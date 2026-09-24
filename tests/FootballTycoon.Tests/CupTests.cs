@@ -77,7 +77,7 @@ public class CupTests
         }
         var opening = WorldFactory.Create(4); var openingBytes = Downgrade(opening); var source = openingBytes.ToArray();
         var migratedOpening = WorldCodec.Decode(openingBytes);
-        Assert.Equal(source, openingBytes); Assert.Equal(6, migratedOpening.SchemaVersion);
+        Assert.Equal(source, openingBytes); Assert.Equal(7, migratedOpening.SchemaVersion);
         Assert.Equal(1, migratedOpening.CupStartSeason);
         Assert.Equal(16, migratedOpening.Fixtures.Count(f => f.Competition == Competition.Cup));
 

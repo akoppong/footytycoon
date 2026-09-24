@@ -33,8 +33,11 @@ public class SeasonTests
             var proposal = Proposals.Preview(world, new(Allocation.StartNextSeason), world.Revision);
             Assert.Empty(proposal.BlockingReasons);
             Assert.Equal(season == 3 ? 18 : 0, proposal.Renewal!.PlayerContracts);
+            Assert.Equal(proposal.Renewal.PlayerContracts, proposal.Renewal.Renewed + proposal.Renewal.Released);
             Assert.Equal(before, WorldCodec.Encode(world));
             var receipt = Proposals.Commit(world, $"renew-{season}", world.Revision, proposal);
+            Assert.Equal(season == 3 ? proposal.Renewal.Renewed : 18, world.OwnedClub.Players.Count);
+            Assert.True(world.OwnedClub.Players.Count >= Contracts.MinimumSquad);
             Assert.Equal(cash, world.OwnedClub.Cash);
             Assert.Equal(owner, world.OwnerCash);
             Assert.Equal(season, world.Season);
@@ -75,7 +78,7 @@ public class SeasonTests
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(6, migrated.SchemaVersion);
+        Assert.Equal(7, migrated.SchemaVersion);
         Assert.Equal(CareerStatus.SeasonReview, migrated.Status);
         Assert.Single(migrated.SeasonSummaries);
         Assert.Equal(16, migrated.SeasonSummaries[0].FinalTable.Length);

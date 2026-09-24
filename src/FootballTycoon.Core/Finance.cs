@@ -89,6 +89,7 @@ public static class Proposals
         if (revision != world.Revision) reasons.Add("The world changed. Refresh the proposal.");
         if (!Enum.IsDefined(command.Allocation)) reasons.Add("Unknown allocation.");
         if (command.Amount != 0 && command.Allocation != Allocation.InjectCapital) reasons.Add("This quote does not accept a custom amount.");
+        if (!command.ContractOverrides.IsEmpty && command.Allocation != Allocation.StartNextSeason) reasons.Add("This quote does not accept contract choices.");
         if (world.Status is CareerStatus.LostControl or CareerStatus.PrototypeComplete) reasons.Add("This career checkpoint is complete.");
         if (world.Status == CareerStatus.Acquisition && command.Allocation != Allocation.Acquire) reasons.Add("Acquire the club first.");
         if (world.Status == CareerStatus.SeasonReview && command.Allocation is not (Allocation.StartNextSeason or Allocation.InjectCapital)) reasons.Add("Review and renew the next season before choosing its capital plan.");
@@ -149,11 +150,16 @@ public static class Proposals
                     reasons.Add("A season-end review is required; this milestone supports three seasons.");
                 else
                 {
-                    renewal = Seasons.Terms(world);
+                    var terms = Seasons.Terms(world, command.ContractOverrides);
+                    renewal = terms;
                     review = world.Week + 4;
-                    total = renewal.RenewedAnnualWages + renewal.AnnualOperations;
+                    total = checked(terms.RenewedCommitment + terms.AnnualOperations);
+                    var overrides = command.ContractOverrides;
+                    if (overrides.Distinct().Count() != overrides.Length || overrides.Any(id => terms.Contracts.All(c => c.PlayerId != id)))
+                        reasons.Add("Contract choices must name expiring players at your club, once each.");
+                    reasons.AddRange(Contracts.Blocking(club, new(terms.Contracts, terms.RaisesHeld, terms.AnnualWagesBefore, terms.AnnualWagesAfter, terms.WageLimit)));
                 }
-                uncertainty = "No upfront payment. Annual broadcast and sponsorship renew at the published next-tier rates. Expiring player and operating contracts extend for one season at unchanged rates. Existing wages, facility upkeep and arrears carry forward; no cash or personal reserve resets. Trading demand follows the new tier; existing wages do not automatically fall after relegation. Negotiated renewals remain a future system. Choose a new capital plan after confirmation.";
+                uncertainty = "No upfront payment. Annual broadcast and sponsorship renew at the published next-tier rates. Jonas Reed recommends renewing or releasing each expiring player contract; your choices set the new wages and lengths from next week. Released players leave on free transfers and are not replaced automatically. Operating contracts extend for one season at unchanged rates. Existing wages, facility upkeep and arrears carry forward; no cash or personal reserve resets. Trading demand follows the new tier; contracts that are not expiring keep their wages after relegation. Choose a new capital plan after confirmation.";
                 break;
             case Allocation.InjectCapital:
                 title = "Inject owner capital"; upfront = -command.Amount; total = command.Amount;
@@ -164,7 +170,8 @@ public static class Proposals
         // A malformed amount must never overflow or influence the preview calculation.
         if (command.Allocation == Allocation.InjectCapital && (command.Amount <= 0 || command.Amount > world.OwnerCash)) upfront = 0;
         var forecastWorld = world;
-        if (renewal is not null) { forecastWorld = WorldCodec.Clone(world); Seasons.StartNext(forecastWorld); }
+        // The forecast runs the actual rollover on a clone, so it includes the chosen renewal wages and releases.
+        if (renewal is not null) { forecastWorld = WorldCodec.Clone(world); Seasons.StartNext(forecastWorld, command.ContractOverrides); }
         var forecast = Finance.Forecast(forecastWorld, club.Id, upfront, weekly,
             command.Allocation == Allocation.Hospitality ? review + 1 : world.Week + 2, command.Allocation == Allocation.Hospitality);
         if (command.Allocation == Allocation.Hospitality || RecruitmentMarket.IsSigning(command.Allocation))
@@ -175,7 +182,8 @@ public static class Proposals
                 reasons.Add("The downside forecast crosses the owner reserve. An explicit reserve exception is required.");
         }
         var proposalId = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-            $"{Convert.ToHexString(SHA256.HashData(WorldCodec.Encode(world)))}:{(int)command.Allocation}:{command.Amount}:{command.ReserveException}")));
+            $"{Convert.ToHexString(SHA256.HashData(WorldCodec.Encode(world)))}:{(int)command.Allocation}:{command.Amount}:{command.ReserveException}"
+            + (command.ContractOverrides.IsEmpty ? "" : ":" + string.Join(",", command.ContractOverrides.Select(id => id.Value))))));
         return new(proposalId, world.Revision, command, title, executive, upfront, weekly, total, review, forecast, reasons.ToImmutable(), uncertainty) { Renewal = renewal, Recruitment = recruitment };
     }
 
@@ -201,7 +209,7 @@ public static class Proposals
                 world.Decisions.Add(new(new(1), 0, true, "Choose the opening capital plan"));
                 break;
             case Allocation.StartNextSeason:
-                Seasons.StartNext(world);
+                Seasons.StartNext(world, proposal.Command.ContractOverrides);
                 break;
             case Allocation.InjectCapital:
                 Finance.Post(world, "owner", -proposal.Command.Amount, CashKind.Injection, reference);
@@ -228,7 +236,7 @@ public static class Proposals
             world.AllocationChosen = true;
             world.Decisions = world.Decisions.Select(d => !d.Resolved && d.Required ? d with { Resolved = true } : d).ToList();
         }
-        world.History.Add(new(world.Week, proposal.Command, proposal.Executive, proposal.Title, proposal.Forecast) { Recruitment = proposal.Recruitment });
+        world.History.Add(new(world.Week, proposal.Command, proposal.Executive, proposal.Title, proposal.Forecast) { Recruitment = proposal.Recruitment, Renewal = proposal.Renewal });
         world.Revision++;
         var receipt = new CommitReceipt(commandId, proposal.Id, world.Revision, proposal.Title);
         world.Commands.Add(commandId, receipt);

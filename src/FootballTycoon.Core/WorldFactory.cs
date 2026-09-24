@@ -62,7 +62,7 @@ public static class WorldFactory
                 club.Players.Add(new(new(i * 18 + p + 1), $"{firstNames[p]} {new[] { "Mercer", "Ward", "Hale", "Bennett", "Reed", "Clarke" }[i % 6]} {i + 1}",
                     p < 2 ? Role.Goalkeeper : p < 8 ? Role.Defender : p < 14 ? Role.Midfielder : Role.Forward,
                     75 - division * 8 + RandomStreams.Next(world, $"players/{i}", 20),
-                    19 + p % 14, Money.Scale(170000, factor), new(i * 18 + p + 1), 104));
+                    19 + p % 14, Contracts.StandardWage(division), new(i * 18 + p + 1), 104));
             world.Clubs.Add(club);
             foreach (var player in club.Players)
                 AddObligation(world, club.Id, 1, player.ContractEndWeek, -player.WeeklyWage, CashKind.Wages, $"Player contract {player.ContractId.Value}");
@@ -100,9 +100,9 @@ public static class WorldFactory
     public static void AddObligation(World world, ClubId club, int start, int end, long weekly, CashKind kind, string description) =>
         world.Obligations.Add(new(new(world.Obligations.Count + 1), club, start, end, weekly, kind, description));
 
-    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false)
+    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorMatchday = false)
     {
-        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : 6) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : "matchday-6") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
+        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorMatchday ? 6 : 7) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorMatchday ? "matchday-6" : "contracts-7") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
             throw new InvalidDataException("Unsupported save, simulation, content or random version. The source was not changed.");
         if (world.Clubs.Count != 48 || world.Clubs.Select(c => c.Id).Distinct().Count() != 48
             || world.Clubs.Count(c => c.Id == world.OwnedClubId) != 1 || (legacy ? world.Week is < 0 or > 52 : world.Season is < 1 or > Seasons.PlayableSeasons || world.Week < Seasons.StartWeek(world) || world.Week > Seasons.EndWeek(world)) || world.Revision < 0

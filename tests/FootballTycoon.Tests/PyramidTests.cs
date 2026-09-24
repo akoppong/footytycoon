@@ -99,7 +99,7 @@ public class PyramidTests
         foreach (var fixture in legacy["Fixtures"]!.AsArray()) fixture!.AsObject().Remove("Division");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(source, bytes); Assert.Equal(6, migrated.SchemaVersion);
+        Assert.Equal(source, bytes); Assert.Equal(7, migrated.SchemaVersion);
         Assert.All(migrated.Fixtures.Where(f => f.Competition == Competition.League), f => Assert.Equal(migrated.Clubs.Single(c => c.Id == f.Home).Division, f.Division));
         Assert.Equal(16, migrated.Fixtures.Count(f => f.Competition == Competition.Cup && f.CupRound == 1));
         Assert.All(migrated.Clubs, c => Assert.Equal(c.Division, c.OpeningDivision));
