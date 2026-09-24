@@ -236,7 +236,7 @@ public partial class Main
                 var key = ReviewKey(chosenReview); if (!filedReviews.Add(key)) filedReviews.Remove(key); SelectInbox("brief");
             })); return;
         }
-        if (inboxSelection == "match" && chosenMatch is not null) { MatchCard(chosenMatch); return; }
+        if (inboxSelection == "match" && chosenMatch is not null) { MatchCard(chosenMatch, full: true); return; }
         if (inboxSelection == "commitment" && chosenHistory is not null)
         {
             var card = Card(); card.AddChild(Caption($"SAVED COMMITMENT · CAREER WEEK {chosenHistory.Week}"));
@@ -416,14 +416,48 @@ public partial class Main
         card.AddChild(Label(season.Plan));
         card.AddChild(Label("Recorded at the final weekly settlement. Later owner funding remains in the cash journal.", 12));
     }
-    private void MatchCard(MatchResult match)
+    private void MatchCard(MatchResult match, bool full = false)
     {
         var fixture = MatchFixture(match);
             var card = Card(); card.AddChild(Caption($"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound).ToUpperInvariant() : "MATCH REPORT")} · WEEK {SeasonWeek(match.Week)}")); card.AddChild(Label(MatchTitle(match), 24));
         if (match.ExtraTime) card.AddChild(Label(match.Shootout is null ? "Decided after extra time." : $"Level after extra time · {match.Shootout} on penalties.", 13));
         card.AddChild(Label($"Shots {match.HomeShots}–{match.AwayShots} · Attendance {match.Attendance:N0} · Home receipts {Money.Format(match.Receipts)}", 13));
-        foreach (var moment in match.Moments) card.AddChild(Label($"{moment.Minute}'  {moment.Text}"));
+        string Name(PersonId id) => view.PlayerNames.TryGetValue(id, out var name) ? name : "Unknown player";
+        static string Rating(Appearance a) => (a.Rating / 10m).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+        foreach (var moment in match.Moments) card.AddChild(Label($"{moment.Minute}'  {moment.Text}{(moment.AssistId is { } assist ? $" Assist: {Name(assist)}." : "")}"));
         if (match.Moments.IsEmpty) card.AddChild(Label("Neither side found the net."));
+        var star = match.HomeLineup.Concat(match.AwayLineup).FirstOrDefault(a => a.Player == match.PlayerOfMatch);
+        if (star is not null) card.AddChild(Label($"Player of the match: {Name(star.Player)} · {ClubName(match.HomeLineup.Contains(star) ? match.Home : match.Away)} · {Rating(star)}", 14));
+        if (!full) return;
+        card.AddChild(Caption("CARDS AND INJURIES"));
+        string Matches(int count) => count == 1 ? "1 match" : $"{count} matches";
+        foreach (var e in match.Events)
+            card.AddChild(Label($"{e.Minute}'  " + e.Kind switch
+            {
+                MatchEventKind.Yellow => $"Yellow card · {Name(e.Player)} · {ClubName(e.ClubId)}" + (e.Duration > 0 ? $" · {Matchday.YellowsPerBan * e.Duration} cautions this season, suspended for {Matches(e.Duration)}" : ""),
+                MatchEventKind.SecondYellow => $"Second yellow, sent off · {Name(e.Player)} · {ClubName(e.ClubId)} · suspended for {Matches(e.Duration)}",
+                MatchEventKind.Red => $"Red card · {Name(e.Player)} · {ClubName(e.ClubId)} · suspended for {Matches(e.Duration)}",
+                _ => $"Injury · {Name(e.Player)} · {ClubName(e.ClubId)} · out for about {e.Duration} week{(e.Duration == 1 ? "" : "s")}"
+            }, 13));
+        if (match.Events.IsEmpty) card.AddChild(Label(match.HomeLineup.IsEmpty ? "Not recorded for this match." : "No cards or injuries.", 13));
+        card.AddChild(Caption("LINE-UPS AND RATINGS"));
+        if (match.HomeLineup.IsEmpty && match.AwayLineup.IsEmpty) card.AddChild(Label("Line-ups and ratings were not recorded for matches played before this update.", 13));
+        else
+        {
+            var columns = new GridContainer { Columns = 2, SizeFlagsHorizontal = SizeFlags.ExpandFill }; columns.AddThemeConstantOverride("h_separation", 24); card.AddChild(columns);
+            foreach (var (club, lineup) in new[] { (match.Home, match.HomeLineup), (match.Away, match.AwayLineup) })
+            {
+                var column = Stack(columns, 3); column.CustomMinimumSize = new Vector2(220 * textScale / 100, 0);
+                column.AddChild(Caption(ClubName(club).ToUpperInvariant(), Navy, 11));
+                foreach (var a in lineup)
+                    column.AddChild(Caption($"{a.Position switch { Role.Goalkeeper => "GK", Role.Defender => "DF", Role.Midfielder => "MF", _ => "FW" }}  {Rating(a)}  {Name(a.Player)}", a.Player == match.PlayerOfMatch ? Navy : Muted, 12));
+            }
+        }
+        if (match.Home == view.ClubId || match.Away == view.ClubId)
+        {
+            card.AddChild(Caption("CALLUM PRICE · MANAGER"));
+            card.AddChild(Label($"“{Matchday.ManagerLine(match, view.ClubId, fixture.Competition == Competition.Cup, view.PlayerNames)}”"));
+        }
     }
     private string ClubName(ClubId id) => view.Clubs.Single(c => c.Id == id).Name;
     private Fixture MatchFixture(MatchResult match) => view.Fixtures.Single(f => f.Id == match.FixtureId);

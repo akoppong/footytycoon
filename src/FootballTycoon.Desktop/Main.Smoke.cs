@@ -98,6 +98,13 @@ public partial class Main
             if (filedReviews.Count != 0) throw new InvalidOperationException("Review was not restored.");
             chosenHistory = view.History.Last(); SelectInbox("commitment"); await Capture("Commitment");
             chosenMatch = view.Results.Last(); SelectInbox("match"); await Capture("Match-report");
+            var reportText = content.FindChildren("*", "Label", true, false).OfType<Label>().Select(l => l.Text).ToArray();
+            if (!reportText.Contains("LINE-UPS AND RATINGS") || !reportText.Contains("CALLUM PRICE · MANAGER") || !reportText.Any(t => t.StartsWith("Player of the match")))
+                throw new InvalidOperationException("Match report is missing line-ups, player of the match or the manager's line.");
+            if (content.GetParent() is ScrollContainer reportScroll)
+            {
+                reportScroll.ScrollVertical = (int)reportScroll.GetVScrollBar().MaxValue; await Capture("Match-report-lower"); reportScroll.ScrollVertical = 0;
+            }
             Navigate("Business"); Preview(Allocation.InjectCapital, 25000000); await Settled();
             await Press("Review final terms"); await Capture("Owner-funding-terms"); await Press("Keep editing"); await Press("Back to comparison");
             ShowSettings(); await Settled(); before = view.Revision; ContinueCareer(); await Settled();
