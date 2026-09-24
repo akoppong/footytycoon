@@ -8,4 +8,4 @@ Each winning club receives a recorded round prize. Cup prizes and cup gate recei
 
 League tables and promotion use league fixtures only. The season report stores the owner’s cup result and prize total. Older saves migrate through schema 3: at a clean season boundary they receive an opening draw; saves already inside a season begin cup participation at the next rollover. Historical reports mark the cup as not held, preserving their league results and cash.
 
-The cup shares the aggregate match model. Squad rotation, injuries, fatigue, manager selection policy and richer major-moment presentation remain part of the broader player-lifecycle and leadership work.
+The cup shares the aggregate match model, including injuries, suspensions and availability-aware selection. Squad rotation, fatigue, manager selection policy and richer major-moment presentation remain part of the broader player-lifecycle and leadership work.
