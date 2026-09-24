@@ -1,0 +1,13 @@
+# Delegated recruitment windows
+
+The opening capital plan can authorize a forward search during season weeks 0–2. A separate midseason review is available during weeks 24–27, regardless of which opening plan was chosen. The Owner Desk links to Football while this review is open. Advancing beyond week 27 without approval leaves the existing squad in place; it does not spend money or create a mandate.
+
+Jonas Reed offers at most two named forwards and the option to keep the squad. His first choice prioritizes current ability among same-division rivals' surplus forwards. The lower-cost alternative uses a lower fee ceiling and a wage quote tied to the player's current wage; contribution may be weaker. Both midseason recommendations exclude each selling club's two strongest forwards. This is a deliberately bounded forward-line review, not a whole-player-pool search or an autonomous all-club market.
+
+The owner previews the fee ceiling, weekly and annual wages, total commitment, contract end, current ability and the existing leading forwards' average ability. The manager still chooses the team. The forecast assumes the full authorized cost; it does not assume resale income. A reserve exception requires its own revised proposal and confirmation, and cannot override a negative downside cash forecast or the wage affordability limit.
+
+Approval records one midseason decision for that season. It creates a pending negotiation without deducting the fee. Staff resolve it the following week, including week 28 for a last-week approval. They recheck cash, the downside reserve, the 75% recurring-revenue wage limit, deadline and player availability. Refusal or failed checks close the mandate without a transfer fee. A successful transfer posts equal buyer/seller entries and replaces the player's wage obligation from the following week through the end of the next season. There are no automatic tier wage changes on this contract.
+
+The approved player snapshot, fee, wage and contract end remain in decision history, separate from the later negotiation outcome. Saving and loading preserves the pending target and decision; it cannot reopen an already used review or reroll a resolved outcome. Schema 5 migrates schemas 1–4 in memory. Older historical decisions without saved target terms remain unchanged rather than inventing a target retrospectively.
+
+Still open: role-based squad needs, all-club recruiting and rival bids, protected-player sale approvals, contract renewal negotiations, revisions after a failed mandate, youth and risk preferences, and the broader player lifecycle and leadership systems. Existing end-of-season player renewals still use the disclosed fixed extension policy.

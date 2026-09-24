@@ -1,0 +1,28 @@
+{
+  "version": "prototype-1",
+  "clubNames": [
+    "Ashford Athletic", "Bellwick City", "Cairnbridge", "Dunmere Rovers", "Eastport United", "Fairhaven Town", "Glenford", "Highmoor Albion",
+    "Ironvale", "Kingsford City", "Larkspur Athletic", "Millhaven", "Northgate United", "Oakbridge Town", "Penwick", "Queensmere",
+    "Ravenswick", "Stonebridge FC", "Thornbury Athletic", "Upton Vale", "Valechester", "Westhaven City", "Yewdale", "Brackenfield",
+    "Copperton", "Daleswick", "Elmstead United", "Foxborough", "Greyford Town", "Hartswell", "Ivydale", "Juniper Rovers",
+    "Kestrel Town", "Longmarsh", "Mossbridge", "Netherford", "Orchard Vale", "Pinehaven", "Redmarsh Athletic", "Silverton",
+    "Ternwick", "Underwood", "Verdant Town", "Willowmere", "Amberfield", "Birchgate", "Cloverford", "Driftwood United"
+  ],
+  "ownedClubIndex": 17,
+  "purchasePrice": 280000000,
+  "ownerCapital": 500000000,
+  "openingClubCash": 140000000,
+  "reserveTarget": 30000000,
+  "annualBroadcast": 130000000,
+  "annualSponsor": 52000000,
+  "historicalTickets": 105000000,
+  "historicalHospitality": 18000000,
+  "historicalCommercial": 31200000,
+  "weeklyOperations": 1400000,
+  "hospitalityCost": 65000000,
+  "hospitalityWeeklyUpkeep": 100000,
+  "hospitalityBuildWeeks": 28,
+  "transferFeeCeiling": 55000000,
+  "recruitWeeklyWage": 250000,
+  "wageLimit": 0.75
+}
