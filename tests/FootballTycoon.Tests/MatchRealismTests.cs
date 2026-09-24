@@ -221,7 +221,7 @@ public sealed class MatchRealismTests : IDisposable
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(7, migrated.SchemaVersion); Assert.Equal("contracts-7", migrated.SimulationVersion);
+        Assert.Equal(8, migrated.SchemaVersion); Assert.Equal("contracts-8", migrated.SimulationVersion);
         Assert.Equal(world.Results.Select(r => (r.FixtureId, r.HomeGoals, r.AwayGoals)), migrated.Results.Select(r => (r.FixtureId, r.HomeGoals, r.AwayGoals)));
         Assert.All(migrated.Results, r =>
         {
@@ -269,8 +269,13 @@ public sealed class MatchRealismTests : IDisposable
             var current = await session.QueryAsync();
             await session.CommitAsync(allocation.ToString(), current.Revision, await session.PreviewAsync(new(allocation), current.Revision));
         }
-        await session.AdvanceAsync(AdvanceTarget.Month);
+        // The dated calendar opens with preseason, so advance until the first league results exist.
         var view = await session.QueryAsync();
+        for (var i = 0; i < 6 && view.Results.IsEmpty; i++)
+        {
+            await session.AdvanceAsync(AdvanceTarget.Month);
+            view = await session.QueryAsync();
+        }
         Assert.Equal(view.Squad.Select(p => p.Id), view.SquadAvailability.Select(a => a.Player));
         Assert.All(view.SquadAvailability, a => Assert.Equal(a.Status == Availability.Available, Matchday.IsAvailable(view.Squad.Single(p => p.Id == a.Player), view.Week + 1)));
         Assert.NotEmpty(view.Results);

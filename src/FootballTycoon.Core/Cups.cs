@@ -2,7 +2,6 @@ namespace FootballTycoon.Core;
 
 public static class Cups
 {
-    private static readonly int[] RoundWeeks = [2, 19, 20, 37, 43, 47];
     private static readonly long[] WinnerPrizes = [2_500_000, 5_000_000, 7_500_000, 12_500_000, 25_000_000, 50_000_000];
     public static string RoundName(int round) => round switch
     {
@@ -64,13 +63,13 @@ public static class Cups
         var final = fixtures.FirstOrDefault(f => f.CupRound == 6);
         if (final is not null && world.Results.SingleOrDefault(r => r.FixtureId == final.Id)?.Winner == club) return "Domestic Cup winners";
         var next = fixtures.FirstOrDefault(f => !world.Results.Any(r => r.FixtureId == f.Id));
-        return next is not null ? $"Next: {RoundName(next.CupRound)} · season week {Seasons.WeekInSeason(next.Week, world.Season)}" : "Awaiting the next cup draw";
+        return next is not null ? $"Next: {RoundName(next.CupRound)} · {Calendar.Day(next.Week)}" : "Awaiting the next cup draw";
     }
 
     public static long PrizeToDate(World world, ClubId club) => world.Journal.Where(j => j.Account == WorldFactory.Account(club)
         && j.Week > Seasons.StartWeek(world) && j.Kind == CashKind.Prize).Sum(j => j.Amount);
 
-    private static int SeasonOf(int week) => (week - 1) / Seasons.Weeks + 1;
+    private static int SeasonOf(int week) => Calendar.SeasonOf(week);
     private static ClubId[] Shuffle(World world, IEnumerable<ClubId> source, int round)
     {
         var values = source.OrderBy(id => id.Value).ToArray();
@@ -84,7 +83,7 @@ public static class Cups
     private static void AddFixtures(World world, IReadOnlyList<ClubId> entrants, int round)
     {
         if (entrants.Count % 2 != 0) throw new InvalidOperationException("Cup draw requires an even field.");
-        var week = Seasons.StartWeek(world) + RoundWeeks[round - 1];
+        var week = Seasons.StartWeek(world) + Calendar.CupWeek(world, round);
         for (var i = 0; i < entrants.Count; i += 2)
             world.Fixtures.Add(new(new(world.Fixtures.Count + 1), week, entrants[i], entrants[i + 1])
             { Competition = Competition.Cup, CupRound = round });

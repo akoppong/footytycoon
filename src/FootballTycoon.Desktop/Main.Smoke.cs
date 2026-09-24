@@ -63,6 +63,9 @@ public partial class Main
                 throw new InvalidOperationException("Hospitality was not committed exactly once.");
             ContinueCareer(); await Settled();
             if (view.Week != 4) throw new InvalidOperationException("Continue did not stop at the first monthly review.");
+            // The league opens in mid-August (week 7); the second monthly stop has a played match to inspect.
+            ContinueCareer(); await Settled();
+            if (view.Week != 8) throw new InvalidOperationException("Continue did not stop at the second monthly review.");
             static IEnumerable<Node> Descendants(Node node)
             {
                 foreach (var child in node.GetChildren())
@@ -75,11 +78,11 @@ public partial class Main
             chart.GrabFocus();
             chart._GuiInput(new InputEventKey { Pressed = true, Keycode = Key.Left });
             await Settled();
-            if (!Descendants(shell).OfType<Label>().Any(label => label.IsVisibleInTree() && label.Text.StartsWith("Season week 3 · reserve target")))
+            if (!Descendants(shell).OfType<Label>().Any(label => label.IsVisibleInTree() && label.Text.StartsWith($"{Calendar.FullDay(7)} · reserve target")))
                 throw new InvalidOperationException("Keyboard chart inspection did not expose exact values.");
             await Capture("Keyboard-chart");
             chart._GuiInput(new InputEventKey { Pressed = true, Keycode = Key.Enter }); await Settled();
-            if (inboxSelection != "match" || chosenMatch?.Week != 3) throw new InvalidOperationException("Keyboard chart match selection failed.");
+            if (inboxSelection != "match" || chosenMatch?.Week != 7) throw new InvalidOperationException("Keyboard chart match selection failed.");
             SelectInbox("brief");
             foreach (var scale in new[] { 100, 125, 150 })
             {
@@ -113,11 +116,11 @@ public partial class Main
             chosenReview = view.Reviews.Last(); SelectInbox(ReviewKey(chosenReview)); await Press("File away");
             Save(); await Settled(); ShowSaves(); await Settled(); await Capture("Recovery");
             await Press("Load this checkpoint");
-            if (inboxSelection != "resume" || auxiliary != "" || view.Week != 4 || filedReviews.Count != 0 || chosenReview is not null) throw new InvalidOperationException("Checkpoint did not restore context.");
+            if (inboxSelection != "resume" || auxiliary != "" || view.Week != 8 || filedReviews.Count != 0 || chosenReview is not null) throw new InvalidOperationException("Checkpoint did not restore context.");
             await Capture("Resumed-career");
             if (OS.GetCmdlineUserArgs().Contains("--market-smoke-test"))
             {
-                while (view.Week < RecruitmentMarket.MidseasonOpens)
+                while (!view.MarketAvailable && view.Week < Seasons.Weeks)
                 {
                     await session.AdvanceAsync(AdvanceTarget.Month); view = await session.QueryAsync();
                 }
@@ -149,7 +152,7 @@ public partial class Main
                 if (view.MarketAvailable) throw new InvalidOperationException("Reload reopened the midseason decision.");
                 await session.AdvanceAsync(AdvanceTarget.Week); view = await session.QueryAsync();
                 Navigate("History"); await Capture("Midseason-outcome");
-                if (!view.Reviews.Any(r => r.Week == 25 && r.ForecastId is not null && (r.Title == "Forward signed" || r.Title == "Recruitment closed without a signing")))
+                if (!view.Reviews.Any(r => r.Week == view.Week && r.ForecastId is not null && (r.Title == "Forward signed" || r.Title == "Recruitment closed without a signing")))
                     throw new InvalidOperationException("Negotiation outcome missing.");
                 GD.Print("MARKET SMOKE PASS: shortlist, three options at two scales, confirmed ceiling, pending-save reload and negotiation outcome.");
             }

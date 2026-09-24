@@ -4,12 +4,22 @@ namespace FootballTycoon.Core;
 
 public static class RecruitmentMarket
 {
-    // Approval weeks; a mandate approved on the last day resolves the following week.
-    public const int MidseasonOpens = 24;
-    public const int MidseasonCloses = 27;
     public static bool IsMidseason(Allocation allocation) => allocation is Allocation.MidseasonRecruitment or Allocation.MidseasonValue or Allocation.MidseasonWait;
     public static bool IsSigning(Allocation allocation) => allocation == Allocation.Recruitment || allocation is Allocation.MidseasonRecruitment or Allocation.MidseasonValue;
-    public static bool WindowOpen(World world) => world.Week - Seasons.StartWeek(world) is >= MidseasonOpens and <= MidseasonCloses;
+
+    // Season-relative approval weeks; a mandate approved on the last day resolves the following week.
+    // Dated seasons open on the first Saturday on or after 1 January and complete every deal by 1 February.
+    public static (int Opens, int Closes) Window(World world)
+    {
+        if (!Calendar.IsDated(world, world.Season)) return (24, 27);
+        var start = Seasons.StartWeek(world);
+        var year = Calendar.Date(start + 1).Year + 1;
+        var opens = Enumerable.Range(1, Seasons.Weeks).First(w => Calendar.Date(start + w) >= new DateOnly(year, 1, 1));
+        var closes = Enumerable.Range(opens, Seasons.Weeks - opens).Last(w => Calendar.Date(start + w + 1) <= new DateOnly(year, 2, 1));
+        return (opens, closes);
+    }
+    public static bool WindowOpen(World world) => Window(world) is var (opens, closes) && world.Week - Seasons.StartWeek(world) >= opens && world.Week - Seasons.StartWeek(world) <= closes;
+    public static string WindowName(World world) => Calendar.IsDated(world, world.Season) ? "January" : "Midseason";
     public static bool Decided(World world) => world.History.Any(h => h.Week >= Seasons.StartWeek(world) && IsMidseason(h.Command.Allocation));
     public static bool Available(World world) => world.Status == CareerStatus.Active && world.AllocationChosen && WindowOpen(world) && !Decided(world);
 
@@ -52,10 +62,12 @@ public static class RecruitmentMarket
 
     public static string Status(World world)
     {
-        if (Decided(world)) return "Midseason decision recorded · see History for the original terms and outcome.";
+        var name = WindowName(world);
+        if (Decided(world)) return $"{name} window decision recorded · see History for the original terms and outcome.";
         var offset = Seasons.StartWeek(world);
-        if (world.Week < offset + MidseasonOpens) return $"Midseason review opens in season week {MidseasonOpens}.";
-        if (world.Week > offset + MidseasonCloses) return "Midseason window closed · the existing squad continues.";
-        return $"Midseason window · approve by season week {MidseasonCloses}; negotiations finish by season week {MidseasonCloses + 1}.";
+        var (opens, closes) = Window(world);
+        if (world.Week < offset + opens) return $"{name} window opens {Calendar.Day(offset + opens)}.";
+        if (world.Week > offset + closes) return $"{name} window closed · the existing squad continues.";
+        return $"{name} window open · approve by {Calendar.Day(offset + closes)}; deals complete by {Calendar.Day(offset + closes + 1)}.";
     }
 }

@@ -16,7 +16,6 @@ public partial class SeasonChart : Control
     private readonly long low, high;
     private int inspectedWeek;
     private readonly int start, end;
-    private int DisplayWeek(int week) => week - start;
     public event Action<MatchResult>? MatchSelected;
     public event Action<string>? InspectionChanged;
 
@@ -82,12 +81,12 @@ public partial class SeasonChart : Control
         Path(actual, navy, false, 2.5f);
         DrawLine(new Vector2(X(view.Week), 18), new Vector2(X(view.Week), bottom), red);
         DrawCircle(new Vector2(X(view.Week), Y(view.ClubCash)), 3, navy);
-        Text(new Vector2(Math.Clamp(X(view.Week) + 5, 70, Size.X - 130), 14), $"NOW · W{DisplayWeek(view.Week)}", red);
+        Text(new Vector2(Math.Clamp(X(view.Week) + 5, 70, Size.X - 130), 14), $"NOW · {Calendar.Day(view.Week).ToUpperInvariant()}", red);
         var minimum = (proposal?.Forecast ?? view.Forecast).Points.Where(p => p.Week >= start && p.Week <= end).MinBy(p => p.DownsideCash);
         if (minimum is not null)
         {
             DrawCircle(new Vector2(X(minimum.Week), Y(minimum.DownsideCash)), 3, red);
-            var label = $"Season downside low {Main.ShortMoney(minimum.DownsideCash)} · W{DisplayWeek(minimum.Week)}";
+            var label = $"Season downside low {Main.ShortMoney(minimum.DownsideCash)} · {Calendar.Day(minimum.Week)}";
             var length = font.GetStringSize(label, HorizontalAlignment.Left, -1, fontSize).X;
             Text(new Vector2(Math.Clamp(X(minimum.Week) - length / 2, 72, Math.Max(72, Size.X - length - 6)), bottom + fontSize + 2), label, red);
         }
@@ -103,8 +102,9 @@ public partial class SeasonChart : Control
             DrawRect(new Rect2(X(fixture.Week) - 7, y - fontSize, 15, fontSize + 6), mark == "W" ? new Color("dce8df") : mark == "L" ? new Color("f7e2dc") : new Color("efebe1"));
             Text(new Vector2(X(fixture.Week) - 3, y + 2), mark, color);
         }
-        Text(new Vector2(70, Size.Y - 5), "W0 · season start", grey);
-        Text(new Vector2(Size.X - 180, Size.Y - 5), "W52 · season end", grey);
+        Text(new Vector2(70, Size.Y - 5), $"{Calendar.Day(start)} · season start", grey);
+        var closing = $"{Calendar.Day(end)} · season end";
+        Text(new Vector2(Size.X - 22 - font.GetStringSize(closing, HorizontalAlignment.Left, -1, fontSize).X, Size.Y - 5), closing, grey);
         if (HasFocus())
         {
             DrawRect(new Rect2(Vector2.Zero, Size), new Color("e0a33c"), false, 2);
@@ -138,7 +138,7 @@ public partial class SeasonChart : Control
     }
     private string WeekDetail(int week)
     {
-        var lines = new List<string> { $"Season week {DisplayWeek(week)} · reserve target {Money.Format(view.ReserveTarget)}" };
+        var lines = new List<string> { $"{Calendar.FullDay(week)} · reserve target {Money.Format(view.ReserveTarget)}" };
         if (week <= view.Week) lines.Add("Actual closing cash: " + Money.Format(actual.Single(p => p.Week == week).Cash));
         if (view.Forecast.Points.FirstOrDefault(p => p.Week == week) is { } point)
             lines.Add($"Base: {Money.Format(point.BaseCash)} · downside: {Money.Format(point.DownsideCash)}");

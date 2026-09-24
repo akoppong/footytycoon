@@ -100,7 +100,8 @@ public static class Proposals
         if (RecruitmentMarket.IsMidseason(command.Allocation))
         {
             if (!world.AllocationChosen) reasons.Add("Choose the season's opening capital plan first.");
-            if (!RecruitmentMarket.WindowOpen(world)) reasons.Add("Midseason approvals are available in season weeks 24–27.");
+            if (!RecruitmentMarket.WindowOpen(world) && RecruitmentMarket.Window(world) is var (opens, closes))
+                reasons.Add($"{RecruitmentMarket.WindowName(world)} window approvals run {Calendar.Day(Seasons.StartWeek(world) + opens)} to {Calendar.Day(Seasons.StartWeek(world) + closes)}.");
             if (RecruitmentMarket.Decided(world)) reasons.Add("This season's midseason decision is already recorded.");
         }
         switch (command.Allocation)
@@ -120,7 +121,7 @@ public static class Proposals
                 total = checked(upfront + weekly * Math.Max(0, Seasons.EndWeek(world) + Seasons.Weeks - review));
                 if (world.Projects.Any(p => p.ClubId == club.Id && p.CompletionWeek > world.Week)) reasons.Add("Only one construction project may run at a time.");
                 if (club.HospitalityLevel >= 3) reasons.Add("This facility is at its three-step limit.");
-                uncertainty = $"Upfront construction payment; 28-week build. Extra receipts depend on home matches and demand. Upkeep begins the week after opening and is committed through career week {Seasons.EndWeek(world) + Seasons.Weeks}. Recoverable construction value: 40%; cancellation UI is deferred.";
+                uncertainty = $"Upfront construction payment; 28-week build. Extra receipts depend on home matches and demand. Upkeep begins the week after opening and is committed through {Calendar.FullDay(Seasons.EndWeek(world) + Seasons.Weeks)}. Recoverable construction value: 40%; cancellation UI is deferred.";
                 break;
             case Allocation.Recruitment:
             case Allocation.MidseasonRecruitment:
@@ -227,7 +228,7 @@ public static class Proposals
             case Allocation.MidseasonValue:
                 var target = proposal.Recruitment!.Player;
                 var seller = world.Clubs.Single(c => c.Players.Any(p => p.Id == target.Id));
-                var windowEnd = Seasons.StartWeek(world) + (proposal.Command.Allocation == Allocation.Recruitment ? 3 : RecruitmentMarket.MidseasonCloses + 1);
+                var windowEnd = Seasons.StartWeek(world) + (proposal.Command.Allocation == Allocation.Recruitment ? 3 : RecruitmentMarket.Window(world).Closes + 1);
                 world.Negotiations.Add(new(world.History.Count + 1, seller.Id, target.Id, Math.Min(world.Week + 2, windowEnd), proposal.UpfrontCash, proposal.WeeklyCost, proposal.Forecast.Id));
                 break;
         }

@@ -157,8 +157,8 @@ public static class WorldFactory
                 {
                     var home = ids[pair]; var away = ids[15 - pair];
                     if (round % 2 == 1) (home, away) = (away, home);
-                    world.Fixtures.Add(new(new(++fixtureId), offset + round + 3, home, away) { Division = division });
-                    world.Fixtures.Add(new(new(++fixtureId), offset + round + 22, away, home) { Division = division });
+                    world.Fixtures.Add(new(new(++fixtureId), offset + Calendar.LeagueWeek(world, round, false), home, away) { Division = division });
+                    world.Fixtures.Add(new(new(++fixtureId), offset + Calendar.LeagueWeek(world, round, true), away, home) { Division = division });
                 }
                 ids.Insert(1, ids[^1]); ids.RemoveAt(16);
             }
@@ -169,9 +169,9 @@ public static class WorldFactory
     public static void AddObligation(World world, ClubId club, int start, int end, long weekly, CashKind kind, string description) =>
         world.Obligations.Add(new(new(world.Obligations.Count + 1), club, start, end, weekly, kind, description));
 
-    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorMatchday = false)
+    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false)
     {
-        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorMatchday ? 6 : 7) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorMatchday ? "matchday-6" : "contracts-7") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
+        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : 8) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : "contracts-8") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
             throw new InvalidDataException("Unsupported save, simulation, content or random version. The source was not changed.");
         if (world.Clubs.Count != 48 || world.Clubs.Select(c => c.Id).Distinct().Count() != 48
             || world.Clubs.Count(c => c.Id == world.OwnedClubId) != 1 || (legacy ? world.Week is < 0 or > 52 : world.Season is < 1 or > Seasons.PlayableSeasons || world.Week < Seasons.StartWeek(world) || world.Week > Seasons.EndWeek(world)) || world.Revision < 0
@@ -191,6 +191,7 @@ public static class WorldFactory
             || world.Fixtures.Count(f => f.Competition == Competition.League) != 720 * (legacy ? 1 : world.Season) || world.Fixtures.Select(f => f.Id).Distinct().Count() != world.Fixtures.Count
             || world.Fixtures.Any(f => f.Home == f.Away || !world.Clubs.Any(c => c.Id == f.Home) || !world.Clubs.Any(c => c.Id == f.Away)))
             throw new InvalidDataException("Invalid identities or references.");
+        if (world.CalendarStartSeason < 1) throw new InvalidDataException("Invalid calendar history.");
         if (people.Any(p => p.InjuredUntilWeek < 0 || p.SuspendedMatches < 0 || p.SeasonYellows < 0)
             || world.Results.Any(r => r.HomeLineup.Length > 11 || r.AwayLineup.Length > 11
                 || r.HomeLineup.Concat(r.AwayLineup).Any(a => a.Rating is < 0 or > 100) || r.Events.Any(e => e.Duration < 0)))

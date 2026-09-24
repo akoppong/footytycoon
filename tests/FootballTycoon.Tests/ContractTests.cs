@@ -257,11 +257,11 @@ public class ContractTests
     }
 
     [Fact]
-    public void SchemaSixSaveAtTheRenewalReviewMigratesAndReceivesRecommendations()
+    public void SchemaSevenSaveAtTheRenewalReviewMigratesAndReceivesRecommendations()
     {
         var world = Expiring();
         var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
-        legacy["SchemaVersion"] = 6; legacy["SimulationVersion"] = "matchday-6";
+        legacy["SchemaVersion"] = 7; legacy["SimulationVersion"] = "matchday-7";
         foreach (var record in legacy["History"]!.AsArray())
         {
             record!.AsObject().Remove("Renewal");
@@ -270,7 +270,7 @@ public class ContractTests
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(7, migrated.SchemaVersion); Assert.Equal("contracts-7", migrated.SimulationVersion);
+        Assert.Equal(8, migrated.SchemaVersion); Assert.Equal("contracts-8", migrated.SimulationVersion);
         Assert.Equal(CareerStatus.SeasonReview, migrated.Status);
         Assert.All(migrated.History, h => { Assert.Null(h.Renewal); Assert.Empty(h.Command.ContractOverrides); });
         Assert.Equal(world.OwnedClub.Players, migrated.OwnedClub.Players);

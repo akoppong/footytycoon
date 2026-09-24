@@ -29,7 +29,7 @@ public enum CashKind { Purchase, Injection, Wages, Operations, Broadcast, Sponso
 
 public sealed record OwnerCommand(Allocation Allocation, long Amount = 0, bool ReserveException = false)
 {
-    // Season renewal only: expiring players whose director recommendation the owner reverses (schema 7).
+    // Season renewal only: expiring players whose director recommendation the owner reverses (schema 8).
     public ImmutableArray<PersonId> ContractOverrides { get; init; } = [];
 }
 public sealed record LedgerEntry(int Sequence, int Week, string Account, long Amount, CashKind Kind, string Reference);
@@ -37,7 +37,7 @@ public sealed record Obligation(ObligationId Id, ClubId ClubId, int StartWeek, i
 public sealed record Arrear(ObligationId ObligationId, ClubId ClubId, int Week, long Amount);
 public sealed record Player(PersonId Id, string Name, Role Role, int Ability, int Age, long WeeklyWage, ContractId ContractId, int ContractEndWeek)
 {
-    // Availability (schema 6). Defaults mean fit and eligible, so they are omitted from saves.
+    // Availability (schema 7). Defaults mean fit and eligible, so they are omitted from saves.
     // Unavailable for fixtures in career weeks before InjuredUntilWeek.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int InjuredUntilWeek { get; init; }
     // Remaining competitive matches of the player's club to miss.
@@ -65,7 +65,7 @@ public sealed record MatchResult(FixtureId FixtureId, int Week, ClubId Home, Clu
     public ClubId Winner { get; init; }
     public bool ExtraTime { get; init; }
     public string? Shootout { get; init; }
-    // Empty for matches played before schema 6.
+    // Empty for matches played before schema 7.
     public ImmutableArray<Appearance> HomeLineup { get; init; } = [];
     public ImmutableArray<Appearance> AwayLineup { get; init; } = [];
     public ImmutableArray<MatchEvent> Events { get; init; } = [];
@@ -80,7 +80,7 @@ public sealed record Forecast(string Id, int CreatedWeek, int HorizonWeeks, Immu
 public sealed record DecisionRecord(int Week, OwnerCommand Command, string Executive, string Intent, Forecast OriginalForecast)
 {
     public RecruitmentTerms? Recruitment { get; init; }
-    // Season renewals from schema 7: each expiring contract's recommendation and the owner's choice.
+    // Season renewals from schema 8: each expiring contract's recommendation and the owner's choice.
     public RenewalTerms? Renewal { get; init; }
 }
 public sealed record Review(int Week, string Title, string Evidence, string? ForecastId);
@@ -99,7 +99,7 @@ public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long Rene
     public int NextDivision { get; init; }
     public long CurrentAnnualBroadcast { get; init; }
     public long CurrentAnnualSponsor { get; init; }
-    // Expiring player contracts (schema 7). RenewedAnnualWages is the chosen renewals' first-season cost.
+    // Expiring player contracts (schema 8). RenewedAnnualWages is the chosen renewals' first-season cost.
     public ImmutableArray<ContractReview> Contracts { get; init; } = [];
     public long ExpiringAnnualWages { get; init; }
     public long AnnualWagesBefore { get; init; }
@@ -147,8 +147,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 7;
-    public string SimulationVersion { get; set; } = "contracts-7";
+    public int SchemaVersion { get; set; } = 8;
+    public string SimulationVersion { get; set; } = "contracts-8";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -156,6 +156,8 @@ public sealed class World
     public int Week { get; set; }
     public int Season { get; set; } = 1;
     public int CupStartSeason { get; set; } = 1;
+    // First season scheduled on the dated calendar; earlier seasons keep the layout they were saved with.
+    public int CalendarStartSeason { get; set; } = 1;
     public long SeasonOpeningCash { get; set; }
     public int SeasonOpeningLedgerSequence { get; set; }
     public List<SeasonSummary> SeasonSummaries { get; set; } = [];
@@ -192,6 +194,9 @@ public static class WorldCodec
     {
         var world = JsonSerializer.Deserialize<World>(bytes) ?? throw new InvalidDataException("Empty world.");
         var closeLegacySeason = world.SchemaVersion == 1 && world.Status == CareerStatus.PrototypeComplete;
+        // Pre-calendar saves keep their stored layout (including cup rounds added during migration) for the
+        // current season; the next season is the first on the dated calendar.
+        if (world.SchemaVersion < 6) world.CalendarStartSeason = world.Season + 1;
         if (world.SchemaVersion == 1)
         {
             WorldFactory.Validate(world, legacy: true);
@@ -233,17 +238,22 @@ public static class WorldCodec
         if (world.SchemaVersion == 5)
         {
             WorldFactory.Validate(world, priorMarket: true);
+            world.SchemaVersion = 6; world.SimulationVersion = "calendar-6";
+        }
+        if (world.SchemaVersion == 6)
+        {
+            WorldFactory.Validate(world, priorCalendar: true);
             // Earlier matches keep empty line-ups, ratings and events; every player starts fit and eligible.
             foreach (var club in world.Clubs)
                 club.Players = club.Players.Select(p => p with { InjuredUntilWeek = 0, SuspendedMatches = 0, SeasonYellows = 0 }).ToList();
-            world.SchemaVersion = 6; world.SimulationVersion = "matchday-6";
+            world.SchemaVersion = 7; world.SimulationVersion = "matchday-7";
         }
-        if (world.SchemaVersion == 6)
+        if (world.SchemaVersion == 7)
         {
             WorldFactory.Validate(world, priorMatchday: true);
             // Earlier commands carry no contract choices and earlier renewals no contract reviews. Proposals are never
             // saved, so a save paused at a season review simply receives the director's recommendations when reopened.
-            world.SchemaVersion = 7; world.SimulationVersion = "contracts-7";
+            world.SchemaVersion = 8; world.SimulationVersion = "contracts-8";
         }
         WorldFactory.Validate(world);
         return world;
