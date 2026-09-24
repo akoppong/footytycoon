@@ -46,23 +46,37 @@ public static class WorldFactory
     public static World Create(ulong seed)
     {
         var b = Balance.Load();
-        var world = new World { Seed = seed, OwnedClubId = new(b.OwnedClubIndex + 1), OwnerCash = b.OwnerCapital,
-            OpeningOwnerCash = b.OwnerCapital, SeasonOpeningCash = b.OpeningClubCash, ReserveTarget = b.ReserveTarget, Status = CareerStatus.Acquisition };
-        string[] firstNames = ["Theo", "Ellis", "Luca", "Adam", "Noah", "Max", "Owen", "Sam", "Finn", "Leo", "Kai", "Ben", "Jude", "Alex", "Rory", "Evan", "Louis", "Isaac"];
+        var world = new World
+        {
+            Seed = seed,
+            OwnedClubId = new(b.OwnedClubIndex + 1),
+            OwnerCash = b.OwnerCapital,
+            OpeningOwnerCash = b.OwnerCapital,
+            SeasonOpeningCash = b.OpeningClubCash,
+            ReserveTarget = b.ReserveTarget,
+            Status = CareerStatus.Acquisition
+        };
+        var usedNames = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < 48; i++)
         {
             var division = i / 16 + 1;
             var factor = division == 1 ? 1.6m : division == 2 ? 1m : 0.65m;
-            var club = new Club { Id = new(i + 1), Name = b.ClubNames[i], Division = division, OpeningDivision = division,
-                Cash = Money.Scale(b.OpeningClubCash, factor), OpeningCash = Money.Scale(b.OpeningClubCash, factor),
-                AnnualBroadcast = Money.Scale(b.AnnualBroadcast, factor), AnnualSponsor = Money.Scale(b.AnnualSponsor, factor),
-                HistoricalTickets = Money.Scale(b.HistoricalTickets, factor), HistoricalHospitality = Money.Scale(b.HistoricalHospitality, factor),
-                HistoricalCommercial = Money.Scale(b.HistoricalCommercial, factor), Lot = RandomStreams.Next(world, $"lots/{i}", int.MaxValue) };
-            for (var p = 0; p < 18; p++)
-                club.Players.Add(new(new(i * 18 + p + 1), $"{firstNames[p]} {new[] { "Mercer", "Ward", "Hale", "Bennett", "Reed", "Clarke" }[i % 6]} {i + 1}",
-                    p < 2 ? Role.Goalkeeper : p < 8 ? Role.Defender : p < 14 ? Role.Midfielder : Role.Forward,
-                    75 - division * 8 + RandomStreams.Next(world, $"players/{i}", 20),
-                    19 + p % 14, Money.Scale(170000, factor), new(i * 18 + p + 1), 104));
+            var club = new Club
+            {
+                Id = new(i + 1),
+                Name = b.ClubNames[i],
+                Division = division,
+                OpeningDivision = division,
+                Cash = Money.Scale(b.OpeningClubCash, factor),
+                OpeningCash = Money.Scale(b.OpeningClubCash, factor),
+                AnnualBroadcast = Money.Scale(b.AnnualBroadcast, factor),
+                AnnualSponsor = Money.Scale(b.AnnualSponsor, factor),
+                HistoricalTickets = Money.Scale(b.HistoricalTickets, factor),
+                HistoricalHospitality = Money.Scale(b.HistoricalHospitality, factor),
+                HistoricalCommercial = Money.Scale(b.HistoricalCommercial, factor),
+                Lot = RandomStreams.Next(world, $"lots/{i}", int.MaxValue)
+            };
+            AddSquad(world, club, i, division, Money.Scale(170000, factor) * 18, usedNames);
             world.Clubs.Add(club);
             foreach (var player in club.Players)
                 AddObligation(world, club.Id, 1, player.ContractEndWeek, -player.WeeklyWage, CashKind.Wages, $"Player contract {player.ContractId.Value}");
@@ -73,6 +87,61 @@ public static class WorldFactory
         AddSeasonFixtures(world);
         Validate(world);
         return world;
+    }
+
+    private static readonly string[] FirstNames =
+    [
+        "Theo", "Ellis", "Luca", "Adam", "Noah", "Max", "Owen", "Sam", "Finn", "Leo", "Kai", "Ben", "Jude", "Alex", "Rory", "Evan",
+        "Louis", "Isaac", "Callum", "Jamie", "Connor", "Harvey", "Kieran", "Liam", "Mason", "Nathan", "Oscar", "Reece", "Ryan", "Tom",
+        "Joe", "Dan", "Marcus", "Jordan", "Tyler", "Aaron", "Declan", "Ethan", "Harry", "Jack", "Lewis", "Matty", "Ollie", "Scott",
+        "Kyle", "Dylan", "Ross", "Sean", "Niall", "Gareth", "Rhys", "Ewan", "Fraser", "Kofi", "Tariq", "Mateo", "Diego", "Mikel",
+        "Tomas", "Andrei", "Pavel", "Jonas", "Lars", "Emeka", "Sami", "Yusuf", "Kwame", "Ibrahim", "Rafael", "Bruno", "Nico", "Hugo"
+    ];
+
+    private static readonly string[] Surnames =
+    [
+        "Mercer", "Ward", "Hale", "Bennett", "Reed", "Clarke", "Walsh", "Hughes", "Fletcher", "Barnes", "Holt", "Pearce", "Doyle",
+        "Shaw", "Kerr", "Lowe", "Marsh", "Nolan", "Parry", "Quinn", "Rowe", "Sutton", "Tate", "Vaughan", "Whitaker", "Ashworth",
+        "Bland", "Carver", "Dawson", "Egan", "Foley", "Gibbs", "Harding", "Ingram", "Jarvis", "Keane", "Lister", "McGowan", "Naylor",
+        "Osborne", "Price", "Riley", "Sharpe", "Thorne", "Upton", "Vickers", "Webb", "Yates", "Abbott", "Brennan", "Coyle", "Dunne",
+        "Ellison", "Frost", "Gallagher", "Hendry", "Irwin", "Jennings", "Kilbride", "Lennon", "Maguire", "Norris", "O'Neill", "Pritchard",
+        "Robson", "Stokes", "Tierney", "Varley", "Wilder", "Adeyemi", "Boateng", "Mensah", "Okafor", "Diallo", "Traore", "Silva",
+        "Costa", "Moreno", "Navarro", "Kowalski", "Novak", "Horvat", "Jansen", "Visser", "Lindqvist", "Berg", "Moretti", "Rossi",
+        "Fischer", "Richter", "Dubois", "Laurent", "Haddad", "Petrov", "Evans", "Morgan", "Pryce", "Jenkins", "Campbell", "Kendall"
+    ];
+
+    // A separate "identity/{club}" stream keeps the older "players/{club}" ability draws, and therefore match results, unchanged.
+    private static void AddSquad(World world, Club club, int index, int division, long wageBill, HashSet<string> usedNames)
+    {
+        var stream = $"identity/{index}";
+        var clubFirst = new HashSet<string>(StringComparer.Ordinal);
+        var clubSurnames = new HashSet<string>(StringComparer.Ordinal);
+        var drafts = new List<(string Name, Role Role, int Ability, int Age, int ContractEnd)>();
+        for (var p = 0; p < 18; p++)
+        {
+            string first, surname;
+            do first = FirstNames[RandomStreams.Next(world, stream, FirstNames.Length)]; while (!clubFirst.Add(first));
+            do surname = Surnames[RandomStreams.Next(world, stream, Surnames.Length)];
+            while (clubSurnames.Contains(surname) || usedNames.Contains($"{first} {surname}"));
+            clubSurnames.Add(surname);
+            usedNames.Add($"{first} {surname}");
+            var age = 17 + RandomStreams.Next(world, stream, 10) + RandomStreams.Next(world, stream, 10);
+            drafts.Add(($"{first} {surname}", p < 2 ? Role.Goalkeeper : p < 8 ? Role.Defender : p < 14 ? Role.Midfielder : Role.Forward,
+                75 - division * 8 + RandomStreams.Next(world, $"players/{index}", 20), age,
+                Seasons.Weeks * (1 + RandomStreams.Next(world, stream, Seasons.PlayableSeasons))));
+        }
+        // Stronger players in their prime earn more; the club's total opening wage bill stays exactly as balanced.
+        var weakest = drafts.Min(d => d.Ability);
+        var weights = drafts.Select(d => (long)(d.Ability - weakest + 12) * (d.Ability - weakest + 12)
+            * (d.Age < 21 ? 6 : d.Age > 31 ? 8 : 10) + RandomStreams.Next(world, stream, 40)).ToArray();
+        var totalWeight = weights.Sum();
+        var wages = weights.Select(w => wageBill * w / totalWeight / 1000 * 1000).ToArray();
+        wages[Array.IndexOf(weights, weights.Max())] += wageBill - wages.Sum();
+        for (var p = 0; p < 18; p++)
+        {
+            var id = index * 18 + p + 1;
+            club.Players.Add(new(new(id), drafts[p].Name, drafts[p].Role, drafts[p].Ability, drafts[p].Age, wages[p], new(id), drafts[p].ContractEnd));
+        }
     }
 
     public static void AddSeasonFixtures(World world)

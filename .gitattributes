@@ -1,0 +1,7 @@
+# Normalize line endings in the repository; check C# sources out with CRLF so
+# `dotnet format --verify-no-changes` behaves identically on every Windows machine and CI runner.
+* text=auto
+*.cs text eol=crlf
+*.csproj text eol=crlf
+*.ttf binary
+*.tpz binary

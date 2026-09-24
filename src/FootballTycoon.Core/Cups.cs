@@ -5,8 +5,13 @@ public static class Cups
     private static readonly long[] WinnerPrizes = [2_500_000, 5_000_000, 7_500_000, 12_500_000, 25_000_000, 50_000_000];
     public static string RoundName(int round) => round switch
     {
-        1 => "Preliminary round", 2 => "Round of 32", 3 => "Round of 16",
-        4 => "Quarter-final", 5 => "Semi-final", 6 => "Final", _ => "Domestic Cup"
+        1 => "Preliminary round",
+        2 => "Round of 32",
+        3 => "Round of 16",
+        4 => "Quarter-final",
+        5 => "Semi-final",
+        6 => "Final",
+        _ => "Domestic Cup"
     };
 
     public static void AddOpeningRound(World world)
@@ -81,6 +86,6 @@ public static class Cups
         var week = Seasons.StartWeek(world) + Calendar.CupWeek(world, round);
         for (var i = 0; i < entrants.Count; i += 2)
             world.Fixtures.Add(new(new(world.Fixtures.Count + 1), week, entrants[i], entrants[i + 1])
-                { Competition = Competition.Cup, CupRound = round });
+            { Competition = Competition.Cup, CupRound = round });
     }
 }
