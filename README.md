@@ -73,7 +73,7 @@ The desktop uses Godot's local `user://saves/offline` directory. The run script 
 
 Each immutable `.ftsave` contains bounded metadata, gzip JSON, and a SHA256 over metadata plus payload. Writes flush to a temporary file, reopen and validate, then rename within the vault. The application publishes a changed world only after persistence succeeds. The save browser orders bounded file headers, then fully validates the 20 checkpoints on the displayed page. Older/newer navigation keeps the remaining checkpoints accessible; corrupt files are preserved and omitted from selection. No file pruning is implemented: three logical rotating autosave slot names keep **all** physical snapshots, plus manual, pre-commit recovery and post-commit checkpoints. Disk usage therefore grows. Future retention must preserve branch ancestry and unique recovery points.
 
-Loading any snapshot forks on the next successful write. Duplicate command receipts persist. Unsupported versions are rejected without modifying their source. Current source and the packaged executable use schema 6 and migrate schema 1–5 in memory without overwriting the original file. Steam Cloud is not implemented.
+Loading any snapshot forks on the next successful write. Duplicate command receipts persist. Unsupported versions are rejected without modifying their source. Current source uses schema 7 and migrates schemas 1–6 in memory without overwriting the original file (the packaged executable predates schema 7). Steam Cloud is not implemented.
 
 See [implementation status and remaining gates](docs/IMPLEMENTATION_STATUS.md) for the exact boundary and validation evidence.
 
