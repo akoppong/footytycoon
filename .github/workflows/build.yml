@@ -1,13 +1,141 @@
-name: Foundation validation
-on: [push, pull_request]
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  # Superseded PR pushes are cancelled; every commit that lands on main is still validated.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
 jobs:
-  core-and-desktop:
+  core:
+    name: Core · format, build, test, audit
     runs-on: windows-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
-      - name: Build and test
+          global-json-file: global.json
+      - uses: actions/cache@v6
+        with:
+          path: .tools/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Build.props', 'global.json') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Restore
+        run: dotnet restore FootballTycoon.slnx --configfile NuGet.Config
+      - name: Verify formatting
+        run: dotnet format FootballTycoon.slnx --verify-no-changes --no-restore
+      - name: Build (warnings are errors)
+        run: dotnet build FootballTycoon.slnx --no-restore --configuration Release
+      - name: Test
+        run: dotnet test FootballTycoon.slnx --no-build --configuration Release --logger trx --results-directory TestResults
+      - name: Audit NuGet packages for known vulnerabilities
         shell: pwsh
-        run: ./scripts/build.ps1 -Desktop
+        run: |
+          $report = dotnet list FootballTycoon.slnx package --vulnerable --include-transitive 2>&1 | Out-String
+          Write-Output $report
+          if ($LASTEXITCODE -ne 0) { throw 'Vulnerability audit could not run.' }
+          if ($report -match 'has the following vulnerable packages') { throw 'Vulnerable NuGet packages found.' }
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: TestResults
+
+  desktop:
+    name: Desktop · Godot build and smoke test
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@v6
+        with:
+          path: .tools/packages
+          key: nuget-desktop-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Build.props', 'global.json') }}
+          restore-keys: nuget-desktop-${{ runner.os }}-
+      - uses: actions/cache@v6
+        with:
+          path: .tools/godot
+          key: godot-editor-4.7.2-${{ hashFiles('scripts/ci/install-godot.ps1') }}
+      - name: Install Godot 4.7.2 .NET (SHA-512 verified)
+        shell: pwsh
+        run: ./scripts/ci/install-godot.ps1
+      - name: Restore
+        run: dotnet restore src/FootballTycoon.Desktop --configfile NuGet.Config
+      - name: Verify formatting
+        run: dotnet format src/FootballTycoon.Desktop/FootballTycoon.Desktop.csproj --verify-no-changes --no-restore
+      - name: Build (warnings are errors)
+        run: dotnet build src/FootballTycoon.Desktop --no-restore --configuration Debug
+      - name: Import project resources
+        shell: pwsh
+        run: |
+          $godot = (Get-ChildItem .tools/godot -Filter '*console.exe' -Recurse | Select-Object -First 1).FullName
+          & $godot --headless --path src/FootballTycoon.Desktop --import
+          if ($LASTEXITCODE -ne 0) { throw 'Godot resource import failed.' }
+      - name: Headless engine smoke test
+        shell: pwsh
+        run: |
+          ./scripts/run.ps1 -SmokeTest -Headless *>&1 | Tee-Object -FilePath smoke.log
+          if (-not (Select-String -LiteralPath smoke.log -Pattern '^SMOKE PASS:' -Quiet)) { throw 'Smoke test did not report SMOKE PASS.' }
+      - name: Upload smoke log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-smoke-log
+          path: smoke.log
+          if-no-files-found: ignore
+
+  headless:
+    name: Headless · ${{ matrix.strategy }} three-season career
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        strategy: [PreserveReserve, Hospitality, Recruitment]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      # No package cache: the headless projects have no NuGet dependencies, and saving under the
+      # core job's key could overwrite it with an empty cache.
+      - name: Run the career end to end
+        shell: pwsh
+        run: |
+          dotnet run --project src/FootballTycoon.Headless --configuration Release -- ${{ matrix.strategy }} 2026 artifacts/headless *>&1 | Tee-Object -FilePath headless.log
+          if ($LASTEXITCODE -ne 0) { throw 'Headless runner failed.' }
+          $outcome = Select-String -LiteralPath headless.log -Pattern '^(Outcome|Gameplay SHA256):' | ForEach-Object { $_.Line }
+          if ($outcome.Count -ne 2) { throw 'Headless runner did not finish the career.' }
+          "### ${{ matrix.strategy }}`n``````n$($outcome -join "`n")`n``````" >> $env:GITHUB_STEP_SUMMARY
+
+  gate:
+    name: CI gate
+    if: always()
+    needs: [core, desktop, headless]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every check to pass
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then echo "A required check did not succeed."; exit 1; fi
+          done
