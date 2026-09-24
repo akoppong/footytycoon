@@ -174,7 +174,48 @@ public partial class Main
                     textScale = 150; Theme.DefaultFontSize = 21; Render();
                     await Capture($"Season-{season + 1}-renewals");
                     textScale = 100; Theme.DefaultFontSize = 14; Render(); await Settled();
-                    await Press("Review final terms"); await Press("Confirm and commit");
+                    var expiring = selected.Renewal.Contracts;
+                    if (!expiring.IsEmpty)
+                    {
+                        // Reverse one recommendation, return to the director's plan, then commit with one override.
+                        var pick = expiring.FirstOrDefault(c => c.Recommended == ContractAction.Release) ?? expiring.First(c => c.Role == Role.Forward);
+                        await Press(ContractButtonText(pick));
+                        var flipped = selected?.Renewal?.Contracts.Single(c => c.PlayerId == pick.PlayerId);
+                        if (flipped is null || flipped.Chosen == pick.Chosen || selected!.Command.ContractOverrides.Length != 1)
+                            throw new InvalidOperationException("Contract override was not requoted.");
+                        if (GetViewport().GuiGetFocusOwner() is not Godot.Button focused || focused.Text != ContractButtonText(flipped))
+                            throw new InvalidOperationException("Keyboard focus did not return to the changed contract.");
+                        await Capture($"Season-{season + 1}-renewal-override");
+                        if (content.GetParent() is ScrollContainer renewalScroll)
+                        {
+                            renewalScroll.ScrollVertical = (int)renewalScroll.GetVScrollBar().MaxValue; await Capture($"Season-{season + 1}-renewal-override-lower"); renewalScroll.ScrollVertical = 0;
+                        }
+                        textScale = 150; Theme.DefaultFontSize = 21; Render(); await Capture($"Season-{season + 1}-renewal-override");
+                        // With the chart collapsed, page through the contract list at both scales.
+                        await Press("Collapse chart");
+                        foreach (var scale in new[] { 150, 100 })
+                        {
+                            textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render(); await Settled();
+                            if (content.GetParent() is not ScrollContainer list) continue;
+                            var page = 0;
+                            for (var offset = 0; offset <= (int)list.GetVScrollBar().MaxValue; offset += (int)(list.Size.Y * .9f))
+                            {
+                                list.ScrollVertical = offset; await Capture($"Season-{season + 1}-contracts-{++page}");
+                            }
+                            list.ScrollVertical = 0;
+                        }
+                        await Press("Expand chart");
+                        await Press("Accept all recommendations");
+                        if (selected is not { Renewal: not null } || !selected.Command.ContractOverrides.IsEmpty || selected.Renewal.Contracts.Any(c => c.Chosen != c.Recommended))
+                            throw new InvalidOperationException("Accepting all recommendations did not clear the overrides.");
+                        await Press(ContractButtonText(pick));
+                        if (!selected!.BlockingReasons.IsEmpty) throw new InvalidOperationException("Override blocked: " + string.Join("; ", selected.BlockingReasons));
+                    }
+                    await Press("Review final terms");
+                    if (!expiring.IsEmpty) await Capture($"Season-{season + 1}-renewal-final-terms");
+                    await Press("Confirm and commit");
+                    if (!expiring.IsEmpty && view.History.Last(h => h.Renewal is not null).Renewal!.Contracts.Count(c => c.Chosen != c.Recommended) != 1)
+                        throw new InvalidOperationException("Renewal decision was not recorded against the recommendation.");
                     if (view.Season != season + 1 || view.Division != nextDivision || view.AllocationChosen || !view.Results.IsEmpty)
                         throw new InvalidOperationException("Rollover did not reset the season view.");
                     await Capture($"Season-{season + 1}-capital-plan");
@@ -184,7 +225,7 @@ public partial class Main
                 Navigate("History"); await Capture("Three-season-history");
                 if (view.Status != CareerStatus.PrototypeComplete || view.SeasonSummaries.Length != 3)
                     throw new InvalidOperationException("Three-season milestone did not finish.");
-                GD.Print("SEASON SMOKE PASS: renewal UI, annual plans, three season reports and final endpoint.");
+                GD.Print("SEASON SMOKE PASS: renewal UI, contract recommendations with an override and accept-all, annual plans, three season reports and final endpoint.");
             }
             GD.Print($"SMOKE PASS: acquisition, all plan previews, final confirmations, required-decision guards, next review, six workspaces at three text scales, chart collapse, review filing/restoration, funding terms, settings, save/load and resume; {DisplayServer.GetName()}");
             GetTree().Quit();

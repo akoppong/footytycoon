@@ -243,6 +243,7 @@ public partial class Main
             card.AddChild(Label(chosenHistory.Intent, 28)); card.AddChild(Label(chosenHistory.Executive));
             Comparison(card, chosenHistory, view.Week);
             RecruitmentHistory(card, chosenHistory);
+            RenewalHistory(card, chosenHistory);
             card.AddChild(Label("The original forecast is kept as it was when you committed. It is an estimate, not a promise. Recruitment approval does not guarantee a signing."));
             card.AddChild(Button("Open decision history", () => Navigate("History"))); return;
         }
@@ -319,6 +320,59 @@ public partial class Main
         card.AddChild(Label($"Approved target: {terms.Player.Name} · {terms.Seller}\nFee ceiling {Money.Format(terms.FeeCeiling)} · {Money.Format(terms.WeeklyWage)}/week · contract through career week {terms.ContractEndWeek}. These are the saved mandate terms; the negotiation outcome is reported separately.", 14));
     }
 
+    private void RenewalHistory(VBoxContainer card, DecisionRecord decision)
+    {
+        if (decision.Renewal is not { Contracts.IsEmpty: false } terms) return;
+        var changed = terms.Contracts.Where(c => c.Chosen != c.Recommended).ToArray();
+        var released = terms.Contracts.Where(c => c.Chosen == ContractAction.Release).Select(c => c.Name).ToArray();
+        card.AddChild(Label($"Expiring contracts: {terms.Renewed} renewed, {terms.Released} released. Annual wages {Money.Format(terms.ExpiringAnnualWages)} → {Money.Format(terms.RenewedAnnualWages)}.\n"
+            + $"Released on free transfers: {(released.Length == 0 ? "none" : string.Join(", ", released))}.\n"
+            + (changed.Length == 0 ? "You accepted every recommendation from Jonas Reed." : "Your changes to Jonas Reed's advice: " + string.Join("; ", changed.Select(Override)) + "."), 14));
+    }
+    private static string Override(ContractReview c) =>
+        $"{c.Name} {(c.Chosen == ContractAction.Renew ? $"renewed for {Years(c.Years)} at {Money.Format(c.OfferedWage)}/wk" : "released")}, advised to {(c.Recommended == ContractAction.Renew ? "renew" : "release")}";
+    private static string Years(int years) => years == 1 ? "1 year" : $"{years} years";
+    internal static string ContractButtonText(ContractReview c) => (c.Chosen != c.Recommended ? "YOUR CHOICE · " : "")
+        + (c.Chosen == ContractAction.Renew ? $"Renew {c.Name}: {Years(c.Years)} at {Money.Format(c.OfferedWage)}/wk · switch to release"
+            : $"Release {c.Name} on a free transfer · switch to renew: {Years(c.Years)} at {Money.Format(c.OfferedWage)}/wk");
+    private PersonId? contractFocus;
+    // Keyboard-accessible choices: one button per expiring contract toggles renew/release and requotes the terms.
+    private void ContractChoices(VBoxContainer card, Proposal proposal, RenewalTerms renewal)
+    {
+        if (renewal.Contracts.IsEmpty)
+        {
+            card.AddChild(Label("No player contracts expire at this season end. Every player continues on his current terms.", 14)); return;
+        }
+        var overrides = proposal.Command.ContractOverrides;
+        card.AddChild(Caption("JONAS REED · SPORTING DIRECTOR · EXPIRING CONTRACTS"));
+        card.AddChild(Label($"Squad minimum: {string.Join(", ", Contracts.Minimum.Select(m => $"{m.Minimum} {m.Role.ToString().ToLowerInvariant()}s"))} and {Contracts.MinimumSquad} players in all. Released players are not replaced automatically.", 12));
+        if (renewal.RaisesHeld) card.AddChild(Label("Raises are held at current wages so the recommended renewals stay within the wage budget.", 13));
+        if (confirming)
+        {
+            var released = renewal.Contracts.Where(c => c.Chosen == ContractAction.Release).Select(c => c.Name).ToArray();
+            card.AddChild(Label($"Releasing on free transfers: {(released.Length == 0 ? "none" : string.Join(", ", released))}.", 14));
+            var changed = renewal.Contracts.Where(c => c.Chosen != c.Recommended).ToArray();
+            card.AddChild(Label(changed.Length == 0 ? "You are accepting every recommendation." : "Your changes to the director's advice: " + string.Join("; ", changed.Select(Override)) + ".", 14));
+            return;
+        }
+        card.AddChild(Label(overrides.IsEmpty ? "Showing Jonas's recommendations. Choose a player to reverse his advice; the terms and forecast update."
+            : $"{overrides.Length} of {renewal.PlayerContracts} recommendations reversed.", 13));
+        if (!overrides.IsEmpty) card.AddChild(Button("Accept all recommendations", () => Preview(Allocation.StartNextSeason)));
+        foreach (var contract in renewal.Contracts)
+        {
+            var row = Stack(card, 2);
+            row.AddChild(Label($"{contract.Name} · {contract.Role} · Age {contract.Age} · Ability {contract.Ability} · now {Money.Format(contract.CurrentWage)}/wk", 14));
+            row.AddChild(Label(contract.Reason, 12));
+            var toggled = (overrides.Contains(contract.PlayerId) ? overrides.Remove(contract.PlayerId) : overrides.Add(contract.PlayerId))
+                .Sort((a, b) => a.Value.CompareTo(b.Value));
+            var id = contract.PlayerId;
+            var button = Button(ContractButtonText(contract), () => { contractFocus = id; Preview(Allocation.StartNextSeason, contractOverrides: toggled); });
+            if (contract.Chosen != contract.Recommended) button.AddThemeColorOverride("font_color", new Color("785411"));
+            row.AddChild(button);
+            if (contractFocus == id) { contractFocus = null; button.CallDeferred(Control.MethodName.GrabFocus); }
+        }
+    }
+
     private void DesignProposal(Proposal proposal)
     {
         var card = Card(); card.AddChild(Caption(confirming ? "FINAL TERMS · NOTHING SPENT YET" : "PROPOSAL · TIME IS HELD"));
@@ -340,11 +394,19 @@ public partial class Main
             Fact(card, "Next season’s competition", Pyramid.Outcome(renewal.CurrentDivision, renewal.NextDivision));
             Fact(card, "Annual broadcast · current → next", $"{Money.Format(renewal.CurrentAnnualBroadcast)} → {Money.Format(renewal.AnnualBroadcast)}");
             Fact(card, "Annual sponsorship · current → next", $"{Money.Format(renewal.CurrentAnnualSponsor)} → {Money.Format(renewal.AnnualSponsor)}");
-            Fact(card, "Expiring player contracts · extended one season", renewal.PlayerContracts.ToString());
-            Fact(card, "Annual wages for renewed players", Money.Format(renewal.RenewedAnnualWages));
+            Fact(card, "Expiring player contracts", renewal.PlayerContracts == 0 ? "None this season"
+                : $"{renewal.PlayerContracts} · {renewal.Renewed} renewed · {renewal.Released} released");
+            if (renewal.PlayerContracts > 0)
+            {
+                var change = renewal.RenewedAnnualWages - renewal.ExpiringAnnualWages;
+                Fact(card, "Annual wages · expiring contracts → renewed", $"{Money.Format(renewal.ExpiringAnnualWages)} → {Money.Format(renewal.RenewedAnnualWages)} · {(change > 0 ? "+" : "")}{Money.Format(change)} a year");
+            }
+            Fact(card, "Wage budget next season · squad wages / 75% limit", $"{Money.Format(renewal.AnnualWagesAfter)} of {Money.Format(renewal.WageLimit)} · {(renewal.WageLimit == 0 ? 0 : (decimal)renewal.AnnualWagesAfter / renewal.WageLimit):P0} used", renewal.AnnualWagesAfter > renewal.WageLimit ? Red : null);
+            Fact(card, "Cash forecast low with these choices · expected / worst case", $"{Money.Format(proposal.Forecast.LowestBase)} / {Money.Format(proposal.Forecast.LowestDownside)}", proposal.Forecast.LowestDownside < view.ReserveTarget ? Red : null);
             Fact(card, "Annual operations run rate · including carried contracts", Money.Format(renewal.AnnualOperations));
             Fact(card, "Arrears carried forward", Money.Format(renewal.Arrears));
             Fact(card, "Cash on confirmation · unchanged", Money.Format(view.ClubCash));
+            ContractChoices(card, proposal, renewal);
         }
         else
         {
