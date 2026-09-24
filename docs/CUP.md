@@ -1,6 +1,6 @@
 # Domestic Cup
 
-The domestic cup is a parallel competition for all 48 clubs. Thirty-two drawn clubs enter a preliminary round and sixteen receive byes. The remaining 32 play five knockout rounds: round of 32, round of 16, quarter-final, semi-final and final. There are no replays. Level matches use extra time and penalties.
+The domestic cup is a parallel competition for all 48 clubs. Thirty-two drawn clubs enter a preliminary round and sixteen receive byes. The remaining 32 play five knockout rounds: round of 32, round of 16, quarter-final, semi-final and final. There are no replays. Level matches use extra time and penalties. On the dated calendar the preliminary round is in early August, a week before the league starts. The following rounds fall in November, January, March and April, and the final is in late May, after the last league round. Cup and league fixtures never share a week.
 
 Draws use saved named random streams, so loading cannot redraw a tie. Only the current known round is scheduled; its winners determine the next saved draw. This keeps future opponents, home gates and prize receipts uncertain.
 

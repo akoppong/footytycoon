@@ -28,9 +28,10 @@ public static class Simulation
             world.Reviews.Add(new(world.Week, "Hospitality opens", "Mara Ellis delivered the expansion. Extra receipts now depend on actual home dates and demand; construction cost is already paid.", project.ForecastId));
         }
         world.Phase = Phase.Reporting;
-        if (world.Week == Seasons.StartWeek(world) + RecruitmentMarket.MidseasonOpens)
-            world.Reviews.Add(new(world.Week, "Midseason transfer window opens",
-                $"Jonas Reed has reviewed the forward line. Visit Football to compare his first choice, a lower-cost alternative, or keeping the squad. Approve by season week {RecruitmentMarket.MidseasonCloses}; continuing beyond the window keeps the squad without a new commitment.", null));
+        var (windowOpens, windowCloses) = RecruitmentMarket.Window(world);
+        if (world.Week == Seasons.StartWeek(world) + windowOpens)
+            world.Reviews.Add(new(world.Week, $"{RecruitmentMarket.WindowName(world)} transfer window opens",
+                $"Jonas Reed has reviewed the forward line. Visit Football to compare his first choice, a lower-cost alternative, or keeping the squad. Approve by {Calendar.Day(Seasons.StartWeek(world) + windowCloses)}; continuing beyond the window keeps the squad without a new commitment.", null));
         if (world.Status == CareerStatus.Administration && world.AdministrationWeek is { } start && world.Week >= start + 4)
         {
             world.Status = CareerStatus.LostControl;
@@ -109,7 +110,8 @@ public static class Simulation
             var minimum = history.Command.ReserveException ? 0 : world.ReserveTarget;
             var canSign = world.Week <= bid.ExpiryWeek && world.Status == CareerStatus.Active && player is not null
                 && seller.Players.Count(p => p.Role == Role.Forward) > 2
-                && (!RecruitmentMarket.IsMidseason(history.Command.Allocation) || world.Week - Seasons.StartWeek(world) is > RecruitmentMarket.MidseasonOpens and <= RecruitmentMarket.MidseasonCloses + 1)
+                && (!RecruitmentMarket.IsMidseason(history.Command.Allocation) || RecruitmentMarket.Window(world) is var (opens, closes)
+                    && world.Week - Seasons.StartWeek(world) > opens && world.Week - Seasons.StartWeek(world) <= closes + 1)
                 && buyer.Cash >= bid.FeeCeiling && forecast.LowestDownside >= minimum
                 && checked(Finance.AnnualWages(buyer) + bid.WeeklyWage * 52) <= Money.Scale(Finance.EligibleRevenue(world, buyer.Id), Balance.Load().WageLimit);
             var accepted = canSign && RandomStreams.Next(world, $"negotiation/{bid.DecisionId}", 100) < 70;
@@ -126,7 +128,7 @@ public static class Simulation
                 WorldFactory.AddObligation(world, buyer.Id, world.Week + 1, contractEnd, -bid.WeeklyWage, CashKind.Wages, $"Player contract {contractId.Value}");
             }
             world.Reviews.Add(new(world.Week, accepted ? "Forward signed" : "Recruitment closed without a signing",
-                accepted ? $"Jonas Reed signed {player!.Name} from {seller.Name} for {Money.Format(bid.FeeCeiling)}. Wages: {Money.Format(bid.WeeklyWage)}/week from next week through career week {Seasons.EndWeek(world) + Seasons.Weeks}. Selection remains the manager's decision."
+                accepted ? $"Jonas Reed signed {player!.Name} from {seller.Name} for {Money.Format(bid.FeeCeiling)}. Wages: {Money.Format(bid.WeeklyWage)}/week from next week through {Calendar.FullDay(Seasons.EndWeek(world) + Seasons.Weeks)}. Selection remains the manager's decision."
                 : "The negotiation failed or no longer met its deadline, reserve, availability or wage checks. The fee was not spent; the existing squad continues.", bid.ForecastId));
             world.Negotiations.Remove(bid);
         }

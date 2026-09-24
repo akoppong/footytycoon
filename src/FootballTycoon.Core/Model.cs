@@ -105,8 +105,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 5;
-    public string SimulationVersion { get; set; } = "market-5";
+    public int SchemaVersion { get; set; } = 6;
+    public string SimulationVersion { get; set; } = "calendar-6";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -114,6 +114,8 @@ public sealed class World
     public int Week { get; set; }
     public int Season { get; set; } = 1;
     public int CupStartSeason { get; set; } = 1;
+    // First season scheduled on the dated calendar; earlier seasons keep the layout they were saved with.
+    public int CalendarStartSeason { get; set; } = 1;
     public long SeasonOpeningCash { get; set; }
     public int SeasonOpeningLedgerSequence { get; set; }
     public List<SeasonSummary> SeasonSummaries { get; set; } = [];
@@ -150,6 +152,9 @@ public static class WorldCodec
     {
         var world = JsonSerializer.Deserialize<World>(bytes) ?? throw new InvalidDataException("Empty world.");
         var closeLegacySeason = world.SchemaVersion == 1 && world.Status == CareerStatus.PrototypeComplete;
+        // Pre-calendar saves keep their stored layout (including cup rounds added during migration) for the
+        // current season; the next season is the first on the dated calendar.
+        if (world.SchemaVersion < 6) world.CalendarStartSeason = world.Season + 1;
         if (world.SchemaVersion == 1)
         {
             WorldFactory.Validate(world, legacy: true);
@@ -187,6 +192,11 @@ public static class WorldCodec
         {
             WorldFactory.Validate(world, priorCompetition: true);
             world.SchemaVersion = 5; world.SimulationVersion = "market-5";
+        }
+        if (world.SchemaVersion == 5)
+        {
+            WorldFactory.Validate(world, priorMarket: true);
+            world.SchemaVersion = 6; world.SimulationVersion = "calendar-6";
         }
         WorldFactory.Validate(world);
         return world;

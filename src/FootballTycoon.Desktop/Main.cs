@@ -23,7 +23,6 @@ public partial class Main : Control
     private string? retryCommandId;
     private Proposal? selected;
     private string saveDirectory = "";
-    private int SeasonWeek(int careerWeek) => Seasons.WeekInSeason(careerWeek, view.Season);
 
     public override void _Ready()
     {
@@ -125,7 +124,7 @@ public partial class Main : Control
         {
             var result = view.Results.FirstOrDefault(r => r.FixtureId == fixture.Id);
             var opponent = view.Clubs.Single(c => c.Id == (fixture.Home == view.ClubId ? fixture.Away : fixture.Home)).Name;
-            cup.AddChild(Label(result is null ? $"{Cups.RoundName(fixture.CupRound)} · Season week {SeasonWeek(fixture.Week)} · {opponent}"
+            cup.AddChild(Label(result is null ? $"{Cups.RoundName(fixture.CupRound)} · {Calendar.Day(fixture.Week)} · {opponent}"
                 : $"{Cups.RoundName(fixture.CupRound)} · {MatchTitle(result)}{(result.Shootout is null ? "" : $" · pens {result.Shootout}")}", 14));
         }
         var table = Card(); table.AddChild(Label($"Division {view.Division}", 24));
@@ -164,10 +163,10 @@ public partial class Main : Control
         var forecast = Card(); forecast.AddChild(Label("52-week cash forecast", 24));
         forecast.AddChild(Label(view.Forecast.Assumptions, 15));
         foreach (var point in view.Forecast.Points.Where((_, i) => i % 4 == 0))
-            forecast.AddChild(Label($"Career week {point.Week,2}  ·  Base {Money.Format(point.BaseCash)}  ·  Downside {Money.Format(point.DownsideCash)}  ·  Signed net that week {Money.Format(point.KnownNet)}", 16));
+            forecast.AddChild(Label($"{Calendar.FullDay(point.Week)}  ·  Base {Money.Format(point.BaseCash)}  ·  Downside {Money.Format(point.DownsideCash)}  ·  Signed net that week {Money.Format(point.KnownNet)}", 16));
         var obligations = Card(); obligations.AddChild(Label("Signed obligations and receipts", 24));
         foreach (var group in view.Obligations.GroupBy(o => (o.Kind, o.StartWeek, o.EndWeek)))
-            obligations.AddChild(Label($"{group.Key.Kind} · {Money.Format(group.Sum(o => o.WeeklyAmount))}/week · career weeks {group.Key.StartWeek}–{group.Key.EndWeek}", 16));
+            obligations.AddChild(Label($"{group.Key.Kind} · {Money.Format(group.Sum(o => o.WeeklyAmount))}/week · {Calendar.FullDay(group.Key.StartWeek)} to {Calendar.FullDay(group.Key.EndWeek)}", 16));
         var journal = Card(); journal.AddChild(Label("Cash reconciliation", 24));
         foreach (var group in view.CashLines.GroupBy(line => line.Kind)) journal.AddChild(Label($"{group.Key}: {Money.Format(group.Sum(line => line.Amount))}"));
         journal.AddChild(Label($"Opening {Money.Format(Balance.Load().OpeningClubCash)} + net movements {Money.Format(view.CashLines.Sum(l => l.Amount))} = closing {Money.Format(view.ClubCash)}"));
@@ -180,7 +179,7 @@ public partial class Main : Control
         staff.AddChild(Label("Appointments are fixed in this prototype. Hiring, dismissal, personality policies and contract negotiations are future systems.", 14));
         var squad = Card(); squad.AddChild(Label("Senior squad", 24));
         foreach (var player in view.Squad.OrderBy(p => p.Role).ThenByDescending(p => p.Ability))
-            squad.AddChild(Label($"{player.Name} · {player.Role} · Age {player.Age} · Ability {player.Ability}\n{Money.Format(player.WeeklyWage)}/week · Contract through career week {player.ContractEndWeek}", 16));
+            squad.AddChild(Label($"{player.Name} · {player.Role} · Age {player.Age} · Ability {player.Ability}\n{Money.Format(player.WeeklyWage)}/week · Contract through {Calendar.FullDay(player.ContractEndWeek)}", 16));
     }
 
     private void History()
@@ -188,7 +187,7 @@ public partial class Main : Control
         foreach (var season in view.SeasonSummaries.Reverse()) SeasonReport(season);
         foreach (var decision in view.History.Reverse())
         {
-            var card = Card(); card.AddChild(Label($"Career week {decision.Week} · {decision.Intent}", 24));
+            var card = Card(); card.AddChild(Label($"{Calendar.FullDay(decision.Week)} · {decision.Intent}", 24));
             card.AddChild(Label($"{decision.Executive}\nOriginal forecast low: base {Money.Format(decision.OriginalForecast.LowestBase)}, downside {Money.Format(decision.OriginalForecast.LowestDownside)}. These figures retain the original proposal assumptions."));
             RecruitmentHistory(card, decision);
         }
@@ -209,11 +208,11 @@ public partial class Main : Control
     private void Advance(AdvanceTarget target) => Start(async () =>
     {
         var result = await session.AdvanceAsync(target); view = await session.QueryAsync(); inboxSelection = "brief";
-        return $"Saved locally · career week {result.Week} · {result.StopReason}";
+        return $"Saved locally · {Calendar.FullDay(result.Week)} · {result.StopReason}";
     });
     private void Save() => Start(async () =>
     {
-        var checkpoint = await session.SaveAsync($"Manual week {view.Week}"); return $"Saved locally · {checkpoint.CreatedAt.ToLocalTime():g}";
+        var checkpoint = await session.SaveAsync($"Manual · {Calendar.FullDay(view.Week)}"); return $"Saved locally · {checkpoint.CreatedAt.ToLocalTime():g}";
     }, false);
 
     private void ShowSaves() => ShowSavePage(0);
@@ -229,7 +228,7 @@ public partial class Main : Control
             foreach (var save in page.Entries)
             {
                 var card = Card();
-                card.AddChild(Label($"{save.Slot} · career week {save.Week} · {save.CreatedAt.ToLocalTime():g} · Branch {save.BranchId[..6]}"));
+                card.AddChild(Label($"{save.Slot} · {Calendar.FullDay(save.Week)} · {save.CreatedAt.ToLocalTime():g} · Branch {save.BranchId[..6]}"));
                 card.AddChild(Button("Load this checkpoint", () => Start(async () =>
                 {
                     await session.LoadAsync(save.SnapshotId); view = await session.QueryAsync(); selected = null; workspace = "Owner Desk"; auxiliary = ""; inboxSelection = "resume"; filedReviews.Clear(); showFiled = false; chosenReview = null; chosenMatch = null; chosenHistory = null; confirming = false;
@@ -303,6 +302,6 @@ public partial class Main : Control
         var panel = new PanelContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill }; parent.AddChild(panel);
         var box = new VBoxContainer(); panel.AddChild(box); box.AddChild(Label(title, 12)); box.AddChild(Label(value, 28));
     }
-    private void ReviewCard(Review review) { var card = Card(); card.AddChild(Label($"Career week {review.Week} · {review.Title}", 22)); card.AddChild(Label(review.Evidence)); }
+    private void ReviewCard(Review review) { var card = Card(); card.AddChild(Label($"{Calendar.FullDay(review.Week)} · {review.Title}", 22)); card.AddChild(Label(review.Evidence)); }
 
 }

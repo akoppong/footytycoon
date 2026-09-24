@@ -32,7 +32,7 @@ while ((await session.QueryAsync()).Status is CareerStatus.Active or CareerStatu
     }
     var result = await session.AdvanceAsync(AdvanceTarget.Month);
     var view = await session.QueryAsync();
-    Console.WriteLine($"Week {view.Week,2} | {Money.Format(view.ClubCash),12} | {view.Results.Length,2} matches | {result.StopReason}");
+    Console.WriteLine($"{Calendar.FullDay(view.Week)} | {Money.Format(view.ClubCash),12} | {view.Results.Length,2} matches | {result.StopReason}");
     if (result.StopReason == "Owner decision required") break;
 }
 var final = await session.QueryAsync();
