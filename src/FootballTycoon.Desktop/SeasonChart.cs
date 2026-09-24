@@ -21,10 +21,10 @@ public partial class SeasonChart : Control
 
     public SeasonChart(GameView view, Proposal? proposal, Font font, int textScale, Forecast? selectedOriginal = null)
     {
-        this.view = view; this.proposal = proposal; this.font = font; fontSize = 10 * textScale / 100;
+        this.view = view; this.proposal = proposal; this.font = font; fontSize = 12 * textScale / 100;
         inspectedWeek = view.Week;
         start = proposal?.Renewal is not null ? view.SeasonEndWeek : view.SeasonStartWeek; end = start + Seasons.Weeks;
-        CustomMinimumSize = new Vector2(0, 156 + (textScale - 100) * .6f);
+        CustomMinimumSize = new Vector2(0, 168 + (textScale - 100) * .84f);
         FocusMode = FocusModeEnum.All; MouseDefaultCursorShape = CursorShape.Cross;
         original = selectedOriginal ?? view.History.LastOrDefault(h => h.Command.Allocation != Allocation.Acquire)?.OriginalForecast;
         var cash = proposal?.Renewal is not null ? view.ClubCash : view.SeasonOpeningCash;
@@ -44,7 +44,9 @@ public partial class SeasonChart : Control
         FocusExited += () => { InspectionChanged?.Invoke(""); QueueRedraw(); };
     }
     private float X(int week) => 70 + (Size.X - 92) * (week - start) / 52f;
-    private float Y(long cash) => 22 + (Size.Y - 91) * (1 - (float)((double)(cash - low) / (high - low)));
+    // Reserve separate rows for the low annotation, fixture marks and dates at every text scale.
+    private float PlotBottom => Size.Y - (3 * fontSize + 38);
+    private float Y(long cash) => 22 + (PlotBottom - 22) * (1 - (float)((double)(cash - low) / (high - low)));
     private void Text(Vector2 at, string text, Color color, int? size = null) => DrawString(font, at, text, HorizontalAlignment.Left, -1, size ?? fontSize, color);
     private void Path(IEnumerable<(int Week, long Cash)> values, Color color, bool dashed = false, float width = 2, float dashLength = 4)
     {
@@ -63,8 +65,8 @@ public partial class SeasonChart : Control
     public override void _Draw()
     {
         if (Size.X < 100) return;
-        var navy = new Color("1f3a5f"); var red = new Color("b5462f"); var grey = new Color("8a93a0");
-        var bottom = Size.Y - 69; var reserveY = Y(view.ReserveTarget);
+        var navy = new Color("1f3a5f"); var red = new Color("a4361f"); var grey = new Color("5c6472");
+        var bottom = PlotBottom; var reserveY = Y(view.ReserveTarget);
         DrawRect(new Rect2(70, reserveY, Size.X - 92, Math.Max(0, bottom - reserveY)), new Color("fbede9"));
         DrawDashedLine(new Vector2(70, reserveY), new Vector2(Size.X - 22, reserveY), red, 1, 4);
         DrawLine(new Vector2(70, bottom), new Vector2(Size.X - 22, bottom), new Color("d9d2c4"));
@@ -88,7 +90,7 @@ public partial class SeasonChart : Control
             DrawCircle(new Vector2(X(minimum.Week), Y(minimum.DownsideCash)), 3, red);
             var label = $"Season downside low {Main.ShortMoney(minimum.DownsideCash)} · {Calendar.Day(minimum.Week)}";
             var length = font.GetStringSize(label, HorizontalAlignment.Left, -1, fontSize).X;
-            Text(new Vector2(Math.Clamp(X(minimum.Week) - length / 2, 72, Math.Max(72, Size.X - length - 6)), bottom + fontSize + 2), label, red);
+            Text(new Vector2(Math.Clamp(X(minimum.Week) - length / 2, 72, Math.Max(72, Size.X - length - 6)), bottom + fontSize + 4), label, red);
         }
         foreach (var fixture in view.Fixtures.Where(f => f.Week > start && f.Week <= end))
         {
@@ -98,7 +100,7 @@ public partial class SeasonChart : Control
             var mark = result is null ? (fixture.Competition == Competition.Cup ? "C" : "·")
                 : fixture.Competition == Competition.League && result.HomeGoals == result.AwayGoals ? "D" : won ? "W" : "L";
             var color = mark == "W" ? new Color("2f6b48") : mark == "L" ? red : grey;
-            var y = Size.Y - 37;
+            var y = bottom + 2 * fontSize + 16;
             DrawRect(new Rect2(X(fixture.Week) - 7, y - fontSize, 15, fontSize + 6), mark == "W" ? new Color("dce8df") : mark == "L" ? new Color("f7e2dc") : new Color("efebe1"));
             Text(new Vector2(X(fixture.Week) - 3, y + 2), mark, color);
         }

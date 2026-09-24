@@ -138,7 +138,7 @@ public partial class Main : Control
             var values = new[] { (++position).ToString(), row.Name + (own ? " · you" : ""), row.Played.ToString(), row.Won.ToString(), row.Drawn.ToString(), row.Lost.ToString(), (row.GoalsFor - row.GoalsAgainst).ToString("+0;-0;0"), row.Points.ToString() };
             for (var column = 0; column < values.Length; column++)
             {
-                var cell = column == 1 ? Label(values[column], 13) : Caption(values[column], own ? new Color("1f3a5f") : Muted, 12);
+                var cell = column == 1 ? Label(values[column], 13) : TableFigure(values[column], own ? new Color("1f3a5f") : Muted);
                 cell.CustomMinimumSize = new Vector2((column == 1 ? 150 : 28) * textScale / 100, 26 * textScale / 100);
                 cell.SizeFlagsHorizontal = column == 1 ? SizeFlags.ExpandFill : SizeFlags.Fill;
                 if (own) cell.AddThemeColorOverride("font_color", new Color("1f3a5f"));
@@ -298,10 +298,11 @@ public partial class Main : Control
     {
         var panel = new PanelContainer(); var box = new VBoxContainer(); panel.AddChild(box); content.AddChild(panel); return box;
     }
-    private void Metric(GridContainer parent, string title, string value)
+    private void Metric(GridContainer parent, string title, string value, bool emphasis = false)
     {
         var panel = new PanelContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill }; parent.AddChild(panel);
-        var box = new VBoxContainer(); panel.AddChild(box); box.AddChild(Label(title, 12)); box.AddChild(Label(value, 28));
+        var box = new VBoxContainer(); panel.AddChild(box); box.AddChild(Caption(title));
+        box.AddChild(emphasis ? KeyNumber(value, 32) : Label(value, 20));
     }
     private void ReviewCard(Review review) { var card = Card(); card.AddChild(Label($"{Calendar.FullDay(review.Week)} · {review.Title}", 22)); card.AddChild(Label(review.Evidence)); }
 
