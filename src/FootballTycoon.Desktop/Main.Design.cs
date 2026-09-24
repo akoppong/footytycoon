@@ -8,7 +8,7 @@ namespace FootballTycoon.Desktop;
 public partial class Main
 {
     private static readonly Color Navy = new("0f1b2d"), Paper = new("f6f3ec"), White = new("fffdf8"),
-        Rule = new("d9d2c4"), Muted = new("5c6472"), Amber = new("e0a33c"), Red = new("a4361f");
+        Rule = new("d9d2c4"), Muted = new("5c6472"), OnNavyMuted = new("b5c3d4"), Amber = new("e0a33c"), Red = new("a4361f");
     private Font serifFont = null!, monoFont = null!;
     private VBoxContainer shell = null!, rail = null!;
     private string auxiliary = "", inboxSelection = "brief";
@@ -30,7 +30,7 @@ public partial class Main
         shell = new VBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
         shell.AddThemeConstantOverride("separation", 0); root.AddChild(shell);
         var footer = Surface(Navy, 10); root.AddChild(footer);
-        status = Label("Loading the opening opportunity…", 11); status.AddThemeColorOverride("font_color", new Color("afbdce")); footer.AddChild(status);
+        status = Label("Loading the opening opportunity…", 12); status.AddThemeColorOverride("font_color", OnNavyMuted); footer.AddChild(status);
     }
 
     private static PanelContainer Surface(Color color, int padding = 16)
@@ -48,10 +48,22 @@ public partial class Main
         });
         return panel;
     }
-    private Label Caption(string text, Color? color = null, int size = 10)
+    private Label Caption(string text, Color? color = null, int size = 12)
     {
-        var label = Label(text, size); label.AddThemeFontOverride("font", monoFont);
+        var label = Label(text, Math.Max(12, size));
         label.AddThemeColorOverride("font_color", color ?? Muted); return label;
+    }
+    private Label TableFigure(string text, Color? color = null, int size = 13)
+    {
+        var label = Caption(text, color, size); label.AddThemeFontOverride("font", monoFont);
+        label.AutowrapMode = TextServer.AutowrapMode.Off;
+        label.HorizontalAlignment = HorizontalAlignment.Right; return label;
+    }
+    private Label KeyNumber(string text, int size = 28, Color? color = null)
+    {
+        var label = Label(text, size);
+        label.AddThemeFontOverride("font", Theme.GetFont("font", "KeyNumber"));
+        label.AddThemeColorOverride("font_color", color ?? Navy); return label;
     }
     private static VBoxContainer Stack(Node parent, int gap = 10)
     {
@@ -112,16 +124,18 @@ public partial class Main
         var top = new HBoxContainer(); header.AddChild(top);
         var identity = Stack(top, 2); identity.SizeFlagsStretchRatio = 1.4f;
         var name = Label(view.Club, 21); name.AddThemeColorOverride("font_color", White); identity.AddChild(name);
-        identity.AddChild(Caption($"DIVISION {view.Division}  ·  {Calendar.SeasonName(view.Season)} SEASON  ·  {Calendar.FullDay(view.Week).ToUpperInvariant()}", new Color("8fa3bc")));
+        identity.AddChild(Caption($"DIVISION {view.Division}  ·  {Calendar.SeasonName(view.Season)} SEASON  ·  {Calendar.FullDay(view.Week).ToUpperInvariant()}", OnNavyMuted));
         var fixture = view.Fixtures.OrderBy(f => f.Week).FirstOrDefault(f => f.Week > view.Week);
         var next = Stack(top, 3);
-        next.AddChild(Caption("NEXT MATCH", new Color("8fa3bc")));
+        next.AddChild(Caption("NEXT MATCH", OnNavyMuted));
         date = Label(fixture is null ? "Season schedule complete" : $"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound) + " · " : "")}{ClubName(fixture.Home == view.ClubId ? fixture.Away : fixture.Home)} · {(fixture.Home == view.ClubId ? "H" : "A")} · {Calendar.Day(fixture.Week)}", 12);
         date.AddThemeColorOverride("font_color", White); next.AddChild(date);
         foreach (var metric in new[] { ("CLUB CASH", view.ClubCash), ("YOUR RESERVE", view.PersonalReserve) })
         {
-            var box = Stack(top, 3); box.AddChild(Caption(metric.Item1, new Color("8fa3bc")));
-            box.AddChild(Caption(ShortMoney(metric.Item2), White, 18));
+            var box = Stack(top, 3); box.AddChild(Caption(metric.Item1, OnNavyMuted));
+            box.AddChild(view.Status == CareerStatus.Acquisition
+                ? Caption(ShortMoney(metric.Item2), White, 18)
+                : KeyNumber(ShortMoney(metric.Item2), 26, White));
         }
         var advance = Button(selected is not null ? "Time is held" : view.Status == CareerStatus.Acquisition ? "Review purchase" : view.Status == CareerStatus.SeasonReview ? "Review next season" : !view.AllocationChosen ? "Choose a plan" : "Continue →", ContinueCareer);
         advance.CustomMinimumSize = new Vector2(155, 0); advance.SizeFlagsHorizontal = SizeFlags.Fill; Primary(advance); top.AddChild(advance);
@@ -183,7 +197,7 @@ public partial class Main
         if (!chartExpanded) return;
         var original = inboxSelection == "commitment" ? chosenHistory?.OriginalForecast
             : inboxSelection.StartsWith("review:") ? view.History.LastOrDefault(h => h.OriginalForecast.Id == chosenReview?.ForecastId)?.OriginalForecast : null;
-        var chart = new SeasonChart(view, selected, monoFont, textScale, original) { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        var chart = new SeasonChart(view, selected, Theme.DefaultFont, textScale, original) { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         chart.MatchSelected += match => { chosenMatch = match; SelectInbox("match"); };
         box.AddChild(chart);
         box.AddChild(Caption("NAVY  Actual / dashed base     RED DASH  Downside     AMBER  Proposed base / dashed downside     GREY DOT  Original base", Muted, 10));
@@ -239,7 +253,7 @@ public partial class Main
         Fact(box, "Club reserve target", Money.Format(view.ReserveTarget));
         Fact(box, "Base low · next 52 weeks", $"{Money.Format(forecast.LowestBase)} · {Calendar.FullDay(forecast.LowestBaseWeek)}");
         Fact(box, "Downside low · next 52 weeks", $"{Money.Format(forecast.LowestDownside)} · {Calendar.FullDay(forecast.LowestDownsideWeek)}", forecast.LowestDownside < view.ReserveTarget ? Red : null);
-        box.AddChild(Label($"The chart ends when the season closes on {Calendar.FullDay(view.SeasonEndWeek)}. Forecast lows above cover the full rolling 52-week horizon; dates beyond the season are illustrative.", 11));
+        box.AddChild(Label($"The chart ends when the season closes on {Calendar.FullDay(view.SeasonEndWeek)}. Forecast lows above cover the full rolling 52-week horizon; dates beyond the season are illustrative.", 12));
         if (selected is { } proposal)
         {
             Fact(box, proposal.Command.Allocation == Allocation.Acquire ? "Personal payment to seller" : proposal.Command.Allocation == Allocation.InjectCapital ? "Personal transfer to club" : "Upfront / fee ceiling",
@@ -260,7 +274,7 @@ public partial class Main
     }
     private void Fact(VBoxContainer box, string label, string value, Color? color = null)
     {
-        var row = Stack(box, 3); row.AddChild(Caption(label.ToUpperInvariant())); row.AddChild(Caption(value, color ?? Navy, 14)); row.AddChild(new HSeparator());
+        var row = Stack(box, 3); row.AddChild(Caption(label.ToUpperInvariant())); row.AddChild(Caption(value, color ?? Navy, 16)); row.AddChild(new HSeparator());
     }
     private void RenderDesk()
     {
@@ -324,10 +338,10 @@ public partial class Main
         card.AddChild(Label("A club worth building.", 38)); card.AddChild(Label("Stonebridge Football Club", 28));
         card.AddChild(Label("An established local club with a competitive squad and limited hospitality. Supporters value continuity. Decide what deserves capital while Mara Ellis keeps the bills covered."));
         var metrics = new GridContainer { Columns = 2 }; card.AddChild(metrics);
-        Metric(metrics, "ASKING PRICE · PERSONAL CASH", ShortMoney(Balance.Load().PurchasePrice));
-        Metric(metrics, "YOUR RESERVE AFTER PURCHASE", ShortMoney(view.PersonalReserve - Balance.Load().PurchasePrice));
-        Metric(metrics, "CLUB CASH AT TAKEOVER", ShortMoney(view.ClubCash));
-        Metric(metrics, "ANNUAL SQUAD WAGES", ShortMoney(view.AnnualWages));
+        Metric(metrics, "ASKING PRICE · PERSONAL CASH", Money.Format(Balance.Load().PurchasePrice), emphasis: true);
+        Metric(metrics, "CLUB CASH AT TAKEOVER", Money.Format(view.ClubCash), emphasis: true);
+        Metric(metrics, "YOUR RESERVE AFTER PURCHASE", Money.Format(view.PersonalReserve - Balance.Load().PurchasePrice));
+        Metric(metrics, "ANNUAL SQUAD WAGES", Money.Format(view.AnnualWages));
         card.AddChild(Caption("OBLIGATIONS YOU INHERIT"));
         foreach (var obligation in view.Obligations.GroupBy(o => o.Kind))
             Fact(card, obligation.Key.ToString(), Money.Format(obligation.Sum(o => o.WeeklyAmount)) + "/week · signed net");
@@ -552,7 +566,14 @@ public partial class Main
                 var column = Stack(columns, 3); column.CustomMinimumSize = new Vector2(220 * textScale / 100, 0);
                 column.AddChild(Caption(ClubName(club).ToUpperInvariant(), Navy, 11));
                 foreach (var a in lineup)
-                    column.AddChild(Caption($"{a.Position switch { Role.Goalkeeper => "GK", Role.Defender => "DF", Role.Midfielder => "MF", _ => "FW" }}  {Rating(a)}  {Name(a.Player)}", a.Player == match.PlayerOfMatch ? Navy : Muted, 12));
+                {
+                    var row = new HBoxContainer(); column.AddChild(row);
+                    var position = Caption(a.Position switch { Role.Goalkeeper => "GK", Role.Defender => "DF", Role.Midfielder => "MF", _ => "FW" });
+                    position.CustomMinimumSize = new Vector2(24 * textScale / 100, 0); position.SizeFlagsHorizontal = SizeFlags.Fill; row.AddChild(position);
+                    var rating = TableFigure(Rating(a), a.Player == match.PlayerOfMatch ? Navy : Muted);
+                    rating.SizeFlagsHorizontal = SizeFlags.Fill; row.AddChild(rating);
+                    row.AddChild(Label(Name(a.Player), 13));
+                }
             }
         }
         if (match.Home == view.ClubId || match.Away == view.ClubId)

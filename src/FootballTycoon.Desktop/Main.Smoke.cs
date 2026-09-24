@@ -11,6 +11,15 @@ public partial class Main
         try
         {
             await Settled();
+            // Verify the engine applied the weight axes; StringName keys silently used Archivo's 600 default.
+            var textServer = TextServerManager.GetPrimaryInterface();
+            var weightTag = textServer.NameToTag("wght");
+            foreach (var (font, weight) in new[] { (Theme.DefaultFont, 400), (Theme.GetFont("font", "KeyNumber"), 750) })
+            {
+                var coordinates = textServer.FontGetVariationCoordinates(font.GetRids()[0]);
+                if (!coordinates.TryGetValue(weightTag, out var applied) || applied.AsInt32() != weight)
+                    throw new InvalidOperationException($"Expected font weight {weight}; the engine did not apply it.");
+            }
             var output = OS.GetEnvironment("FT_SMOKE_OUTPUT");
             if (string.IsNullOrEmpty(output)) output = ProjectSettings.GlobalizePath("user://smoke");
             System.IO.Directory.CreateDirectory(output);
@@ -19,6 +28,8 @@ public partial class Main
                 await Settled();
                 if (shell.Size.X > GetViewportRect().Size.X + 1 || shell.Size.Y > GetViewportRect().Size.Y)
                     throw new InvalidOperationException($"Shell overflow in {name}: {shell.Size}.");
+                if (Descendants(shell).OfType<Label>().Any(label => label.GetThemeFont("font") == monoFont && label.GetLineCount() > 1))
+                    throw new InvalidOperationException($"A numeric table cell wrapped in {name}.");
                 if (DisplayServer.GetName() != "headless")
                 {
                     var result = GetViewport().GetTexture().GetImage().SavePng(System.IO.Path.Combine(output, $"{name}-{textScale}.png"));
@@ -104,10 +115,15 @@ public partial class Main
             var reportText = content.FindChildren("*", "Label", true, false).OfType<Label>().Select(l => l.Text).ToArray();
             if (!reportText.Contains("LINE-UPS AND RATINGS") || !reportText.Contains("CALLUM PRICE · MANAGER") || !reportText.Any(t => t.StartsWith("Player of the match")))
                 throw new InvalidOperationException("Match report is missing line-ups, player of the match or the manager's line.");
-            if (content.GetParent() is ScrollContainer reportScroll)
+            foreach (var scale in new[] { 100, 125, 150 })
             {
-                reportScroll.ScrollVertical = (int)reportScroll.GetVScrollBar().MaxValue; await Capture("Match-report-lower"); reportScroll.ScrollVertical = 0;
+                textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render(); await Capture("Match-report");
+                if (content.GetParent() is ScrollContainer reportScroll)
+                {
+                    reportScroll.ScrollVertical = (int)reportScroll.GetVScrollBar().MaxValue; await Capture("Match-report-lower"); reportScroll.ScrollVertical = 0;
+                }
             }
+            textScale = 100; Theme.DefaultFontSize = 14;
             Navigate("Business"); Preview(Allocation.InjectCapital, 25000000); await Settled();
             await Press("Review final terms"); await Capture("Owner-funding-terms"); await Press("Keep editing"); await Press("Back to comparison");
             ShowSettings(); await Settled(); before = view.Revision; ContinueCareer(); await Settled();

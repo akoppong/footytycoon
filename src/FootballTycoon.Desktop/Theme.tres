@@ -1,12 +1,19 @@
-[gd_resource type="Theme" load_steps=11 format=3]
+[gd_resource type="Theme" load_steps=12 format=3]
 
 [ext_resource type="FontFile" path="res://Assets/Fonts/Archivo.ttf" id="1"]
 
 [sub_resource type="FontVariation" id="body_font"]
 base_font = ExtResource("1")
 variation_opentype = {
-&"wght": 400.0,
-&"wdth": 100.0
+2003265652: 400.0,
+2003072104: 100.0
+}
+
+[sub_resource type="FontVariation" id="number_font"]
+base_font = ExtResource("1")
+variation_opentype = {
+2003265652: 750.0,
+2003072104: 100.0
 }
 
 [sub_resource type="StyleBoxFlat" id="normal"]
@@ -75,6 +82,8 @@ content_margin_right = 5.0
 default_font = SubResource("body_font")
 default_font_size = 14
 Label/colors/font_color = Color(0.059, 0.106, 0.176, 1)
+KeyNumber/base_type = &"Label"
+KeyNumber/fonts/font = SubResource("number_font")
 Button/colors/font_color = Color(0.122, 0.227, 0.373, 1)
 Button/colors/font_hover_color = Color(0.059, 0.106, 0.176, 1)
 Button/colors/font_pressed_color = Color(0.059, 0.106, 0.176, 1)
