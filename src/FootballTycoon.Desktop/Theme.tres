@@ -1,0 +1,97 @@
+[gd_resource type="Theme" load_steps=11 format=3]
+
+[ext_resource type="FontFile" path="res://Assets/Fonts/Archivo.ttf" id="1"]
+
+[sub_resource type="FontVariation" id="body_font"]
+base_font = ExtResource("1")
+variation_opentype = {
+&"wght": 400.0,
+&"wdth": 100.0
+}
+
+[sub_resource type="StyleBoxFlat" id="normal"]
+bg_color = Color(0.999, 0.992, 0.973, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.788, 0.757, 0.69, 1)
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="hover"]
+bg_color = Color(0.937, 0.922, 0.882, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.122, 0.227, 0.373, 1)
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="disabled"]
+bg_color = Color(0.91, 0.89, 0.85, 1)
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="focus"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.878, 0.639, 0.235, 1)
+
+[sub_resource type="StyleBoxFlat" id="panel"]
+bg_color = Color(0.999, 0.992, 0.973, 1)
+border_width_bottom = 1
+border_color = Color(0.851, 0.824, 0.769, 1)
+content_margin_left = 18.0
+content_margin_top = 16.0
+content_margin_right = 18.0
+content_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxFlat" id="line"]
+bg_color = Color(0.851, 0.824, 0.769, 1)
+content_margin_top = 1.0
+
+[sub_resource type="StyleBoxFlat" id="scroll"]
+bg_color = Color(0.937, 0.922, 0.882, 1)
+content_margin_left = 5.0
+content_margin_right = 5.0
+
+[sub_resource type="StyleBoxFlat" id="grabber"]
+bg_color = Color(0.65, 0.62, 0.56, 1)
+content_margin_left = 5.0
+content_margin_right = 5.0
+
+[resource]
+default_font = SubResource("body_font")
+default_font_size = 14
+Label/colors/font_color = Color(0.059, 0.106, 0.176, 1)
+Button/colors/font_color = Color(0.122, 0.227, 0.373, 1)
+Button/colors/font_hover_color = Color(0.059, 0.106, 0.176, 1)
+Button/colors/font_pressed_color = Color(0.059, 0.106, 0.176, 1)
+Button/colors/font_focus_color = Color(0.059, 0.106, 0.176, 1)
+Button/colors/font_disabled_color = Color(0.36, 0.39, 0.44, 1)
+Button/styles/normal = SubResource("normal")
+Button/styles/hover = SubResource("hover")
+Button/styles/pressed = SubResource("hover")
+Button/styles/disabled = SubResource("disabled")
+Button/styles/focus = SubResource("focus")
+PanelContainer/styles/panel = SubResource("panel")
+HSeparator/styles/separator = SubResource("line")
+VScrollBar/styles/scroll = SubResource("scroll")
+VScrollBar/styles/grabber = SubResource("grabber")
+VScrollBar/styles/grabber_highlight = SubResource("grabber")
+VScrollBar/styles/grabber_pressed = SubResource("grabber")
+VBoxContainer/constants/separation = 10
+HBoxContainer/constants/separation = 10
+GridContainer/constants/h_separation = 10
+GridContainer/constants/v_separation = 10

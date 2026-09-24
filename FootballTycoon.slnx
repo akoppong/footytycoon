@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FootballTycoon.Application/FootballTycoon.Application.csproj" />
+    <Project Path="src/FootballTycoon.Core/FootballTycoon.Core.csproj" />
+    <Project Path="src/FootballTycoon.Headless/FootballTycoon.Headless.csproj" />
+    <Project Path="src/FootballTycoon.Infrastructure/FootballTycoon.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FootballTycoon.Tests/FootballTycoon.Tests.csproj" />
+  </Folder>
+</Solution>
