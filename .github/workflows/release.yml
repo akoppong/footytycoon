@@ -1,0 +1,123 @@
+name: Release build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
+jobs:
+  export:
+    name: Export and smoke-test Windows build
+    runs-on: windows-latest
+    timeout-minutes: 45
+    outputs:
+      package: ${{ steps.package.outputs.name }}
+    steps:
+      - name: Validate release tag
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: if ($env:REF_NAME -notmatch '^v[0-9A-Za-z.\-]+$') { throw "Release tags must look like v1.2.3 (got '$env:REF_NAME')." }
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@v6
+        with:
+          path: .tools/packages
+          key: nuget-export-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Build.props', 'global.json') }}
+          restore-keys: nuget-export-${{ runner.os }}-
+      - uses: actions/cache@v6
+        with:
+          path: |
+            .tools/godot
+            .tools/appdata/Godot/export_templates
+          key: godot-export-4.7.2-${{ hashFiles('scripts/ci/install-godot.ps1') }}
+      - name: Install Godot 4.7.2 .NET and Windows templates (SHA-512 verified)
+        shell: pwsh
+        run: ./scripts/ci/install-godot.ps1 -Templates
+      - name: Build and import project resources
+        shell: pwsh
+        run: |
+          dotnet restore src/FootballTycoon.Desktop --configfile NuGet.Config
+          if ($LASTEXITCODE -ne 0) { throw 'Desktop restore failed.' }
+          dotnet build src/FootballTycoon.Desktop --no-restore --configuration Debug
+          if ($LASTEXITCODE -ne 0) { throw 'Desktop build failed.' }
+          $godot = (Get-ChildItem .tools/godot -Filter '*console.exe' -Recurse | Select-Object -First 1).FullName
+          & $godot --headless --path src/FootballTycoon.Desktop --import
+          if ($LASTEXITCODE -ne 0) { throw 'Godot resource import failed.' }
+      - name: Export and smoke-test the executable
+        shell: pwsh
+        run: ./scripts/export.ps1
+      - name: Package
+        id: package
+        shell: pwsh
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          $builds = @(Get-ChildItem artifacts -Directory -Filter 'windows-*')
+          if ($builds.Count -ne 1) { throw "Expected one export directory, found $($builds.Count)." }
+          # Tag names were validated in the first step.
+          if ($env:REF_TYPE -eq 'tag') { $label = $env:REF_NAME }
+          else { $label = ($env:REF_NAME -replace '[^0-9A-Za-z.\-]', '-') + '-' + $env:SHA.Substring(0, 7) }
+          $name = "FootballTycoon-$label-win64"
+          $staging = Join-Path 'package' $name
+          New-Item -ItemType Directory -Force $staging | Out-Null
+          # Ship the executable with its .pck, data directory and licenses; keep export/smoke logs out of the package.
+          Get-ChildItem -LiteralPath $builds[0].FullName | Where-Object { $_.Extension -ne '.log' } |
+            Copy-Item -Destination $staging -Recurse
+          Compress-Archive -Path $staging -DestinationPath "package/$name.zip"
+          "name=$name" >> $env:GITHUB_OUTPUT
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.package.outputs.name }}
+          path: package/${{ steps.package.outputs.name }}.zip
+          retention-days: 30
+          if-no-files-found: error
+      - name: Upload export logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: export-logs
+          path: artifacts/windows-*/*.log
+          if-no-files-found: ignore
+
+  publish:
+    name: Publish GitHub Release
+    if: github.ref_type == 'tag'
+    needs: export
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.export.outputs.package }}
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          PACKAGE: ${{ needs.export.outputs.package }}
+        run: |
+          # Re-running a tag's workflow replaces the asset on the existing release instead of failing.
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$PACKAGE.zip" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" "$PACKAGE.zip" --repo "$GITHUB_REPOSITORY" --title "Football Tycoon $TAG" \
+              --generate-notes --verify-tag
+          fi

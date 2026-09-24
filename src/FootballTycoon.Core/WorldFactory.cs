@@ -46,18 +46,36 @@ public static class WorldFactory
     public static World Create(ulong seed)
     {
         var b = Balance.Load();
-        var world = new World { Seed = seed, OwnedClubId = new(b.OwnedClubIndex + 1), OwnerCash = b.OwnerCapital,
-            OpeningOwnerCash = b.OwnerCapital, SeasonOpeningCash = b.OpeningClubCash, ReserveTarget = b.ReserveTarget, Status = CareerStatus.Acquisition };
+        var world = new World
+        {
+            Seed = seed,
+            OwnedClubId = new(b.OwnedClubIndex + 1),
+            OwnerCash = b.OwnerCapital,
+            OpeningOwnerCash = b.OwnerCapital,
+            SeasonOpeningCash = b.OpeningClubCash,
+            ReserveTarget = b.ReserveTarget,
+            Status = CareerStatus.Acquisition
+        };
         string[] firstNames = ["Theo", "Ellis", "Luca", "Adam", "Noah", "Max", "Owen", "Sam", "Finn", "Leo", "Kai", "Ben", "Jude", "Alex", "Rory", "Evan", "Louis", "Isaac"];
         for (var i = 0; i < 48; i++)
         {
             var division = i / 16 + 1;
             var factor = division == 1 ? 1.6m : division == 2 ? 1m : 0.65m;
-            var club = new Club { Id = new(i + 1), Name = b.ClubNames[i], Division = division, OpeningDivision = division,
-                Cash = Money.Scale(b.OpeningClubCash, factor), OpeningCash = Money.Scale(b.OpeningClubCash, factor),
-                AnnualBroadcast = Money.Scale(b.AnnualBroadcast, factor), AnnualSponsor = Money.Scale(b.AnnualSponsor, factor),
-                HistoricalTickets = Money.Scale(b.HistoricalTickets, factor), HistoricalHospitality = Money.Scale(b.HistoricalHospitality, factor),
-                HistoricalCommercial = Money.Scale(b.HistoricalCommercial, factor), Lot = RandomStreams.Next(world, $"lots/{i}", int.MaxValue) };
+            var club = new Club
+            {
+                Id = new(i + 1),
+                Name = b.ClubNames[i],
+                Division = division,
+                OpeningDivision = division,
+                Cash = Money.Scale(b.OpeningClubCash, factor),
+                OpeningCash = Money.Scale(b.OpeningClubCash, factor),
+                AnnualBroadcast = Money.Scale(b.AnnualBroadcast, factor),
+                AnnualSponsor = Money.Scale(b.AnnualSponsor, factor),
+                HistoricalTickets = Money.Scale(b.HistoricalTickets, factor),
+                HistoricalHospitality = Money.Scale(b.HistoricalHospitality, factor),
+                HistoricalCommercial = Money.Scale(b.HistoricalCommercial, factor),
+                Lot = RandomStreams.Next(world, $"lots/{i}", int.MaxValue)
+            };
             for (var p = 0; p < 18; p++)
                 club.Players.Add(new(new(i * 18 + p + 1), $"{firstNames[p]} {new[] { "Mercer", "Ward", "Hale", "Bennett", "Reed", "Clarke" }[i % 6]} {i + 1}",
                     p < 2 ? Role.Goalkeeper : p < 8 ? Role.Defender : p < 14 ? Role.Midfielder : Role.Forward,

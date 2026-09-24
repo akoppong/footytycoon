@@ -5,7 +5,9 @@ public static class Pyramid
 {
     public static decimal Factor(int division) => division switch
     {
-        1 => 1.6m, 2 => 1m, 3 => .65m,
+        1 => 1.6m,
+        2 => 1m,
+        3 => .65m,
         _ => throw new ArgumentOutOfRangeException(nameof(division))
     };
     public static long Broadcast(int division) => Money.Scale(Balance.Load().AnnualBroadcast, Factor(division));
