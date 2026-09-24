@@ -11,7 +11,7 @@ The current development executable is artifacts/windows-341fe097/FootballTycoon.
 | Ownership and finance | Acquisition, forecasts, journal and finite injections exist. Complete scenario selection, loan/refinance policies, distributions, covenants and accountable exit reconciliation. |
 | Competition | League, yearly rollover, tier movement and domestic cup are implemented. Complete career records, meaningful run-in presentation and long-career endurance. |
 | Delegated football | Opening search and a separate midseason shortlist/keep-squad review exist. Complete all-club market and rival strategy, contract negotiation, protected-player sale decisions and wage transition/embargo policy. |
-| People and attachment | Named squad and fixed leaders exist. Complete staff hiring/mandates/succession and player aging, availability, development, retirement, academy pipeline and historical callbacks. |
+| People and attachment | Named squad and fixed leaders exist. Complete staff hiring/mandates/succession and player aging, fatigue and rotation (injuries and suspensions exist), development, retirement, academy pipeline and historical callbacks. |
 | Club development | Hospitality exists. Complete stadium, training and academy investment, cancellation/delays, condition, demand, prices, sponsor choices and supporter consequences. |
 | Living world | Stable rivals and finances exist. Complete constrained rival recruitment/investment, credible distress/rescue and balance across 50 seasons. |
 | Content and experience | Design-system shell and durable decision flow exist. Complete six acquisitions, difficulties, twelve event families/48 templates, linked arcs, ambition, onboarding and skippable major moments. |

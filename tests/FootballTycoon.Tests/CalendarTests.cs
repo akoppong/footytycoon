@@ -109,7 +109,7 @@ public class CalendarTests
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(6, migrated.SchemaVersion);
+        Assert.Equal(8, migrated.SchemaVersion);
         Assert.Equal(2, migrated.CalendarStartSeason);
         Assert.Equal(3, migrated.Fixtures.Where(f => f.Competition == Competition.League).Min(f => f.Week));
         Assert.Equal((24, 27), RecruitmentMarket.Window(migrated));

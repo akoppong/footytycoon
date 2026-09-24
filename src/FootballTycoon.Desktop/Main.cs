@@ -190,15 +190,16 @@ public partial class Main : Control
             var card = Card(); card.AddChild(Label($"{Calendar.FullDay(decision.Week)} · {decision.Intent}", 24));
             card.AddChild(Label($"{decision.Executive}\nOriginal forecast low: base {Money.Format(decision.OriginalForecast.LowestBase)}, downside {Money.Format(decision.OriginalForecast.LowestDownside)}. These figures retain the original proposal assumptions."));
             RecruitmentHistory(card, decision);
+            RenewalHistory(card, decision);
         }
         foreach (var review in view.Reviews.AsEnumerable().Reverse()) ReviewCard(review);
         if (view.History.IsEmpty) content.AddChild(Label("Your ownership history begins with the acquisition."));
     }
 
-    private void Preview(Allocation allocation, long amount = 0, bool reserveException = false) => Start(async () =>
+    private void Preview(Allocation allocation, long amount = 0, bool reserveException = false, System.Collections.Immutable.ImmutableArray<PersonId> contractOverrides = default) => Start(async () =>
     {
         confirming = false;
-        selected = await session.PreviewAsync(new(allocation, amount, reserveException), view.Revision);
+        selected = await session.PreviewAsync(new(allocation, amount, reserveException) { ContractOverrides = contractOverrides.IsDefault ? [] : contractOverrides }, view.Revision);
         retryCommandId = Guid.NewGuid().ToString("N");
         return "Review the exact terms before committing.";
     });

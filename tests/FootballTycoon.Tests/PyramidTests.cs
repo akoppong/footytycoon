@@ -14,7 +14,8 @@ public class PyramidTests
         var tables = Enumerable.Range(1, 3).ToDictionary(d => d, d => Simulation.Table(world, d).ToArray());
         var clubs = world.Clubs.ToDictionary(c => c.Id, c => c.Division);
         var cash = world.Clubs.ToDictionary(c => c.Id, c => c.Cash);
-        var salaries = world.Clubs.ToDictionary(c => c.Id, c => Finance.AnnualWages(c));
+        // Generated contracts can expire at week 52, so each club's payroll follows its contract plan into the new division.
+        var salaries = world.Clubs.ToDictionary(c => c.Id, c => Contracts.Plan(world, c, Pyramid.NextDivisions(world)[c.Id]).WagesAfter);
         var terms = Proposals.Preview(world, new(Allocation.StartNextSeason), world.Revision);
         var before = WorldCodec.Encode(world);
         var destinations = Pyramid.NextDivisions(world);
@@ -99,7 +100,7 @@ public class PyramidTests
         foreach (var fixture in legacy["Fixtures"]!.AsArray()) fixture!.AsObject().Remove("Division");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(source, bytes); Assert.Equal(6, migrated.SchemaVersion);
+        Assert.Equal(source, bytes); Assert.Equal(8, migrated.SchemaVersion);
         Assert.All(migrated.Fixtures.Where(f => f.Competition == Competition.League), f => Assert.Equal(migrated.Clubs.Single(c => c.Id == f.Home).Division, f.Division));
         Assert.Equal(16, migrated.Fixtures.Count(f => f.Competition == Competition.Cup && f.CupRound == 1));
         Assert.All(migrated.Clubs, c => Assert.Equal(c.Division, c.OpeningDivision));

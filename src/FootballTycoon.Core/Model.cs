@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FootballTycoon.Core;
 
@@ -26,24 +27,49 @@ public enum Role { Goalkeeper, Defender, Midfielder, Forward }
 public enum Competition { League, Cup }
 public enum CashKind { Purchase, Injection, Wages, Operations, Broadcast, Sponsorship, Commercial, Tickets, Hospitality, Transfer, Construction, Rescue, Prize }
 
-public sealed record OwnerCommand(Allocation Allocation, long Amount = 0, bool ReserveException = false);
+public sealed record OwnerCommand(Allocation Allocation, long Amount = 0, bool ReserveException = false)
+{
+    // Season renewal only: expiring players whose director recommendation the owner reverses (schema 8).
+    public ImmutableArray<PersonId> ContractOverrides { get; init; } = [];
+}
 public sealed record LedgerEntry(int Sequence, int Week, string Account, long Amount, CashKind Kind, string Reference);
 public sealed record Obligation(ObligationId Id, ClubId ClubId, int StartWeek, int EndWeek, long WeeklyAmount, CashKind Kind, string Description);
 public sealed record Arrear(ObligationId ObligationId, ClubId ClubId, int Week, long Amount);
-public sealed record Player(PersonId Id, string Name, Role Role, int Ability, int Age, long WeeklyWage, ContractId ContractId, int ContractEndWeek);
+public sealed record Player(PersonId Id, string Name, Role Role, int Ability, int Age, long WeeklyWage, ContractId ContractId, int ContractEndWeek)
+{
+    // Availability (schema 7). Defaults mean fit and eligible, so they are omitted from saves.
+    // Unavailable for fixtures in career weeks before InjuredUntilWeek.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int InjuredUntilWeek { get; init; }
+    // Remaining competitive matches of the player's club to miss.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int SuspendedMatches { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int SeasonYellows { get; init; }
+}
 public sealed record Fixture(FixtureId Id, int Week, ClubId Home, ClubId Away)
 {
     public int Division { get; init; }
     public Competition Competition { get; init; }
     public int CupRound { get; init; }
 }
-public sealed record Moment(int Minute, ClubId ClubId, PersonId ScorerId, string Text);
+public sealed record Moment(int Minute, ClubId ClubId, PersonId ScorerId, string Text)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public PersonId? AssistId { get; init; }
+}
+public enum MatchEventKind { Yellow, SecondYellow, Red, Injury }
+// Rating is in tenths (68 = 6.8). Position is the slot played, which can differ from the player's role.
+public sealed record Appearance(PersonId Player, Role Position, int Rating);
+// Duration: weeks out for an injury; matches banned for a dismissal or a caution that completes a set of five.
+public sealed record MatchEvent(int Minute, ClubId ClubId, PersonId Player, MatchEventKind Kind, int Duration);
 public sealed record MatchResult(FixtureId FixtureId, int Week, ClubId Home, ClubId Away, int HomeGoals, int AwayGoals,
     int HomeShots, int AwayShots, int Attendance, long Receipts, ImmutableArray<Moment> Moments)
 {
     public ClubId Winner { get; init; }
     public bool ExtraTime { get; init; }
     public string? Shootout { get; init; }
+    // Empty for matches played before schema 7.
+    public ImmutableArray<Appearance> HomeLineup { get; init; } = [];
+    public ImmutableArray<Appearance> AwayLineup { get; init; } = [];
+    public ImmutableArray<MatchEvent> Events { get; init; } = [];
+    public PersonId? PlayerOfMatch { get; init; }
 }
 public sealed record Project(ProjectId Id, ClubId ClubId, int StartedWeek, int CompletionWeek, long Cost, long RecoverableCash, string ForecastId);
 public sealed record Negotiation(int DecisionId, ClubId Seller, PersonId PlayerId, int ExpiryWeek, long FeeCeiling, long WeeklyWage, string ForecastId);
@@ -54,6 +80,8 @@ public sealed record Forecast(string Id, int CreatedWeek, int HorizonWeeks, Immu
 public sealed record DecisionRecord(int Week, OwnerCommand Command, string Executive, string Intent, Forecast OriginalForecast)
 {
     public RecruitmentTerms? Recruitment { get; init; }
+    // Season renewals from schema 8: each expiring contract's recommendation and the owner's choice.
+    public RenewalTerms? Renewal { get; init; }
 }
 public sealed record Review(int Week, string Title, string Evidence, string? ForecastId);
 public sealed record CommitReceipt(string CommandId, string ProposalId, long Revision, string Summary);
@@ -71,7 +99,21 @@ public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long Rene
     public int NextDivision { get; init; }
     public long CurrentAnnualBroadcast { get; init; }
     public long CurrentAnnualSponsor { get; init; }
+    // Expiring player contracts (schema 8). RenewedAnnualWages is the chosen renewals' first-season cost.
+    public ImmutableArray<ContractReview> Contracts { get; init; } = [];
+    public long ExpiringAnnualWages { get; init; }
+    public long AnnualWagesBefore { get; init; }
+    public long AnnualWagesAfter { get; init; }
+    public long WageLimit { get; init; }
+    public long RenewedCommitment { get; init; }
+    public bool RaisesHeld { get; init; }
+    [JsonIgnore] public int Renewed => Contracts.Count(c => c.Chosen == ContractAction.Renew);
+    [JsonIgnore] public int Released => Contracts.Count(c => c.Chosen == ContractAction.Release);
 }
+public enum ContractAction { Renew, Release }
+// OfferedWage and Years are the renewal terms, also quoted for a recommended release in case the owner keeps the player.
+public sealed record ContractReview(PersonId PlayerId, string Name, Role Role, int Age, int Ability, long CurrentWage,
+    ContractAction Recommended, ContractAction Chosen, long OfferedWage, int Years, string Reason);
 public sealed record Proposal(string Id, long Revision, OwnerCommand Command, string Title, string Executive,
     long UpfrontCash, long WeeklyCost, long TotalCommitment, int ReviewWeek, Forecast Forecast,
     ImmutableArray<string> BlockingReasons, string Uncertainty)
@@ -105,8 +147,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 6;
-    public string SimulationVersion { get; set; } = "calendar-6";
+    public int SchemaVersion { get; set; } = 8;
+    public string SimulationVersion { get; set; } = "contracts-8";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -197,6 +239,21 @@ public static class WorldCodec
         {
             WorldFactory.Validate(world, priorMarket: true);
             world.SchemaVersion = 6; world.SimulationVersion = "calendar-6";
+        }
+        if (world.SchemaVersion == 6)
+        {
+            WorldFactory.Validate(world, priorCalendar: true);
+            // Earlier matches keep empty line-ups, ratings and events; every player starts fit and eligible.
+            foreach (var club in world.Clubs)
+                club.Players = club.Players.Select(p => p with { InjuredUntilWeek = 0, SuspendedMatches = 0, SeasonYellows = 0 }).ToList();
+            world.SchemaVersion = 7; world.SimulationVersion = "matchday-7";
+        }
+        if (world.SchemaVersion == 7)
+        {
+            WorldFactory.Validate(world, priorMatchday: true);
+            // Earlier commands carry no contract choices and earlier renewals no contract reviews. Proposals are never
+            // saved, so a save paused at a season review simply receives the director's recommendations when reopened.
+            world.SchemaVersion = 8; world.SimulationVersion = "contracts-8";
         }
         WorldFactory.Validate(world);
         return world;

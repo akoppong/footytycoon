@@ -276,13 +276,14 @@ public partial class Main
                 var key = ReviewKey(chosenReview); if (!filedReviews.Add(key)) filedReviews.Remove(key); SelectInbox("brief");
             })); return;
         }
-        if (inboxSelection == "match" && chosenMatch is not null) { MatchCard(chosenMatch); return; }
+        if (inboxSelection == "match" && chosenMatch is not null) { MatchCard(chosenMatch, full: true); return; }
         if (inboxSelection == "commitment" && chosenHistory is not null)
         {
             var card = Card(); card.AddChild(Caption($"SAVED COMMITMENT · {Calendar.FullDay(chosenHistory.Week).ToUpperInvariant()}"));
             card.AddChild(Label(chosenHistory.Intent, 28)); card.AddChild(Label(chosenHistory.Executive));
             Comparison(card, chosenHistory, view.Week);
             RecruitmentHistory(card, chosenHistory);
+            RenewalHistory(card, chosenHistory);
             card.AddChild(Label("The original forecast is kept as it was when you committed. It is an estimate, not a promise. Recruitment approval does not guarantee a signing."));
             card.AddChild(Button("Open decision history", () => Navigate("History"))); return;
         }
@@ -359,6 +360,59 @@ public partial class Main
         card.AddChild(Label($"Approved target: {terms.Player.Name} · {terms.Seller}\nFee ceiling {Money.Format(terms.FeeCeiling)} · {Money.Format(terms.WeeklyWage)}/week · contract through {Calendar.FullDay(terms.ContractEndWeek)}. These are the saved mandate terms; the negotiation outcome is reported separately.", 14));
     }
 
+    private void RenewalHistory(VBoxContainer card, DecisionRecord decision)
+    {
+        if (decision.Renewal is not { Contracts.IsEmpty: false } terms) return;
+        var changed = terms.Contracts.Where(c => c.Chosen != c.Recommended).ToArray();
+        var released = terms.Contracts.Where(c => c.Chosen == ContractAction.Release).Select(c => c.Name).ToArray();
+        card.AddChild(Label($"Expiring contracts: {terms.Renewed} renewed, {terms.Released} released. Annual wages {Money.Format(terms.ExpiringAnnualWages)} → {Money.Format(terms.RenewedAnnualWages)}.\n"
+            + $"Released on free transfers: {(released.Length == 0 ? "none" : string.Join(", ", released))}.\n"
+            + (changed.Length == 0 ? "You accepted every recommendation from Jonas Reed." : "Your changes to Jonas Reed's advice: " + string.Join("; ", changed.Select(Override)) + "."), 14));
+    }
+    private static string Override(ContractReview c) =>
+        $"{c.Name} {(c.Chosen == ContractAction.Renew ? $"renewed for {Years(c.Years)} at {Money.Format(c.OfferedWage)}/wk" : "released")}, advised to {(c.Recommended == ContractAction.Renew ? "renew" : "release")}";
+    private static string Years(int years) => years == 1 ? "1 year" : $"{years} years";
+    internal static string ContractButtonText(ContractReview c) => (c.Chosen != c.Recommended ? "YOUR CHOICE · " : "")
+        + (c.Chosen == ContractAction.Renew ? $"Renew {c.Name}: {Years(c.Years)} at {Money.Format(c.OfferedWage)}/wk · switch to release"
+            : $"Release {c.Name} on a free transfer · switch to renew: {Years(c.Years)} at {Money.Format(c.OfferedWage)}/wk");
+    private PersonId? contractFocus;
+    // Keyboard-accessible choices: one button per expiring contract toggles renew/release and requotes the terms.
+    private void ContractChoices(VBoxContainer card, Proposal proposal, RenewalTerms renewal)
+    {
+        if (renewal.Contracts.IsEmpty)
+        {
+            card.AddChild(Label("No player contracts expire at this season end. Every player continues on his current terms.", 14)); return;
+        }
+        var overrides = proposal.Command.ContractOverrides;
+        card.AddChild(Caption("JONAS REED · SPORTING DIRECTOR · EXPIRING CONTRACTS"));
+        card.AddChild(Label($"Squad minimum: {string.Join(", ", Contracts.Minimum.Select(m => $"{m.Minimum} {m.Role.ToString().ToLowerInvariant()}s"))} and {Contracts.MinimumSquad} players in all. Released players are not replaced automatically.", 12));
+        if (renewal.RaisesHeld) card.AddChild(Label("Raises are held at current wages so the recommended renewals stay within the wage budget.", 13));
+        if (confirming)
+        {
+            var released = renewal.Contracts.Where(c => c.Chosen == ContractAction.Release).Select(c => c.Name).ToArray();
+            card.AddChild(Label($"Releasing on free transfers: {(released.Length == 0 ? "none" : string.Join(", ", released))}.", 14));
+            var changed = renewal.Contracts.Where(c => c.Chosen != c.Recommended).ToArray();
+            card.AddChild(Label(changed.Length == 0 ? "You are accepting every recommendation." : "Your changes to the director's advice: " + string.Join("; ", changed.Select(Override)) + ".", 14));
+            return;
+        }
+        card.AddChild(Label(overrides.IsEmpty ? "Showing Jonas's recommendations. Choose a player to reverse his advice; the terms and forecast update."
+            : $"{overrides.Length} of {renewal.PlayerContracts} recommendations reversed.", 13));
+        if (!overrides.IsEmpty) card.AddChild(Button("Accept all recommendations", () => Preview(Allocation.StartNextSeason)));
+        foreach (var contract in renewal.Contracts)
+        {
+            var row = Stack(card, 2);
+            row.AddChild(Label($"{contract.Name} · {contract.Role} · Age {contract.Age} · Ability {contract.Ability} · now {Money.Format(contract.CurrentWage)}/wk", 14));
+            row.AddChild(Label(contract.Reason, 12));
+            var toggled = (overrides.Contains(contract.PlayerId) ? overrides.Remove(contract.PlayerId) : overrides.Add(contract.PlayerId))
+                .Sort((a, b) => a.Value.CompareTo(b.Value));
+            var id = contract.PlayerId;
+            var button = Button(ContractButtonText(contract), () => { contractFocus = id; Preview(Allocation.StartNextSeason, contractOverrides: toggled); });
+            if (contract.Chosen != contract.Recommended) button.AddThemeColorOverride("font_color", new Color("785411"));
+            row.AddChild(button);
+            if (contractFocus == id) { contractFocus = null; button.CallDeferred(Control.MethodName.GrabFocus); }
+        }
+    }
+
     private void DesignProposal(Proposal proposal)
     {
         var card = Card(); card.AddChild(Caption(confirming ? "FINAL TERMS · NOTHING SPENT YET" : "PROPOSAL · TIME IS HELD"));
@@ -380,11 +434,19 @@ public partial class Main
             Fact(card, "Next season’s competition", Pyramid.Outcome(renewal.CurrentDivision, renewal.NextDivision));
             Fact(card, "Annual broadcast · current → next", $"{Money.Format(renewal.CurrentAnnualBroadcast)} → {Money.Format(renewal.AnnualBroadcast)}");
             Fact(card, "Annual sponsorship · current → next", $"{Money.Format(renewal.CurrentAnnualSponsor)} → {Money.Format(renewal.AnnualSponsor)}");
-            Fact(card, "Expiring player contracts · extended one season", renewal.PlayerContracts.ToString());
-            Fact(card, "Annual wages for renewed players", Money.Format(renewal.RenewedAnnualWages));
+            Fact(card, "Expiring player contracts", renewal.PlayerContracts == 0 ? "None this season"
+                : $"{renewal.PlayerContracts} · {renewal.Renewed} renewed · {renewal.Released} released");
+            if (renewal.PlayerContracts > 0)
+            {
+                var change = renewal.RenewedAnnualWages - renewal.ExpiringAnnualWages;
+                Fact(card, "Annual wages · expiring contracts → renewed", $"{Money.Format(renewal.ExpiringAnnualWages)} → {Money.Format(renewal.RenewedAnnualWages)} · {(change > 0 ? "+" : "")}{Money.Format(change)} a year");
+            }
+            Fact(card, "Wage budget next season · squad wages / 75% limit", $"{Money.Format(renewal.AnnualWagesAfter)} of {Money.Format(renewal.WageLimit)} · {(renewal.WageLimit == 0 ? 0 : (decimal)renewal.AnnualWagesAfter / renewal.WageLimit):P0} used", renewal.AnnualWagesAfter > renewal.WageLimit ? Red : null);
+            Fact(card, "Cash forecast low with these choices · expected / worst case", $"{Money.Format(proposal.Forecast.LowestBase)} / {Money.Format(proposal.Forecast.LowestDownside)}", proposal.Forecast.LowestDownside < view.ReserveTarget ? Red : null);
             Fact(card, "Annual operations run rate · including carried contracts", Money.Format(renewal.AnnualOperations));
             Fact(card, "Arrears carried forward", Money.Format(renewal.Arrears));
             Fact(card, "Cash on confirmation · unchanged", Money.Format(view.ClubCash));
+            ContractChoices(card, proposal, renewal);
         }
         else
         {
@@ -456,14 +518,48 @@ public partial class Main
         card.AddChild(Label(season.Plan));
         card.AddChild(Label("Recorded at the final weekly settlement. Later owner funding remains in the cash journal.", 12));
     }
-    private void MatchCard(MatchResult match)
+    private void MatchCard(MatchResult match, bool full = false)
     {
         var fixture = MatchFixture(match);
         var card = Card(); card.AddChild(Caption($"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound).ToUpperInvariant() : "MATCH REPORT")} · {Calendar.FullDay(match.Week).ToUpperInvariant()}")); card.AddChild(Label(MatchTitle(match), 24));
         if (match.ExtraTime) card.AddChild(Label(match.Shootout is null ? "Decided after extra time." : $"Level after extra time · {match.Shootout} on penalties.", 13));
         card.AddChild(Label($"Shots {match.HomeShots}–{match.AwayShots} · Attendance {match.Attendance:N0} · Home receipts {Money.Format(match.Receipts)}", 13));
-        foreach (var moment in match.Moments) card.AddChild(Label($"{moment.Minute}'  {moment.Text}"));
+        string Name(PersonId id) => view.PlayerNames.TryGetValue(id, out var name) ? name : "Unknown player";
+        static string Rating(Appearance a) => (a.Rating / 10m).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+        foreach (var moment in match.Moments) card.AddChild(Label($"{moment.Minute}'  {moment.Text}{(moment.AssistId is { } assist ? $" Assist: {Name(assist)}." : "")}"));
         if (match.Moments.IsEmpty) card.AddChild(Label("Neither side found the net."));
+        var star = match.HomeLineup.Concat(match.AwayLineup).FirstOrDefault(a => a.Player == match.PlayerOfMatch);
+        if (star is not null) card.AddChild(Label($"Player of the match: {Name(star.Player)} · {ClubName(match.HomeLineup.Contains(star) ? match.Home : match.Away)} · {Rating(star)}", 14));
+        if (!full) return;
+        card.AddChild(Caption("CARDS AND INJURIES"));
+        string Matches(int count) => count == 1 ? "1 match" : $"{count} matches";
+        foreach (var e in match.Events)
+            card.AddChild(Label($"{e.Minute}'  " + e.Kind switch
+            {
+                MatchEventKind.Yellow => $"Yellow card · {Name(e.Player)} · {ClubName(e.ClubId)}" + (e.Duration > 0 ? $" · {Matchday.YellowsPerBan * e.Duration} cautions this season, suspended for {Matches(e.Duration)}" : ""),
+                MatchEventKind.SecondYellow => $"Second yellow, sent off · {Name(e.Player)} · {ClubName(e.ClubId)} · suspended for {Matches(e.Duration)}",
+                MatchEventKind.Red => $"Red card · {Name(e.Player)} · {ClubName(e.ClubId)} · suspended for {Matches(e.Duration)}",
+                _ => $"Injury · {Name(e.Player)} · {ClubName(e.ClubId)} · out for about {e.Duration} week{(e.Duration == 1 ? "" : "s")}"
+            }, 13));
+        if (match.Events.IsEmpty) card.AddChild(Label(match.HomeLineup.IsEmpty ? "Not recorded for this match." : "No cards or injuries.", 13));
+        card.AddChild(Caption("LINE-UPS AND RATINGS"));
+        if (match.HomeLineup.IsEmpty && match.AwayLineup.IsEmpty) card.AddChild(Label("Line-ups and ratings were not recorded for matches played before this update.", 13));
+        else
+        {
+            var columns = new GridContainer { Columns = 2, SizeFlagsHorizontal = SizeFlags.ExpandFill }; columns.AddThemeConstantOverride("h_separation", 24); card.AddChild(columns);
+            foreach (var (club, lineup) in new[] { (match.Home, match.HomeLineup), (match.Away, match.AwayLineup) })
+            {
+                var column = Stack(columns, 3); column.CustomMinimumSize = new Vector2(220 * textScale / 100, 0);
+                column.AddChild(Caption(ClubName(club).ToUpperInvariant(), Navy, 11));
+                foreach (var a in lineup)
+                    column.AddChild(Caption($"{a.Position switch { Role.Goalkeeper => "GK", Role.Defender => "DF", Role.Midfielder => "MF", _ => "FW" }}  {Rating(a)}  {Name(a.Player)}", a.Player == match.PlayerOfMatch ? Navy : Muted, 12));
+            }
+        }
+        if (match.Home == view.ClubId || match.Away == view.ClubId)
+        {
+            card.AddChild(Caption("CALLUM PRICE · MANAGER"));
+            card.AddChild(Label($"“{Matchday.ManagerLine(match, view.ClubId, fixture.Competition == Competition.Cup, view.PlayerNames)}”"));
+        }
     }
     private string ClubName(ClubId id) => view.Clubs.Single(c => c.Id == id).Name;
     private Fixture MatchFixture(MatchResult match) => view.Fixtures.Single(f => f.Id == match.FixtureId);

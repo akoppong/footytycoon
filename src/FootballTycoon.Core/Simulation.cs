@@ -138,68 +138,16 @@ public static class Simulation
     {
         var home = world.Clubs.Single(c => c.Id == fixture.Home);
         var away = world.Clubs.Single(c => c.Id == fixture.Away);
-        static Player[] Select(Club club) => club.Players.GroupBy(p => p.Role).SelectMany(group => group.OrderByDescending(p => p.Ability)
-            .ThenBy(p => p.Id.Value).Take(group.Key == Role.Goalkeeper ? 1 : group.Key == Role.Forward ? 2 : 4)).Take(11).ToArray();
-        var ht = Select(home); var at = Select(away);
-        var hStrength = ht.Average(p => p.Ability); var aStrength = at.Average(p => p.Ability);
-        var hg = 0; var ag = 0; var hs = 0; var @as = 0;
-        var moments = ImmutableArray.CreateBuilder<Moment>();
-        var stream = $"match/{fixture.Id.Value}";
-        for (var segment = 0; segment < 6; segment++)
-        {
-            var hChances = 1 + RandomStreams.Next(world, stream, 3);
-            var aChances = 1 + RandomStreams.Next(world, stream, 3);
-            hs += hChances; @as += aChances;
-            for (var chance = 0; chance < hChances; chance++)
-                if (RandomStreams.Next(world, stream, 100) < Math.Clamp(12 + (hStrength - aStrength) * 0.65 + 3, 4, 32))
-                {
-                    hg++; var scorer = ht.Where(p => p.Role != Role.Goalkeeper).ToArray()[RandomStreams.Next(world, stream, ht.Length - 1)];
-                    moments.Add(new(segment * 15 + 1 + RandomStreams.Next(world, stream, 15), home.Id, scorer.Id, $"{scorer.Name} scores for {home.Name}."));
-                }
-            for (var chance = 0; chance < aChances; chance++)
-                if (RandomStreams.Next(world, stream, 100) < Math.Clamp(12 + (aStrength - hStrength) * 0.65, 4, 32))
-                {
-                    ag++; var scorer = at.Where(p => p.Role != Role.Goalkeeper).ToArray()[RandomStreams.Next(world, stream, at.Length - 1)];
-                    moments.Add(new(segment * 15 + 1 + RandomStreams.Next(world, stream, 15), away.Id, scorer.Id, $"{scorer.Name} scores for {away.Name}."));
-                }
-        }
+        var match = Matchday.Play(world, fixture, home, away);
         var demand = (80 + RandomStreams.Next(world, $"attendance/{home.Id.Value}", 36)) / 100m;
         var tickets = Money.Scale(Pyramid.TradingBudget(home, home.HistoricalTickets) / 15, demand);
         var hospitality = Money.Scale(Pyramid.TradingBudget(home, home.HistoricalHospitality) / 15 + home.HospitalityLevel * 1600000, demand);
         Finance.Post(world, WorldFactory.Account(home.Id), tickets, CashKind.Tickets, $"fixture/{fixture.Id.Value}");
         Finance.Post(world, WorldFactory.Account(home.Id), hospitality, CashKind.Hospitality, $"fixture/{fixture.Id.Value}");
-        var extraTime = false; string? shootout = null; var winner = hg > ag ? home.Id : ag > hg ? away.Id : default;
-        if (fixture.Competition == Competition.Cup && hg == ag)
-        {
-            extraTime = true;
-            var homeExtra = RandomStreams.Next(world, stream + "/extra", 100) < Math.Clamp(18 + (int)(hStrength - aStrength), 8, 35);
-            var awayExtra = RandomStreams.Next(world, stream + "/extra", 100) < Math.Clamp(18 + (int)(aStrength - hStrength), 8, 35);
-            if (homeExtra)
-            {
-                hg++; hs++; var scorer = ht.Where(p => p.Role != Role.Goalkeeper).ToArray()[RandomStreams.Next(world, stream + "/extra", ht.Length - 1)];
-                moments.Add(new(91 + RandomStreams.Next(world, stream + "/extra", 30), home.Id, scorer.Id, $"{scorer.Name} scores in extra time for {home.Name}."));
-            }
-            if (awayExtra)
-            {
-                ag++; @as++; var scorer = at.Where(p => p.Role != Role.Goalkeeper).ToArray()[RandomStreams.Next(world, stream + "/extra", at.Length - 1)];
-                moments.Add(new(91 + RandomStreams.Next(world, stream + "/extra", 30), away.Id, scorer.Id, $"{scorer.Name} scores in extra time for {away.Name}."));
-            }
-            if (hg == ag)
-            {
-                var homePenalties = 3 + RandomStreams.Next(world, stream + "/penalties", 3);
-                var awayPenalties = 3 + RandomStreams.Next(world, stream + "/penalties", 3);
-                if (homePenalties == awayPenalties) { if (RandomStreams.Next(world, stream + "/penalties", 2) == 0) homePenalties++; else awayPenalties++; }
-                shootout = $"{homePenalties}–{awayPenalties}";
-                winner = homePenalties > awayPenalties ? home.Id : away.Id;
-            }
-            else winner = hg > ag ? home.Id : away.Id;
-        }
-        var supportWinner = winner == home.Id ? 1 : winner == away.Id ? -1 : Math.Sign(hg - ag);
+        var supportWinner = match.Winner == home.Id ? 1 : match.Winner == away.Id ? -1 : Math.Sign(match.HomeGoals - match.AwayGoals);
         home.Support = Math.Clamp(home.Support + supportWinner, 0, 100);
         away.Support = Math.Clamp(away.Support - supportWinner, 0, 100);
-        world.Results.Add(new(fixture.Id, world.Week, home.Id, away.Id, hg, ag, hs, @as, (int)(tickets / 2200),
-            checked(tickets + hospitality), moments.OrderBy(m => m.Minute).ToImmutableArray())
-        { Winner = winner, ExtraTime = extraTime, Shootout = shootout });
+        world.Results.Add(match with { Attendance = (int)(tickets / 2200), Receipts = checked(tickets + hospitality) });
     }
 
     public static ImmutableArray<TableRow> Table(World world, int division, int? season = null)
