@@ -32,12 +32,13 @@ public class SeasonTests
             var owner = world.OwnerCash;
             var proposal = Proposals.Preview(world, new(Allocation.StartNextSeason), world.Revision);
             Assert.Empty(proposal.BlockingReasons);
-            Assert.Equal(season == 3 ? 18 : 0, proposal.Renewal!.PlayerContracts);
+            Assert.Equal(world.OwnedClub.Players.Count(p => p.ContractEndWeek <= world.Week), proposal.Renewal!.PlayerContracts);
             Assert.Equal(before, WorldCodec.Encode(world));
             var receipt = Proposals.Commit(world, $"renew-{season}", world.Revision, proposal);
             Assert.Equal(cash, world.OwnedClub.Cash);
             Assert.Equal(owner, world.OwnerCash);
             Assert.Equal(season, world.Season);
+            Assert.All(world.OwnedClub.Players, p => Assert.True(p.ContractEndWeek > world.Week));
             Assert.Equal(720 * season, world.Fixtures.Count(f => f.Competition == Competition.League));
             Assert.All(Simulation.Table(world, 2), row => Assert.Equal(0, row.Played));
             Assert.All(world.SeasonSummaries[^1].FinalTable, row => Assert.Equal(30, row.Played));
