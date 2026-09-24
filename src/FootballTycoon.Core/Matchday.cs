@@ -179,9 +179,9 @@ public static class Matchday
             return side.Lineup.Select(x =>
             {
                 var id = x.Player.Id; var (goals, assists) = side.Contributions.GetValueOrDefault(id);
-                var rating = 54 + RandomStreams.Next(world, ratings, 13) + (int)Math.Round((Effective(x.Player, x.Position) - average) / 3)
+                var rating = 58 + RandomStreams.Next(world, ratings, 13) + (int)Math.Round((Effective(x.Player, x.Position) - average) / 3)
                     + 3 * Math.Sign(side.Goals - against) + 10 * goals + 5 * assists;
-                if (x.Position is Role.Goalkeeper or Role.Defender) rating += against == 0 ? (x.Position == Role.Goalkeeper ? 7 : 5) : -3 * Math.Max(0, against - 1);
+                if (x.Position is Role.Goalkeeper or Role.Defender) rating += against == 0 ? (x.Position == Role.Goalkeeper ? 7 : 5) : -2 * Math.Max(0, against - 1);
                 foreach (var e in events.Where(e => e.Player == id && e.ClubId == side.Club.Id))
                     rating -= e.Kind switch { MatchEventKind.Yellow => 3, MatchEventKind.SecondYellow => 20, MatchEventKind.Red => 25, _ => 0 };
                 return new Appearance(id, x.Position, Math.Clamp(rating, 50, 100));
