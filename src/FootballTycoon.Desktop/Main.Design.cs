@@ -36,9 +36,16 @@ public partial class Main
     private static PanelContainer Surface(Color color, int padding = 16)
     {
         var panel = new PanelContainer();
-        panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = color, ContentMarginLeft = padding,
-            ContentMarginRight = padding, ContentMarginTop = padding, ContentMarginBottom = padding,
-            BorderWidthBottom = 1, BorderColor = Rule });
+        panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+        {
+            BgColor = color,
+            ContentMarginLeft = padding,
+            ContentMarginRight = padding,
+            ContentMarginTop = padding,
+            ContentMarginBottom = padding,
+            BorderWidthBottom = 1,
+            BorderColor = Rule
+        });
         return panel;
     }
     private Label Caption(string text, Color? color = null, int size = 10)
@@ -56,16 +63,33 @@ public partial class Main
         var panel = Surface(color, 0); panel.SizeFlagsVertical = SizeFlags.ExpandFill;
         panel.SizeFlagsHorizontal = width == 0 ? SizeFlags.ExpandFill : SizeFlags.Fill;
         panel.CustomMinimumSize = new Vector2(width, 0); parent.AddChild(panel);
-        var scroll = new ScrollContainer { HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled, FollowFocus = true,
-            SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        var scroll = new ScrollContainer
+        {
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            FollowFocus = true,
+            SizeFlagsVertical = SizeFlags.ExpandFill,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
         panel.AddChild(scroll); return Stack(scroll, 0);
     }
     private void Primary(Button button)
     {
-        button.AddThemeStyleboxOverride("normal", new StyleBoxFlat { BgColor = new Color("1f3a5f"), ContentMarginLeft = 14,
-            ContentMarginRight = 14, ContentMarginTop = 12, ContentMarginBottom = 12 });
-        button.AddThemeStyleboxOverride("hover", new StyleBoxFlat { BgColor = new Color("294e7b"), ContentMarginLeft = 14,
-            ContentMarginRight = 14, ContentMarginTop = 12, ContentMarginBottom = 12 });
+        button.AddThemeStyleboxOverride("normal", new StyleBoxFlat
+        {
+            BgColor = new Color("1f3a5f"),
+            ContentMarginLeft = 14,
+            ContentMarginRight = 14,
+            ContentMarginTop = 12,
+            ContentMarginBottom = 12
+        });
+        button.AddThemeStyleboxOverride("hover", new StyleBoxFlat
+        {
+            BgColor = new Color("294e7b"),
+            ContentMarginLeft = 14,
+            ContentMarginRight = 14,
+            ContentMarginTop = 12,
+            ContentMarginBottom = 12
+        });
         foreach (var state in new[] { "font_color", "font_hover_color", "font_focus_color" }) button.AddThemeColorOverride(state, White);
     }
     private void Unavailable(Button button, string reason)
@@ -111,8 +135,16 @@ public partial class Main
             var button = Button(tab, () => Navigate(tab)); button.SizeFlagsHorizontal = SizeFlags.Fill; button.AutowrapMode = TextServer.AutowrapMode.Off; button.CustomMinimumSize = Vector2.Zero;
             button.AddThemeFontSizeOverride("font_size", 13 * textScale / 100);
             var active = tab == workspace && auxiliary == "";
-            button.AddThemeStyleboxOverride("normal", new StyleBoxFlat { BgColor = active ? new Color("24374d") : Navy,
-                BorderWidthBottom = active ? 2 : 0, BorderColor = Amber, ContentMarginLeft = 14, ContentMarginRight = 14, ContentMarginTop = 8, ContentMarginBottom = 8 });
+            button.AddThemeStyleboxOverride("normal", new StyleBoxFlat
+            {
+                BgColor = active ? new Color("24374d") : Navy,
+                BorderWidthBottom = active ? 2 : 0,
+                BorderColor = Amber,
+                ContentMarginLeft = 14,
+                ContentMarginRight = 14,
+                ContentMarginTop = 8,
+                ContentMarginBottom = 8
+            });
             button.AddThemeColorOverride("font_color", active ? Amber : Paper); nav.AddChild(button);
         }
         foreach (var item in new[] { ("Save", (Action)Save), ("Load / recover", (Action)ShowSaves), ("Settings", (Action)ShowSettings) })
@@ -164,9 +196,17 @@ public partial class Main
         void Item(string id, string tag, string title, string from, Action action)
         {
             var b = Button($"{tag}\n{title}\n{from}", action); b.AddThemeFontSizeOverride("font_size", 12 * textScale / 100);
-            b.AddThemeStyleboxOverride("normal", new StyleBoxFlat { BgColor = inboxSelection == id && workspace == "Owner Desk" ? White : new Color("f1ede3"),
-                BorderWidthLeft = inboxSelection == id && workspace == "Owner Desk" ? 3 : 0, BorderWidthBottom = 1, BorderColor = Rule,
-                ContentMarginLeft = 14, ContentMarginRight = 14, ContentMarginTop = 14, ContentMarginBottom = 14 }); inbox.AddChild(b);
+            b.AddThemeStyleboxOverride("normal", new StyleBoxFlat
+            {
+                BgColor = inboxSelection == id && workspace == "Owner Desk" ? White : new Color("f1ede3"),
+                BorderWidthLeft = inboxSelection == id && workspace == "Owner Desk" ? 3 : 0,
+                BorderWidthBottom = 1,
+                BorderColor = Rule,
+                ContentMarginLeft = 14,
+                ContentMarginRight = 14,
+                ContentMarginTop = 14,
+                ContentMarginBottom = 14
+            }); inbox.AddChild(b);
         }
         Item("brief", !view.AllocationChosen ? "DECISION REQUIRED" : "OWNER BRIEF", !view.AllocationChosen ? "Where should the money go?" : "Your club, this week", "Mara Ellis · CEO", () => SelectInbox("brief"));
         if (view.History.LastOrDefault(h => h.Command.Allocation != Allocation.Acquire) is { } history)
@@ -419,7 +459,7 @@ public partial class Main
     private void MatchCard(MatchResult match)
     {
         var fixture = MatchFixture(match);
-            var card = Card(); card.AddChild(Caption($"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound).ToUpperInvariant() : "MATCH REPORT")} · WEEK {SeasonWeek(match.Week)}")); card.AddChild(Label(MatchTitle(match), 24));
+        var card = Card(); card.AddChild(Caption($"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound).ToUpperInvariant() : "MATCH REPORT")} · WEEK {SeasonWeek(match.Week)}")); card.AddChild(Label(MatchTitle(match), 24));
         if (match.ExtraTime) card.AddChild(Label(match.Shootout is null ? "Decided after extra time." : $"Level after extra time · {match.Shootout} on penalties.", 13));
         card.AddChild(Label($"Shots {match.HomeShots}–{match.AwayShots} · Attendance {match.Attendance:N0} · Home receipts {Money.Format(match.Receipts)}", 13));
         foreach (var moment in match.Moments) card.AddChild(Label($"{moment.Minute}'  {moment.Text}"));
