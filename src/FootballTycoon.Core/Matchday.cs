@@ -197,8 +197,13 @@ public static class Matchday
         return new MatchResult(fixture.Id, world.Week, home.Id, away.Id, sides[0].Goals, sides[1].Goals, sides[0].Shots, sides[1].Shots, 0, 0,
             moments.OrderBy(m => m.Minute).ToImmutableArray())
         {
-            Winner = winner, ExtraTime = extraTime, Shootout = shootout,
-            HomeLineup = homeLineup, AwayLineup = awayLineup, Events = recorded, PlayerOfMatch = best
+            Winner = winner,
+            ExtraTime = extraTime,
+            Shootout = shootout,
+            HomeLineup = homeLineup,
+            AwayLineup = awayLineup,
+            Events = recorded,
+            PlayerOfMatch = best
         };
     }
 

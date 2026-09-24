@@ -40,7 +40,10 @@ public class ContractTests
         var world = Expiring();
         var club = world.OwnedClub;
         var par = Contracts.Par(Pyramid.NextDivisions(world)[club.Id]);
-        Set(club, _ => true, p => p with { Age = 26, Ability = par });
+        // Generated wages vary by player; level them so offers order purely by standing.
+        Set(club, _ => true, p => p with { Age = 26, Ability = par, WeeklyWage = Contracts.StandardWage(club.Division) });
+        var contracts = club.Players.Select(p => $"Player contract {p.ContractId.Value}").ToHashSet();
+        world.Obligations = world.Obligations.Select(o => contracts.Contains(o.Description) ? o with { WeeklyAmount = -Contracts.StandardWage(club.Division) } : o).ToList();
         var forwards = club.Players.Where(p => p.Role == Role.Forward).ToArray();
         var midfielders = club.Players.Where(p => p.Role == Role.Midfielder).ToArray();
         var defenders = club.Players.Where(p => p.Role == Role.Defender).ToArray();

@@ -138,12 +138,16 @@ public sealed class GameSession : IAsyncDisposable
             world.Obligations.Where(o => o.ClubId == club.Id).ToImmutableArray(),
             world.Clubs.Select(c => new ClubSummary(c.Id, c.Name, c.Division, c.Cash)).ToImmutableArray(), world.AllocationChosen)
         {
-            Division = club.Division, Season = world.Season, SeasonOpeningCash = world.SeasonOpeningCash,
+            Division = club.Division,
+            Season = world.Season,
+            SeasonOpeningCash = world.SeasonOpeningCash,
             SeasonOpeningLedgerSequence = world.SeasonOpeningLedgerSequence,
             SeasonSummaries = world.SeasonSummaries.ToImmutableArray(),
             Fixtures = world.Fixtures.Where(f => f.Week > Seasons.StartWeek(world) && (f.Home == club.Id || f.Away == club.Id)).ToImmutableArray(),
-            CupStatus = Cups.Status(world, club.Id), CupPrize = Cups.PrizeToDate(world, club.Id),
-            MarketStatus = RecruitmentMarket.Status(world), MarketAvailable = RecruitmentMarket.Available(world),
+            CupStatus = Cups.Status(world, club.Id),
+            CupPrize = Cups.PrizeToDate(world, club.Id),
+            MarketStatus = RecruitmentMarket.Status(world),
+            MarketAvailable = RecruitmentMarket.Available(world),
             RecruitmentOptions = RecruitmentMarket.Options(world),
             SquadAvailability = club.Players.Select(p => Matchday.Status(p, world.Week + 1)).ToImmutableArray(),
             PlayerNames = world.Clubs.SelectMany(c => c.Players).ToImmutableDictionary(p => p.Id, p => p.Name)

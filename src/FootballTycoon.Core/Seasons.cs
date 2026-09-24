@@ -42,11 +42,17 @@ public static class Seasons
                 .Sum(o => o.WeeklyAmount) * Weeks,
             world.Arrears.Where(a => a.ClubId == club.Id).Sum(a => a.Amount))
         {
-            CurrentDivision = club.Division, NextDivision = nextDivision,
-            CurrentAnnualBroadcast = club.AnnualBroadcast, CurrentAnnualSponsor = club.AnnualSponsor,
-            Contracts = plan.Reviews, ExpiringAnnualWages = checked(plan.Reviews.Sum(r => r.CurrentWage) * Weeks),
-            AnnualWagesBefore = plan.WagesBefore, AnnualWagesAfter = plan.WagesAfter, WageLimit = plan.WageLimit,
-            RenewedCommitment = checked(renewed.Sum(r => r.OfferedWage * Weeks * r.Years)), RaisesHeld = plan.RaisesHeld
+            CurrentDivision = club.Division,
+            NextDivision = nextDivision,
+            CurrentAnnualBroadcast = club.AnnualBroadcast,
+            CurrentAnnualSponsor = club.AnnualSponsor,
+            Contracts = plan.Reviews,
+            ExpiringAnnualWages = checked(plan.Reviews.Sum(r => r.CurrentWage) * Weeks),
+            AnnualWagesBefore = plan.WagesBefore,
+            AnnualWagesAfter = plan.WagesAfter,
+            WageLimit = plan.WageLimit,
+            RenewedCommitment = checked(renewed.Sum(r => r.OfferedWage * Weeks * r.Years)),
+            RaisesHeld = plan.RaisesHeld
         };
     }
 

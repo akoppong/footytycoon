@@ -19,7 +19,10 @@ public static class Contracts
     private static bool Candidate(Player p, int par) => p.Age >= 31 && p.Ability < par + 5 || p.Ability < par - 5;
     private static string Plural(Role role) => role switch
     {
-        Role.Goalkeeper => "goalkeepers", Role.Defender => "defenders", Role.Midfielder => "midfielders", _ => "forwards"
+        Role.Goalkeeper => "goalkeepers",
+        Role.Defender => "defenders",
+        Role.Midfielder => "midfielders",
+        _ => "forwards"
     };
 
     // Next-season contracted broadcast and sponsor terms replace the current ones in the revenue denominator.

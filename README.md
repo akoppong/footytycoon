@@ -67,6 +67,20 @@ If using this workspace's local SDK, replace `dotnet` with `./.tools/dotnet/dotn
 
 The core solution intentionally excludes the engine project so simulation tools do not require Godot. `scripts/build.ps1 -Desktop` separately builds it. A second traditional `.sln` beside the Godot project is required by the exporter; its project explicitly targets .NET 10 to prevent Godot inserting its default .NET 8 target. There is no backend and no Steam dependency yet.
 
+## CI/CD
+
+Every pull request runs [CI](.github/workflows/build.yml), and `main` accepts changes only through pull requests whose **CI gate** check has passed (repository admins can bypass in an emergency):
+
+| Job | Checks |
+|---|---|
+| Core | `dotnet format --verify-no-changes`, Release build with warnings as errors, all xUnit tests, NuGet vulnerability audit |
+| Desktop | Installs the pinned Godot 4.7.2 .NET editor (SHA-512 verified), format check, Godot build, resource import, headless engine smoke test |
+| Headless | Each strategy (PreserveReserve, Hospitality, Recruitment) plays a full three-season career; outcomes and gameplay hashes appear in the run summary |
+
+Run `dotnet format FootballTycoon.slnx` and `dotnet format src/FootballTycoon.Desktop/FootballTycoon.Desktop.csproj` before pushing to satisfy the format check.
+
+[Release build](.github/workflows/release.yml) runs on every push to `main`: it exports the Windows build with `scripts/export.ps1`, smoke-tests the executable, and uploads a zip as a workflow artifact for 30 days. Pushing a version tag (for example `git tag v0.2.0`, then `git push origin v0.2.0`) also publishes that zip as a GitHub Release. Dependabot opens weekly update PRs for GitHub Actions and NuGet packages.
+
 ## Saves
 
 The desktop uses Godot's local `user://saves/offline` directory. The run script isolates app data under `.tools/appdata`; when launching the project directly in a normally configured editor, Godot uses its normal application data location. The load screen displays the resolved vault path.
