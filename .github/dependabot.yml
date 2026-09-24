@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    # The Godot SDK must match the editor pinned in scripts/ci/install-godot.ps1; upgrade them together by hand.
+    ignore:
+      - dependency-name: Godot.NET.Sdk
+      - dependency-name: GodotSharp*

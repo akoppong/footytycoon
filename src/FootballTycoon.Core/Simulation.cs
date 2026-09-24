@@ -197,7 +197,7 @@ public static class Simulation
         away.Support = Math.Clamp(away.Support - supportWinner, 0, 100);
         world.Results.Add(new(fixture.Id, world.Week, home.Id, away.Id, hg, ag, hs, @as, (int)(tickets / 2200),
             checked(tickets + hospitality), moments.OrderBy(m => m.Minute).ToImmutableArray())
-            { Winner = winner, ExtraTime = extraTime, Shootout = shootout });
+        { Winner = winner, ExtraTime = extraTime, Shootout = shootout });
     }
 
     public static ImmutableArray<TableRow> Table(World world, int division, int? season = null)

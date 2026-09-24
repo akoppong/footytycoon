@@ -41,8 +41,10 @@ public static class Seasons
                 .Sum(o => o.WeeklyAmount) * Weeks,
             world.Arrears.Where(a => a.ClubId == club.Id).Sum(a => a.Amount))
         {
-            CurrentDivision = club.Division, NextDivision = nextDivision,
-            CurrentAnnualBroadcast = club.AnnualBroadcast, CurrentAnnualSponsor = club.AnnualSponsor
+            CurrentDivision = club.Division,
+            NextDivision = nextDivision,
+            CurrentAnnualBroadcast = club.AnnualBroadcast,
+            CurrentAnnualSponsor = club.AnnualSponsor
         };
     }
 
