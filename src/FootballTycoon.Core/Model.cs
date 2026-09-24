@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FootballTycoon.Core;
 
@@ -30,20 +31,41 @@ public sealed record OwnerCommand(Allocation Allocation, long Amount = 0, bool R
 public sealed record LedgerEntry(int Sequence, int Week, string Account, long Amount, CashKind Kind, string Reference);
 public sealed record Obligation(ObligationId Id, ClubId ClubId, int StartWeek, int EndWeek, long WeeklyAmount, CashKind Kind, string Description);
 public sealed record Arrear(ObligationId ObligationId, ClubId ClubId, int Week, long Amount);
-public sealed record Player(PersonId Id, string Name, Role Role, int Ability, int Age, long WeeklyWage, ContractId ContractId, int ContractEndWeek);
+public sealed record Player(PersonId Id, string Name, Role Role, int Ability, int Age, long WeeklyWage, ContractId ContractId, int ContractEndWeek)
+{
+    // Availability (schema 6). Defaults mean fit and eligible, so they are omitted from saves.
+    // Unavailable for fixtures in career weeks before InjuredUntilWeek.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int InjuredUntilWeek { get; init; }
+    // Remaining competitive matches of the player's club to miss.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int SuspendedMatches { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int SeasonYellows { get; init; }
+}
 public sealed record Fixture(FixtureId Id, int Week, ClubId Home, ClubId Away)
 {
     public int Division { get; init; }
     public Competition Competition { get; init; }
     public int CupRound { get; init; }
 }
-public sealed record Moment(int Minute, ClubId ClubId, PersonId ScorerId, string Text);
+public sealed record Moment(int Minute, ClubId ClubId, PersonId ScorerId, string Text)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public PersonId? AssistId { get; init; }
+}
+public enum MatchEventKind { Yellow, SecondYellow, Red, Injury }
+// Rating is in tenths (68 = 6.8). Position is the slot played, which can differ from the player's role.
+public sealed record Appearance(PersonId Player, Role Position, int Rating);
+// Duration: weeks out for an injury; matches banned for a dismissal or a caution that completes a set of five.
+public sealed record MatchEvent(int Minute, ClubId ClubId, PersonId Player, MatchEventKind Kind, int Duration);
 public sealed record MatchResult(FixtureId FixtureId, int Week, ClubId Home, ClubId Away, int HomeGoals, int AwayGoals,
     int HomeShots, int AwayShots, int Attendance, long Receipts, ImmutableArray<Moment> Moments)
 {
     public ClubId Winner { get; init; }
     public bool ExtraTime { get; init; }
     public string? Shootout { get; init; }
+    // Empty for matches played before schema 6.
+    public ImmutableArray<Appearance> HomeLineup { get; init; } = [];
+    public ImmutableArray<Appearance> AwayLineup { get; init; } = [];
+    public ImmutableArray<MatchEvent> Events { get; init; } = [];
+    public PersonId? PlayerOfMatch { get; init; }
 }
 public sealed record Project(ProjectId Id, ClubId ClubId, int StartedWeek, int CompletionWeek, long Cost, long RecoverableCash, string ForecastId);
 public sealed record Negotiation(int DecisionId, ClubId Seller, PersonId PlayerId, int ExpiryWeek, long FeeCeiling, long WeeklyWage, string ForecastId);
@@ -105,8 +127,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 5;
-    public string SimulationVersion { get; set; } = "market-5";
+    public int SchemaVersion { get; set; } = 6;
+    public string SimulationVersion { get; set; } = "matchday-6";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -187,6 +209,14 @@ public static class WorldCodec
         {
             WorldFactory.Validate(world, priorCompetition: true);
             world.SchemaVersion = 5; world.SimulationVersion = "market-5";
+        }
+        if (world.SchemaVersion == 5)
+        {
+            WorldFactory.Validate(world, priorMarket: true);
+            // Earlier matches keep empty line-ups, ratings and events; every player starts fit and eligible.
+            foreach (var club in world.Clubs)
+                club.Players = club.Players.Select(p => p with { InjuredUntilWeek = 0, SuspendedMatches = 0, SeasonYellows = 0 }).ToList();
+            world.SchemaVersion = 6; world.SimulationVersion = "matchday-6";
         }
         WorldFactory.Validate(world);
         return world;

@@ -65,6 +65,8 @@ public static class Seasons
         var end = EndWeek(world);
         foreach (var club in world.Clubs.OrderBy(c => c.Id.Value))
         {
+            // Cautions reset each season; injuries and unserved bans carry over.
+            club.Players = club.Players.Select(p => p with { SeasonYellows = 0 }).ToList();
             WorldFactory.AddObligation(world, club.Id, world.Week + 1, end, club.AnnualBroadcast / Weeks,
                 CashKind.Broadcast, $"Season {world.Season} broadcast · published tier rate");
             WorldFactory.AddObligation(world, club.Id, world.Week + 1, end, club.AnnualSponsor / Weeks,

@@ -42,6 +42,10 @@ public sealed record GameView(long Revision, int Week, CareerStatus Status, stri
     public string MarketStatus { get; init; } = "";
     public bool MarketAvailable { get; init; }
     public ImmutableArray<RecruitmentTerms> RecruitmentOptions { get; init; } = [];
+    // Same order as Squad; status is for the coming week's fixtures.
+    public ImmutableArray<PlayerAvailability> SquadAvailability { get; init; } = [];
+    // Every current player, so match reports can name both line-ups.
+    public ImmutableDictionary<PersonId, string> PlayerNames { get; init; } = ImmutableDictionary<PersonId, string>.Empty;
 }
 
 // All reads, commands, checkpoints and loads share one queue. No engine state escapes to the UI.
@@ -140,7 +144,9 @@ public sealed class GameSession : IAsyncDisposable
             Fixtures = world.Fixtures.Where(f => f.Week > Seasons.StartWeek(world) && (f.Home == club.Id || f.Away == club.Id)).ToImmutableArray(),
             CupStatus = Cups.Status(world, club.Id), CupPrize = Cups.PrizeToDate(world, club.Id),
             MarketStatus = RecruitmentMarket.Status(world), MarketAvailable = RecruitmentMarket.Available(world),
-            RecruitmentOptions = RecruitmentMarket.Options(world)
+            RecruitmentOptions = RecruitmentMarket.Options(world),
+            SquadAvailability = club.Players.Select(p => Matchday.Status(p, world.Week + 1)).ToImmutableArray(),
+            PlayerNames = world.Clubs.SelectMany(c => c.Players).ToImmutableDictionary(p => p.Id, p => p.Name)
         };
     });
 
