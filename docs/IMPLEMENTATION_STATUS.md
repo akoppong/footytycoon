@@ -31,7 +31,7 @@ The supplied architecture received an independent subagent review before the imp
 | Development | Annual hospitality choices up to three levels, one active project at a time; no other facility category, actual cancellation command, condition-based delay or academy pipeline. The disclosed recovery fraction is a future cancellation term, not an available button. |
 | Valuation/exit | No appraisal, executable buyer offers, sale reconciliation, ten-season review or 50-season career. No estimated wealth is presented as realized money. |
 | Experience | Readable functional prototype; no completed art/audio, full onboarding, linked story arcs, ambition policies or user-tested accessibility certification. League columns are aligned; further usability testing remains. |
-| Persistence | Schema 5 with in-memory migration from schemas 1–4. No pruning/catalog index, fully validated cloud ancestry reconciliation or supported demo import. All autosave generations are retained; the browser validates them in pages. Full hostile-input validation and long-run capacity need further hardening. |
+| Persistence | Schema 6 with in-memory migration from schemas 1–5. No pruning/catalog index, fully validated cloud ancestry reconciliation or supported demo import. All autosave generations are retained; the browser validates them in pages. Full hostile-input validation and long-run capacity need further hardening. |
 | Steam/release | Adapter reports offline explicitly. Windows x64 export and exported execution are verified on this development PC. Steamworks.NET, account partitioning, Remote Storage, conflicts, achievements, final demo/import, storefront assets, clean-machine verification and release operations remain gates. |
 
 ## Complete-game delivery

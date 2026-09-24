@@ -112,11 +112,11 @@ public partial class Main
         var top = new HBoxContainer(); header.AddChild(top);
         var identity = Stack(top, 2); identity.SizeFlagsStretchRatio = 1.4f;
         var name = Label(view.Club, 21); name.AddThemeColorOverride("font_color", White); identity.AddChild(name);
-        identity.AddChild(Caption($"DIVISION {view.Division}  ·  SEASON {view.Season}  ·  {(view.SeasonWeek == 0 ? "SEASON START" : $"WEEK {view.SeasonWeek:00}")}", new Color("8fa3bc")));
+        identity.AddChild(Caption($"DIVISION {view.Division}  ·  {Calendar.SeasonName(view.Season)} SEASON  ·  {Calendar.FullDay(view.Week).ToUpperInvariant()}", new Color("8fa3bc")));
         var fixture = view.Fixtures.OrderBy(f => f.Week).FirstOrDefault(f => f.Week > view.Week);
         var next = Stack(top, 3);
         next.AddChild(Caption("NEXT MATCH", new Color("8fa3bc")));
-        date = Label(fixture is null ? "Season schedule complete" : $"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound) + " · " : "")}{ClubName(fixture.Home == view.ClubId ? fixture.Away : fixture.Home)} · {(fixture.Home == view.ClubId ? "H" : "A")} · W{SeasonWeek(fixture.Week)}", 12);
+        date = Label(fixture is null ? "Season schedule complete" : $"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound) + " · " : "")}{ClubName(fixture.Home == view.ClubId ? fixture.Away : fixture.Home)} · {(fixture.Home == view.ClubId ? "H" : "A")} · {Calendar.Day(fixture.Week)}", 12);
         date.AddThemeColorOverride("font_color", White); next.AddChild(date);
         foreach (var metric in new[] { ("CLUB CASH", view.ClubCash), ("YOUR RESERVE", view.PersonalReserve) })
         {
@@ -210,11 +210,11 @@ public partial class Main
         }
         Item("brief", !view.AllocationChosen ? "DECISION REQUIRED" : "OWNER BRIEF", !view.AllocationChosen ? "Where should the money go?" : "Your club, this week", "Mara Ellis · CEO", () => SelectInbox("brief"));
         if (view.History.LastOrDefault(h => h.Command.Allocation != Allocation.Acquire) is { } history)
-            Item("commitment", "COMMITTED", history.Intent, $"Career week {history.Week} · {history.Executive}", () => { chosenHistory = history; SelectInbox("commitment"); });
+            Item("commitment", "COMMITTED", history.Intent, $"{Calendar.FullDay(history.Week)} · {history.Executive}", () => { chosenHistory = history; SelectInbox("commitment"); });
         foreach (var review in view.Reviews.Reverse().Where(r => showFiled || !filedReviews.Contains(ReviewKey(r))).Take(6))
-            Item(ReviewKey(review), filedReviews.Contains(ReviewKey(review)) ? "FILED" : $"REVIEW · CAREER WEEK {review.Week}", review.Title, "Saved evidence", () => { chosenReview = review; SelectInbox(ReviewKey(review)); });
+            Item(ReviewKey(review), filedReviews.Contains(ReviewKey(review)) ? "FILED" : $"REVIEW · {Calendar.FullDay(review.Week).ToUpperInvariant()}", review.Title, "Saved evidence", () => { chosenReview = review; SelectInbox(ReviewKey(review)); });
         if (view.Results.LastOrDefault() is { } match)
-            Item("match", $"{(MatchFixture(match).Competition == Competition.Cup ? "CUP" : "MATCH")} · WEEK {SeasonWeek(match.Week)}", MatchTitle(match), "Callum Price · Manager", () => { chosenMatch = match; SelectInbox("match"); });
+            Item("match", $"{(MatchFixture(match).Competition == Competition.Cup ? "CUP" : "MATCH")} · {Calendar.Day(match.Week).ToUpperInvariant()}", MatchTitle(match), "Callum Price · Manager", () => { chosenMatch = match; SelectInbox("match"); });
         var boxPanel = Surface(new Color("f1ede3"), 14); inbox.AddChild(boxPanel); var questions = Stack(boxPanel);
         questions.AddChild(Caption("OPEN QUESTIONS"));
         foreach (var question in view.OpenQuestions) questions.AddChild(Label(question, 12));
@@ -225,7 +225,7 @@ public partial class Main
     {
         var panel = Surface(new Color("efebe1"), 16); rail.AddChild(panel); var box = Stack(panel, 11);
         box.AddChild(Label(selected is null ? "At a glance" : confirming ? "Confirm terms" : "Your proposed plan", 22));
-        box.AddChild(Caption(selected is null ? $"SEASON {view.Season} · WEEK {view.SeasonWeek}" : "NOT YET COMMITTED"));
+        box.AddChild(Caption(selected is null ? $"{Calendar.SeasonName(view.Season)} · {Calendar.Day(view.Week).ToUpperInvariant()}" : "NOT YET COMMITTED"));
         if (selected is { } railProposal)
         {
             var action = Button(confirming ? "Confirm and commit" : "Review final terms", () => { if (confirming) CommitSelected(); else { confirming = true; Render(); } });
@@ -237,9 +237,9 @@ public partial class Main
         Fact(box, "Club cash now", Money.Format(view.ClubCash));
         Fact(box, "Personal reserve", Money.Format(view.PersonalReserve));
         Fact(box, "Club reserve target", Money.Format(view.ReserveTarget));
-        Fact(box, "Base low · next 52 weeks", $"{Money.Format(forecast.LowestBase)} · career W{forecast.LowestBaseWeek}");
-        Fact(box, "Downside low · next 52 weeks", $"{Money.Format(forecast.LowestDownside)} · career W{forecast.LowestDownsideWeek}", forecast.LowestDownside < view.ReserveTarget ? Red : null);
-        box.AddChild(Label($"The chart ends at season week 52. Forecast lows above include the full rolling 52-week horizon; dates beyond the season are illustrative.", 11));
+        Fact(box, "Base low · next 52 weeks", $"{Money.Format(forecast.LowestBase)} · {Calendar.FullDay(forecast.LowestBaseWeek)}");
+        Fact(box, "Downside low · next 52 weeks", $"{Money.Format(forecast.LowestDownside)} · {Calendar.FullDay(forecast.LowestDownsideWeek)}", forecast.LowestDownside < view.ReserveTarget ? Red : null);
+        box.AddChild(Label($"The chart ends when the season closes on {Calendar.FullDay(view.SeasonEndWeek)}. Forecast lows above cover the full rolling 52-week horizon; dates beyond the season are illustrative.", 11));
         if (selected is { } proposal)
         {
             Fact(box, proposal.Command.Allocation == Allocation.Acquire ? "Personal payment to seller" : proposal.Command.Allocation == Allocation.InjectCapital ? "Personal transfer to club" : "Upfront / fee ceiling",
@@ -254,7 +254,7 @@ public partial class Main
             if (view.Arrears > 0) { Fact(box, "OVERDUE", Money.Format(view.Arrears), Red); box.AddChild(Button("Review owner funding", () => Navigate("Business"))); }
             box.AddChild(Caption("DECISION HISTORY"));
             foreach (var history in view.History.TakeLast(3).Reverse())
-                box.AddChild(Button($"Career W{history.Week} · {history.Intent}", () => { chosenHistory = history; SelectInbox("commitment"); }));
+                box.AddChild(Button($"{Calendar.FullDay(history.Week)} · {history.Intent}", () => { chosenHistory = history; SelectInbox("commitment"); }));
             if (view.History.IsEmpty) box.AddChild(Label("Your record begins with the acquisition.", 12));
         }
     }
@@ -267,7 +267,7 @@ public partial class Main
         if (view.Status == CareerStatus.Acquisition) { Acquisition(); return; }
         if (inboxSelection.StartsWith("review:") && chosenReview is not null)
         {
-            var card = Card(); card.AddChild(Caption($"REVIEW · CAREER WEEK {chosenReview.Week}")); card.AddChild(Label(chosenReview.Title, 28));
+            var card = Card(); card.AddChild(Caption($"REVIEW · {Calendar.FullDay(chosenReview.Week).ToUpperInvariant()}")); card.AddChild(Label(chosenReview.Title, 28));
             card.AddChild(Label(chosenReview.Evidence));
             var original = view.History.LastOrDefault(h => h.OriginalForecast.Id == chosenReview.ForecastId);
             if (original is not null) Comparison(card, original, chosenReview.Week);
@@ -279,7 +279,7 @@ public partial class Main
         if (inboxSelection == "match" && chosenMatch is not null) { MatchCard(chosenMatch); return; }
         if (inboxSelection == "commitment" && chosenHistory is not null)
         {
-            var card = Card(); card.AddChild(Caption($"SAVED COMMITMENT · CAREER WEEK {chosenHistory.Week}"));
+            var card = Card(); card.AddChild(Caption($"SAVED COMMITMENT · {Calendar.FullDay(chosenHistory.Week).ToUpperInvariant()}"));
             card.AddChild(Label(chosenHistory.Intent, 28)); card.AddChild(Label(chosenHistory.Executive));
             Comparison(card, chosenHistory, view.Week);
             RecruitmentHistory(card, chosenHistory);
@@ -346,7 +346,7 @@ public partial class Main
             card.AddChild(Label(hospitality ? "Build hospitality" : recruitment ? "Back the forward search" : "Protect the reserve", 24));
             card.AddChild(Caption(hospitality ? $"{Money.Format(balance.HospitalityCost)} cash now · {Money.Format(balance.HospitalityWeeklyUpkeep)}/week after opening"
                 : recruitment ? $"{Money.Format(balance.TransferFeeCeiling)} fee ceiling · {Money.Format(balance.RecruitWeeklyWage)}/week wage ceiling" : "£0 new spending · retain the current squad and facilities", Navy, 13));
-            card.AddChild(Label(hospitality ? $"A 28-week build. Future receipts depend on home matches and demand; upkeep runs through career week {view.SeasonEndWeek + 52}."
+            card.AddChild(Label(hospitality ? $"A 28-week build. Future receipts depend on home matches and demand; upkeep runs through {Calendar.FullDay(view.SeasonEndWeek + Seasons.Weeks)}."
                 : recruitment ? "Authorize a search, not a guaranteed signing. Jonas negotiates within your ceiling; the fee is paid only if a deal completes."
                 : "Keep capital available. Retaining cash is a valid plan; it cannot guarantee sporting success.", 13));
             card.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
@@ -356,7 +356,7 @@ public partial class Main
     private void RecruitmentHistory(VBoxContainer card, DecisionRecord decision)
     {
         if (decision.Recruitment is not { } terms) return;
-        card.AddChild(Label($"Approved target: {terms.Player.Name} · {terms.Seller}\nFee ceiling {Money.Format(terms.FeeCeiling)} · {Money.Format(terms.WeeklyWage)}/week · contract through career week {terms.ContractEndWeek}. These are the saved mandate terms; the negotiation outcome is reported separately.", 14));
+        card.AddChild(Label($"Approved target: {terms.Player.Name} · {terms.Seller}\nFee ceiling {Money.Format(terms.FeeCeiling)} · {Money.Format(terms.WeeklyWage)}/week · contract through {Calendar.FullDay(terms.ContractEndWeek)}. These are the saved mandate terms; the negotiation outcome is reported separately.", 14));
     }
 
     private void DesignProposal(Proposal proposal)
@@ -391,14 +391,14 @@ public partial class Main
             Fact(card, RecruitmentMarket.IsSigning(proposal.Command.Allocation) ? "Transfer fee ceiling · conditional" : "Cash committed now", Money.Format(proposal.UpfrontCash));
             Fact(card, "Continuing cost", Money.Format(proposal.WeeklyCost) + "/week");
             Fact(card, "Total commitment / authorized ceiling", Money.Format(proposal.TotalCommitment));
-            Fact(card, "Review · career week", proposal.ReviewWeek.ToString());
+            Fact(card, "Review date", Calendar.FullDay(proposal.ReviewWeek));
         }
         if (proposal.Recruitment is { } recruit)
         {
             Fact(card, "Director’s target", $"{recruit.Player.Name} · {recruit.Seller}");
             Fact(card, "Role / age / current ability", $"{recruit.Player.Role} · {recruit.Player.Age} · {recruit.Player.Ability}");
             Fact(card, "Your two leading forwards · average ability", recruit.CurrentForwardAbility.ToString("0.0"));
-            Fact(card, "Contract if signed next week", $"Wages from career week {view.Week + 2} through career week {recruit.ContractEndWeek} · no automatic tier wage changes");
+            Fact(card, "Contract if signed next week", $"Wages from {Calendar.FullDay(view.Week + 2)} through {Calendar.FullDay(recruit.ContractEndWeek)} · no automatic tier wage changes");
             Fact(card, "Annual wage commitment", Money.Format(recruit.WeeklyWage * Seasons.Weeks));
             card.AddChild(Label("An additional forward competes for places; selection stays with the manager. No buyer or resale value is guaranteed.", 14));
         }
@@ -437,8 +437,8 @@ public partial class Main
         if (point is null) { card.AddChild(Label("This week is outside the original forecast horizon.")); return; }
         var actual = view.SeasonSummaries.FirstOrDefault(s => s.EndWeek == week && decision.Week < s.EndWeek)?.ClosingCash
             ?? Balance.Load().OpeningClubCash + view.CashLines.Where(l => l.Week <= week).Sum(l => l.Amount);
-        Fact(card, $"Original base forecast · career week {week}", Money.Format(point.BaseCash));
-        Fact(card, $"Actual closing cash · career week {week}", Money.Format(actual));
+        Fact(card, $"Original base forecast · {Calendar.FullDay(week)}", Money.Format(point.BaseCash));
+        Fact(card, $"Actual closing cash · {Calendar.FullDay(week)}", Money.Format(actual));
         Fact(card, "Difference from original base", Money.Format(actual - point.BaseCash));
         card.AddChild(Label("The difference includes all club cash movements, including later owner decisions. It does not establish what a rejected investment would have earned.", 12));
     }
@@ -459,7 +459,7 @@ public partial class Main
     private void MatchCard(MatchResult match)
     {
         var fixture = MatchFixture(match);
-        var card = Card(); card.AddChild(Caption($"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound).ToUpperInvariant() : "MATCH REPORT")} · WEEK {SeasonWeek(match.Week)}")); card.AddChild(Label(MatchTitle(match), 24));
+        var card = Card(); card.AddChild(Caption($"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound).ToUpperInvariant() : "MATCH REPORT")} · {Calendar.FullDay(match.Week).ToUpperInvariant()}")); card.AddChild(Label(MatchTitle(match), 24));
         if (match.ExtraTime) card.AddChild(Label(match.Shootout is null ? "Decided after extra time." : $"Level after extra time · {match.Shootout} on penalties.", 13));
         card.AddChild(Label($"Shots {match.HomeShots}–{match.AwayShots} · Attendance {match.Attendance:N0} · Home receipts {Money.Format(match.Receipts)}", 13));
         foreach (var moment in match.Moments) card.AddChild(Label($"{moment.Minute}'  {moment.Text}"));
@@ -477,4 +477,3 @@ public partial class Main
     private static string ReviewKey(Review r) => $"review:{r.Week}:{r.Title}";
     internal static string ShortMoney(long value) => Math.Abs(value) >= 100000000 ? $"£{value / 100000000m:0.00}m" : Math.Abs(value) >= 100000 ? $"£{value / 100000m:0}k" : Money.Format(value);
 }
-

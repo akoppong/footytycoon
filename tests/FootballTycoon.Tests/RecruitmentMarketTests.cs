@@ -17,10 +17,10 @@ public class RecruitmentMarketTests
     }
 
     [Theory]
-    [InlineData(23, false)]
-    [InlineData(24, true)]
+    [InlineData(26, false)]
     [InlineData(27, true)]
-    [InlineData(28, false)]
+    [InlineData(30, true)]
+    [InlineData(31, false)]
     public void WindowBoundariesAndWaitingAreEnforced(int week, bool open)
     {
         var world = AtWeek(week);
@@ -42,7 +42,7 @@ public class RecruitmentMarketTests
     [Fact]
     public void RecommendationsArePureDistinctAndRespectRivalForwardCover()
     {
-        var world = AtWeek(24);
+        var world = AtWeek(27);
         var before = WorldCodec.Encode(world);
         var first = Proposals.Preview(world, new(Allocation.MidseasonRecruitment), world.Revision);
         var value = Proposals.Preview(world, new(Allocation.MidseasonValue), world.Revision);
@@ -67,14 +67,14 @@ public class RecruitmentMarketTests
         var successes = 0; var failures = 0;
         for (ulong seed = 0; seed < 4; seed++)
         {
-            var world = AtWeek(27, seed);
+            var world = AtWeek(30, seed);
             var beforeCash = world.OwnedClub.Cash;
             var proposal = Proposals.Preview(world, new(Allocation.MidseasonValue), world.Revision);
             Assert.Empty(proposal.BlockingReasons);
             var receipt = Proposals.Commit(world, "window-mandate", world.Revision, proposal);
             Assert.Equal(beforeCash, world.OwnedClub.Cash);
             var bid = Assert.Single(world.Negotiations);
-            Assert.Equal(28, bid.ExpiryWeek);
+            Assert.Equal(31, bid.ExpiryWeek);
             var replay = WorldCodec.Clone(world);
             Assert.Equal(proposal.Recruitment, replay.History.Last().Recruitment);
             Assert.Equal(receipt, Proposals.Commit(replay, "window-mandate", proposal.Revision, proposal));
@@ -90,7 +90,7 @@ public class RecruitmentMarketTests
                 successes++;
                 var signed = world.OwnedClub.Players.Single(p => p.Id == bid.PlayerId);
                 var obligation = Assert.Single(world.Obligations, o => o.ClubId == world.OwnedClubId && o.Description == $"Player contract {signed.ContractId.Value}");
-                Assert.Equal(29, obligation.StartWeek);
+                Assert.Equal(32, obligation.StartWeek);
                 Assert.Equal(proposal.Recruitment!.ContractEndWeek, obligation.EndWeek);
                 Assert.Equal(-proposal.WeeklyCost, obligation.WeeklyAmount);
             }
@@ -102,15 +102,15 @@ public class RecruitmentMarketTests
     [Fact]
     public void SigningRechecksAffordabilityAndWindowBeforeSpending()
     {
-        var world = AtWeek(24);
+        var world = AtWeek(27);
         SimulationTests.Commit(world, Allocation.MidseasonRecruitment);
         Finance.Post(world, WorldFactory.Account(world.OwnedClubId), -world.OwnedClub.Cash, CashKind.Operations, "cash-stress");
         Simulation.AdvanceWeek(world);
         Assert.Empty(world.Negotiations);
         Assert.DoesNotContain(world.Journal, j => j.Kind == CashKind.Transfer);
-        var expired = AtWeek(27);
+        var expired = AtWeek(30);
         SimulationTests.Commit(expired, Allocation.MidseasonValue);
-        expired.Negotiations[0] = expired.Negotiations[0] with { ExpiryWeek = 27 };
+        expired.Negotiations[0] = expired.Negotiations[0] with { ExpiryWeek = 30 };
         Simulation.AdvanceWeek(expired);
         Assert.DoesNotContain(expired.Journal, j => j.Kind == CashKind.Transfer);
     }
@@ -122,9 +122,10 @@ public class RecruitmentMarketTests
         SimulationTests.Commit(world, Allocation.Acquire);
         SimulationTests.Commit(world, Allocation.Recruitment);
         var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
-        legacy["SchemaVersion"] = 4; legacy["SimulationVersion"] = "competition-4";
+        legacy["SchemaVersion"] = 4; legacy["SimulationVersion"] = "competition-4"; legacy.Remove("CalendarStartSeason");
         foreach (var history in legacy["History"]!.AsArray()) history!.AsObject().Remove("Recruitment");
         world.History = world.History.Select(h => h with { Recruitment = null }).ToList();
+        world.CalendarStartSeason = 2;
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
