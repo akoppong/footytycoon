@@ -15,7 +15,7 @@ The current development executable is artifacts/windows-341fe097/FootballTycoon.
 | Club development | Hospitality exists. Complete stadium, training and academy investment, cancellation/delays, condition, demand, prices, sponsor choices and supporter consequences. |
 | Living world | Stable rivals and finances exist. Complete constrained rival recruitment/investment, credible distress/rescue and balance across 50 seasons. |
 | Content and experience | Design-system shell and durable decision flow exist. Complete six acquisitions, difficulties, twelve event families/48 templates, linked arcs, ambition, onboarding and skippable major moments. |
-| Presentation | Native layout, chart and typography exist. Finish distinctive fictional club art, sound, music, interaction polish and accessibility validation. |
+| Presentation | Native layout, chart and typography exist. Finish distinctive fictional club art, sound, music, interaction polish and accessibility validation. See the [presentation proposal](PRESENTATION_PROPOSAL.md) for the phased plan. |
 | Career and release | Three-season development boundary remains. Complete ten-year assessment, optional continuation to 50, robust history retention, migrations, Steam integration, cloud conflicts, achievements, demo/import and clean-machine acceptance. |
 | Product proof | No player delight or production readiness claim. Run the PRD's usability, pacing, strategy, balance, performance and release checks with evidence matching each requirement. |
 
