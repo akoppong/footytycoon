@@ -252,6 +252,13 @@ public partial class Main
                     || view.SeasonSummaries.Last().Development.Any(p => view.Squad.Single(s => s.Id == p.PlayerId).Age != p.AgeBefore + 1))
                     throw new InvalidOperationException("Season development did not reach the final report and squad.");
                 Navigate("People"); await Capture("Three-season-development");
+                if (view.Departures.Any(d => d.ClubId != view.ClubId || view.PlayerNames.GetValueOrDefault(d.PlayerId) != d.Name))
+                    throw new InvalidOperationException("Departure records lost their club or historical name.");
+                if (view.Departures.Length > 0 && content.GetParent() is ScrollContainer peopleList)
+                {
+                    peopleList.ScrollVertical = (int)peopleList.GetVScrollBar().MaxValue;
+                    await Capture("Player-departures");
+                }
                 Navigate("History"); await Settled();
                 await Press("Collapse chart");
                 foreach (var scale in new[] { 100, 150 })

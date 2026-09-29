@@ -80,7 +80,7 @@ public class SeasonTests
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(10, migrated.SchemaVersion);
+        Assert.Equal(11, migrated.SchemaVersion);
         Assert.Equal(CareerStatus.SeasonReview, migrated.Status);
         Assert.Single(migrated.SeasonSummaries);
         Assert.Equal(16, migrated.SeasonSummaries[0].FinalTable.Length);

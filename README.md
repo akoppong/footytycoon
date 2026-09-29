@@ -88,7 +88,7 @@ The desktop uses Godot's local `user://saves/offline` directory. The run script 
 
 Each immutable `.ftsave` contains bounded metadata, gzip JSON, and a SHA256 over metadata plus payload. Writes flush to a temporary file, reopen and validate, then rename within the vault. The application publishes a changed world only after persistence succeeds. The save browser orders bounded file headers, then fully validates the 20 checkpoints on the displayed page. Older/newer navigation keeps the remaining checkpoints accessible; corrupt files are preserved and omitted from selection. No file pruning is implemented: three logical rotating autosave slot names keep **all** physical snapshots, plus manual, pre-commit recovery and post-commit checkpoints. Disk usage therefore grows. Future retention must preserve branch ancestry and unique recovery points.
 
-Loading any snapshot forks on the next successful write. Duplicate command receipts persist. Unsupported versions are rejected without modifying their source. Current source uses schema 10 and migrates schemas 1–9 in memory without overwriting the original file (schema 6 adds the dated calendar, 7 match detail and availability, 8 contract decisions, 9 annual player development, 10 training investment); the packaged executable `windows-f618441b` also uses schema 10. Steam Cloud is not implemented.
+Loading any snapshot forks on the next successful write. Duplicate command receipts persist. Unsupported versions are rejected without modifying their source. Current source uses schema 11 and migrates schemas 1–10 in memory without overwriting the original file (schema 6 adds the dated calendar, 7 match detail and availability, 8 contract decisions, 9 annual player development, 10 training investment, 11 player departure records); the packaged executable `windows-f618441b` uses schema 10 and predates the departure archive. Steam Cloud is not implemented.
 
 Players now age and can improve or decline at each season close, before contract recommendations. People shows their development outlook; season reports preserve named before/after results. See [annual player development](docs/PLAYER_DEVELOPMENT.md) for the rules, migration behavior and remaining scope.
 
@@ -101,3 +101,5 @@ See [season rollover scope and validation](docs/SEASON_LOOP.md) for annual renew
 The current build adds promotion/relegation, tier-based renewal previews, a complete domestic knockout cup and [midseason recruitment](docs/RECRUITMENT_MARKET.md). See [complete-game delivery tracking](docs/DELIVERY_PROGRESS.md) for validation and the remaining full-game scope.
 
 Source also supports [training investment](docs/TRAINING.md): three upgrades, 32-week delivery, additive upkeep and uncertain development benefits based on each player's actual exposure.
+
+Newer source preserves [player departure records](docs/PLAYER_HISTORY.md) when contracts expire, retaining named career history after players leave active squads.

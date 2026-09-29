@@ -190,6 +190,11 @@ public partial class Main : Control
             var change = progress is null ? "" : $" · Last season {progress.Change:+0;-0;0}";
             squad.AddChild(Label($"{player.Name} · {player.Role} · Age {player.Age} · Ability {player.Ability}{change}\n{PlayerDevelopment.Outlook(player)}\n{Money.Format(player.WeeklyWage)}/week · Contract through {Calendar.FullDay(player.ContractEndWeek)}", 16));
         }
+        var archive = Card(); archive.AddChild(Label("Player departures", 24));
+        archive.AddChild(Label("Names and career details recorded when players left your club. Earlier saves recover confirmed owner release decisions; unrecorded departures are not reconstructed.", 14));
+        if (view.Departures.IsEmpty) archive.AddChild(Label("No departures recorded.", 14));
+        foreach (var departure in view.Departures)
+            archive.AddChild(Label($"{departure.Name} · {departure.Role}\n{Calendar.FullDay(departure.Week)} · {departure.Reason}\nAt departure: age {departure.Age} · ability {departure.Ability}", 16));
     }
 
     private void History()

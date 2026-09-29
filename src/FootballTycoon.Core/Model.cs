@@ -106,6 +106,8 @@ public sealed record PlayerProgress(PersonId PlayerId, string Name, Role Role, i
     [JsonIgnore] public int Change => AbilityAfter - AbilityBefore;
     public int TrainingBonus { get; init; }
 }
+public sealed record PlayerDeparture(PersonId PlayerId, string Name, Role Role, int Age, int Ability,
+    ClubId ClubId, int Week, string Reason);
 public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long RenewedAnnualWages,
     long AnnualBroadcast, long AnnualSponsor, long AnnualOperations, long Arrears)
 {
@@ -162,8 +164,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 10;
-    public string SimulationVersion { get; set; } = "training-10";
+    public int SchemaVersion { get; set; } = 11;
+    public string SimulationVersion { get; set; } = "people-history-11";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -176,6 +178,7 @@ public sealed class World
     public long SeasonOpeningCash { get; set; }
     public int SeasonOpeningLedgerSequence { get; set; }
     public List<SeasonSummary> SeasonSummaries { get; set; } = [];
+    public List<PlayerDeparture> Departures { get; set; } = [];
     public Phase Phase { get; set; }
     public CareerStatus Status { get; set; }
     public ClubId OwnedClubId { get; set; }
@@ -287,6 +290,14 @@ public static class WorldCodec
             }
             world.Projects = world.Projects.Select(p => p with { Kind = FacilityKind.Hospitality }).ToList();
             world.SchemaVersion = 10; world.SimulationVersion = "training-10";
+        }
+        if (world.SchemaVersion == 10)
+        {
+            WorldFactory.Validate(world, priorTraining: true);
+            // Only confirmed owner renewal decisions contain enough evidence to recover older departures.
+            // Earlier rival releases were not recorded; do not invent those people or events.
+            world.Departures = PlayerHistory.RecoverDepartures(world);
+            world.SchemaVersion = 11; world.SimulationVersion = "people-history-11";
         }
         WorldFactory.Validate(world);
         return world;

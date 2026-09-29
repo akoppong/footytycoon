@@ -44,11 +44,12 @@ public sealed record GameView(long Revision, int Week, CareerStatus Status, stri
     public ImmutableArray<RecruitmentTerms> RecruitmentOptions { get; init; } = [];
     // Same order as Squad; status is for the coming week's fixtures.
     public ImmutableArray<PlayerAvailability> SquadAvailability { get; init; } = [];
-    // Every current player, so match reports can name both line-ups.
+    // Current and recorded historical identities, so departures do not erase report names.
     public ImmutableDictionary<PersonId, string> PlayerNames { get; init; } = ImmutableDictionary<PersonId, string>.Empty;
     public int TrainingLevel { get; init; }
     public int HospitalityLevel { get; init; }
     public ImmutableArray<Project> Projects { get; init; } = [];
+    public ImmutableArray<PlayerDeparture> Departures { get; init; } = [];
 }
 
 // All reads, commands, checkpoints and loads share one queue. No engine state escapes to the UI.
@@ -154,10 +155,11 @@ public sealed class GameSession : IAsyncDisposable
             MarketAvailable = RecruitmentMarket.Available(world),
             RecruitmentOptions = RecruitmentMarket.Options(world),
             SquadAvailability = club.Players.Select(p => Matchday.Status(p, world.Week + 1)).ToImmutableArray(),
-            PlayerNames = world.Clubs.SelectMany(c => c.Players).ToImmutableDictionary(p => p.Id, p => p.Name),
+            PlayerNames = PlayerHistory.Names(world),
             TrainingLevel = club.TrainingLevel,
             HospitalityLevel = club.HospitalityLevel,
-            Projects = world.Projects.Where(p => p.ClubId == club.Id).ToImmutableArray()
+            Projects = world.Projects.Where(p => p.ClubId == club.Id).ToImmutableArray(),
+            Departures = world.Departures.Where(p => p.ClubId == club.Id).OrderByDescending(p => p.Week).ThenBy(p => p.Name).ToImmutableArray()
         };
     });
 

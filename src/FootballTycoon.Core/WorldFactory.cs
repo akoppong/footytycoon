@@ -169,9 +169,9 @@ public static class WorldFactory
     public static void AddObligation(World world, ClubId club, int start, int end, long weekly, CashKind kind, string description) =>
         world.Obligations.Add(new(new(world.Obligations.Count + 1), club, start, end, weekly, kind, description));
 
-    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false)
+    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false, bool priorTraining = false)
     {
-        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : 10) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : "training-10") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
+        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : priorTraining ? 10 : 11) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : priorTraining ? "training-10" : "people-history-11") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
             throw new InvalidDataException("Unsupported save, simulation, content or random version. The source was not changed.");
         if (world.Clubs.Count != 48 || world.Clubs.Select(c => c.Id).Distinct().Count() != 48
             || world.Clubs.Count(c => c.Id == world.OwnedClubId) != 1 || (legacy ? world.Week is < 0 or > 52 : world.Season is < 1 or > Seasons.PlayableSeasons || world.Week < Seasons.StartWeek(world) || world.Week > Seasons.EndWeek(world)) || world.Revision < 0
@@ -183,6 +183,11 @@ public static class WorldFactory
             || world.Fixtures.Any(f => f.Competition == Competition.League && f.Division is < 1 or > 3)))
             throw new InvalidDataException("Missing season division history.");
         var people = world.Clubs.SelectMany(c => c.Players).ToArray();
+        if (world.SchemaVersion >= 11 && (world.Departures.Select(d => (d.PlayerId, d.ClubId, d.Week)).Distinct().Count() != world.Departures.Count
+            || world.Departures.Any(d => d.PlayerId.Value <= 0 || string.IsNullOrWhiteSpace(d.Name) || string.IsNullOrWhiteSpace(d.Reason)
+                || !Enum.IsDefined(d.Role) || d.Age is < 16 or > 100 || d.Ability is < 1 or > 100
+                || d.Week < 0 || d.Week > world.Week || world.Clubs.All(c => c.Id != d.ClubId))))
+            throw new InvalidDataException("Invalid player departure history.");
         if (world.SchemaVersion >= 10 && (world.Clubs.Any(c => c.TrainingLevel is < 0 or > 3)
             || people.Any(p => p.TrainingExposure < 0 || p.TrainingExposure > 20 * Seasons.WeekInSeason(world.Week, world.Season))
             || world.Projects.Any(p => !Enum.IsDefined(p.Kind))
