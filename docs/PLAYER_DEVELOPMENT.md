@@ -4,7 +4,7 @@ At each season close, every current player at all 48 clubs ages by one year. Abi
 
 ## Current rules
 
-These are fictional balance assumptions, not claims about real player development. Ages below refer to age before the annual update.
+These are base rules before training bonuses and fictional balance assumptions, not claims about real player development. Ages below refer to age before the annual update.
 
 | Age / role | Possible annual change | Policy |
 |---|---|---|
@@ -21,8 +21,10 @@ The reported outcome is a bounded simulation result. Appearance counts are evide
 
 Schema 9 (`development-9`) adds immutable development rows to season summaries. Schemas 1–8 migrate in memory. Players retain their saved age and ability during migration; completed seasons keep empty development reports. An unfinished season receives its first update at its next close. Closing an already recorded season is idempotent. Original save files are never overwritten by migration.
 
-This is an annual development foundation within the three-season milestone. Individual potential, training facilities and staff effects, academy intake, retirement, player morale and a balanced long career remain unimplemented. Annual aging does not itself make the current finite player pool suitable for 50 seasons.
+This is an annual development foundation within the three-season milestone. Individual potential, staff effects, academy intake, retirement, player morale and a balanced long career remain unimplemented. Annual aging does not itself make the current finite player pool suitable for 50 seasons.
 
 ## Validation
 
 The focused tests cover every club aging at a real season close, renewal terms using the updated players, exact report retention, repeated close/save-load idempotence, deterministic replay and RNG isolation, bounded improvement/stalling/decline, pre-transfer and current-season exposure, departed-player history, schema-8 migration before and after season close, and malformed report rejection. Final run evidence is recorded in [delivery progress](DELIVERY_PROGRESS.md).
+
+Schema 10 adds [training facilities](TRAINING.md). Actual weekly exposure can improve growth chances without changing the base age rules or random draws; season reports retain the bonus before the exposure counter resets.

@@ -21,7 +21,8 @@ public static class Money
 
 public enum CareerStatus { Acquisition, Active, Administration, LostControl, PrototypeComplete, SeasonReview }
 public enum Phase { Decisions, Payments, Negotiation, Matches, Development, Reporting }
-public enum Allocation { Acquire, PreserveReserve, Hospitality, Recruitment, InjectCapital, StartNextSeason, MidseasonRecruitment, MidseasonValue, MidseasonWait }
+public enum Allocation { Acquire, PreserveReserve, Hospitality, Recruitment, InjectCapital, StartNextSeason, MidseasonRecruitment, MidseasonValue, MidseasonWait, Training }
+public enum FacilityKind { Hospitality, Training }
 public enum AdvanceTarget { Week, Month, NextDecision }
 public enum Role { Goalkeeper, Defender, Midfielder, Forward }
 public enum Competition { League, Cup }
@@ -43,6 +44,8 @@ public sealed record Player(PersonId Id, string Name, Role Role, int Ability, in
     // Remaining competitive matches of the player's club to miss.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int SuspendedMatches { get; init; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int SeasonYellows { get; init; }
+    // Sum of each week's facility growth-chance bonus; transfers retain actual exposure.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public int TrainingExposure { get; init; }
 }
 public sealed record Fixture(FixtureId Id, int Week, ClubId Home, ClubId Away)
 {
@@ -71,7 +74,10 @@ public sealed record MatchResult(FixtureId FixtureId, int Week, ClubId Home, Clu
     public ImmutableArray<MatchEvent> Events { get; init; } = [];
     public PersonId? PlayerOfMatch { get; init; }
 }
-public sealed record Project(ProjectId Id, ClubId ClubId, int StartedWeek, int CompletionWeek, long Cost, long RecoverableCash, string ForecastId);
+public sealed record Project(ProjectId Id, ClubId ClubId, int StartedWeek, int CompletionWeek, long Cost, long RecoverableCash, string ForecastId)
+{
+    public FacilityKind Kind { get; init; }
+}
 public sealed record Negotiation(int DecisionId, ClubId Seller, PersonId PlayerId, int ExpiryWeek, long FeeCeiling, long WeeklyWage, string ForecastId);
 public sealed record Decision(DecisionId Id, int DueWeek, bool Required, string Title, bool Resolved = false);
 public sealed record ForecastPoint(int Week, long BaseCash, long DownsideCash, long KnownNet);
@@ -98,6 +104,7 @@ public sealed record PlayerProgress(PersonId PlayerId, string Name, Role Role, i
     int AbilityAfter, int Appearances, string Evidence)
 {
     [JsonIgnore] public int Change => AbilityAfter - AbilityBefore;
+    public int TrainingBonus { get; init; }
 }
 public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long RenewedAnnualWages,
     long AnnualBroadcast, long AnnualSponsor, long AnnualOperations, long Arrears)
@@ -148,14 +155,15 @@ public sealed class Club
     public long HistoricalCommercial { get; set; }
     public int Support { get; set; } = 60;
     public int HospitalityLevel { get; set; }
+    public int TrainingLevel { get; set; }
     public int Lot { get; set; }
     public List<Player> Players { get; set; } = [];
 }
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 9;
-    public string SimulationVersion { get; set; } = "development-9";
+    public int SchemaVersion { get; set; } = 10;
+    public string SimulationVersion { get; set; } = "training-10";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -268,6 +276,17 @@ public static class WorldCodec
             // Do not age players or fabricate development for an already completed season.
             world.SeasonSummaries = world.SeasonSummaries.Select(s => s with { Development = [] }).ToList();
             world.SchemaVersion = 9; world.SimulationVersion = "development-9";
+        }
+        if (world.SchemaVersion == 9)
+        {
+            WorldFactory.Validate(world, priorDevelopment: true);
+            foreach (var club in world.Clubs)
+            {
+                club.TrainingLevel = 0;
+                club.Players = club.Players.Select(p => p with { TrainingExposure = 0 }).ToList();
+            }
+            world.Projects = world.Projects.Select(p => p with { Kind = FacilityKind.Hospitality }).ToList();
+            world.SchemaVersion = 10; world.SimulationVersion = "training-10";
         }
         WorldFactory.Validate(world);
         return world;

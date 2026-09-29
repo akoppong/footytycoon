@@ -46,6 +46,9 @@ public sealed record GameView(long Revision, int Week, CareerStatus Status, stri
     public ImmutableArray<PlayerAvailability> SquadAvailability { get; init; } = [];
     // Every current player, so match reports can name both line-ups.
     public ImmutableDictionary<PersonId, string> PlayerNames { get; init; } = ImmutableDictionary<PersonId, string>.Empty;
+    public int TrainingLevel { get; init; }
+    public int HospitalityLevel { get; init; }
+    public ImmutableArray<Project> Projects { get; init; } = [];
 }
 
 // All reads, commands, checkpoints and loads share one queue. No engine state escapes to the UI.
@@ -125,7 +128,8 @@ public sealed class GameSession : IAsyncDisposable
         if (world.Status == CareerStatus.SeasonReview) questions.Add("Are the next season’s renewal terms affordable?");
         if (world.Decisions.Any(d => !d.Resolved)) questions.Add("Which capital plan should receive this season’s limited funds?");
         if (world.Negotiations.Count > 0) questions.Add("Will Jonas find a forward within the approved ceiling?");
-        if (world.Projects.Any(p => p.CompletionWeek > world.Week)) questions.Add("Will hospitality demand justify the cash committed to the expansion?");
+        if (world.Projects.Any(p => p.Kind == FacilityKind.Hospitality && p.CompletionWeek > world.Week)) questions.Add("Will hospitality demand justify the cash committed to the expansion?");
+        if (world.Projects.Any(p => p.Kind == FacilityKind.Training && p.CompletionWeek > world.Week)) questions.Add("Will the younger squad develop enough to justify the training investment?");
         if (world.Arrears.Any(a => a.ClubId == club.Id)) questions.Add("Can personal reserves clear the overdue obligations within four weeks?");
         else if (forecast.LowestDownside < world.ReserveTarget) questions.Add("Can the club protect its reserve through the lowest forecast week?");
         return new GameView(world.Revision, world.Week, world.Status, club.Name, club.Id, club.Cash, world.OwnerCash,
@@ -150,7 +154,10 @@ public sealed class GameSession : IAsyncDisposable
             MarketAvailable = RecruitmentMarket.Available(world),
             RecruitmentOptions = RecruitmentMarket.Options(world),
             SquadAvailability = club.Players.Select(p => Matchday.Status(p, world.Week + 1)).ToImmutableArray(),
-            PlayerNames = world.Clubs.SelectMany(c => c.Players).ToImmutableDictionary(p => p.Id, p => p.Name)
+            PlayerNames = world.Clubs.SelectMany(c => c.Players).ToImmutableDictionary(p => p.Id, p => p.Name),
+            TrainingLevel = club.TrainingLevel,
+            HospitalityLevel = club.HospitalityLevel,
+            Projects = world.Projects.Where(p => p.ClubId == club.Id).ToImmutableArray()
         };
     });
 

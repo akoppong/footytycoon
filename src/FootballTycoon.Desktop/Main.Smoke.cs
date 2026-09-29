@@ -11,6 +11,7 @@ public partial class Main
         try
         {
             await Settled();
+            var trainingProbe = OS.GetCmdlineUserArgs().Contains("--training-smoke-test");
             // Verify the engine applied the weight axes; StringName keys silently used Archivo's 600 default.
             var textServer = TextServerManager.GetPrimaryInterface();
             var weightTag = textServer.NameToTag("wght");
@@ -64,14 +65,17 @@ public partial class Main
                 await Press("Review final terms"); await Capture("Hospitality-terms");
                 await Press("Keep editing");
                 await Press("Back to comparison");
+                Preview(Allocation.Training); await Settled(); await Capture("Training-proposal");
+                await Press("Review final terms"); await Capture("Training-terms");
+                await Press("Keep editing"); await Press("Back to comparison");
             }
             textScale = 100; Theme.DefaultFontSize = 14;
             Preview(Allocation.Recruitment); await Settled(); await Capture("Recruitment-proposal");
             await Press("Back to comparison"); Preview(Allocation.PreserveReserve); await Settled(); await Capture("Retain-cash-proposal");
-            await Press("Back to comparison"); Preview(Allocation.Hospitality); await Settled();
+            await Press("Back to comparison"); Preview(trainingProbe ? Allocation.Training : Allocation.Hospitality); await Settled();
             await Press("Review final terms"); await Press("Confirm and commit");
-            if (!view.AllocationChosen || view.ClubCash != Balance.Load().OpeningClubCash - Balance.Load().HospitalityCost)
-                throw new InvalidOperationException("Hospitality was not committed exactly once.");
+            if (!view.AllocationChosen || view.ClubCash != Balance.Load().OpeningClubCash - (trainingProbe ? Facilities.TrainingCost(0) : Balance.Load().HospitalityCost))
+                throw new InvalidOperationException("Construction was not committed exactly once.");
             ContinueCareer(); await Settled();
             if (view.Week != 4) throw new InvalidOperationException("Continue did not stop at the first monthly review.");
             // The league opens in mid-August (week 7); the second monthly stop has a played match to inspect.
@@ -263,6 +267,14 @@ public partial class Main
                     await Press("Hide season 3 player reviews");
                 }
                 GD.Print("DEVELOPMENT SMOKE PASS: three annual reports and aged final squad.");
+                if (trainingProbe)
+                {
+                    if (view.TrainingLevel != 1 || view.HospitalityLevel != 0 || !view.SeasonSummaries.First().Development.Any(p => p.TrainingBonus > 0)
+                        || !view.Reviews.Any(r => r.Title == "Training center opens"))
+                        throw new InvalidOperationException("Training delivery or development evidence is missing.");
+                    Navigate("Club"); await Capture("Training-facilities");
+                    GD.Print("TRAINING SMOKE PASS: proposal, confirmed cost, saved project, delivery, upkeep and seasonal development evidence.");
+                }
                 GD.Print("SEASON SMOKE PASS: renewal UI, contract recommendations with an override and accept-all, annual plans, three season reports and final endpoint.");
             }
             GD.Print($"SMOKE PASS: acquisition, all plan previews, final confirmations, required-decision guards, next review, six workspaces at three text scales, chart collapse, review filing/restoration, funding terms, settings, save/load and resume; {DisplayServer.GetName()}");

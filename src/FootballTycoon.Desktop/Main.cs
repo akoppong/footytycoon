@@ -97,8 +97,13 @@ public partial class Main : Control
         var card = Card(); card.AddChild(Label("Stonebridge Football Club", 28));
         card.AddChild(Label("Stonebridge · River district · Navy and lime\nA club built by the town's engineering works, with a loyal local following. Rival: Ravenswick."));
         card.AddChild(Label("Ownership thesis: build sustainable strength.\nFootball authority: manager selects and prepares the team; sporting director recruits; CEO administers the business."));
-        card.AddChild(Label("Prototype scope: one acquisition, three seasons, annual capital plans, promotion/relegation and tier-based revenue renewals. Facilities outside hospitality, supporter identity effects, valuation and exits are not yet implemented."));
-        card.AddChild(Label($"Invested owner capital: {Money.Format(view.OwnerInvested)}\nCash reserve target: {Money.Format(view.ReserveTarget)}\nOpening plan: {(view.AllocationChosen ? view.History.LastOrDefault(h => h.Command.Allocation is Allocation.PreserveReserve or Allocation.Hospitality or Allocation.Recruitment)?.Intent : "Awaiting owner decision")}"));
+        card.AddChild(Label("Development scope: one acquisition, three seasons, annual capital plans, promotion/relegation and tier-based revenue renewals. Stadium and academy investment, supporter identity effects, valuation and exits remain in development."));
+        card.AddChild(Label($"Invested owner capital: {Money.Format(view.OwnerInvested)}\nCash reserve target: {Money.Format(view.ReserveTarget)}\nOpening plan: {(view.AllocationChosen ? view.History.LastOrDefault(h => Seasons.IsCapitalPlan(h.Command.Allocation))?.Intent : "Awaiting owner decision")}"));
+        var facilities = Card(); facilities.AddChild(Label("Your facilities", 24));
+        facilities.AddChild(Label($"Hospitality · level {view.HospitalityLevel} / 3\nTraining center · level {view.TrainingLevel} / 3"));
+        facilities.AddChild(Label("Training benefits accumulate from the week after delivery. Younger players may improve at the season review; construction does not instantly raise ability.", 14));
+        foreach (var project in view.Projects.OrderByDescending(p => p.StartedWeek))
+            facilities.AddChild(Label($"{project.Kind} · {(project.CompletionWeek > view.Week ? "Opens" : "Delivered")} {Calendar.FullDay(project.CompletionWeek)}\nConstruction paid {Money.Format(project.Cost)} · see Business for signed upkeep", 14));
     }
 
     private void Football()

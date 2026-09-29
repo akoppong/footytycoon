@@ -30,12 +30,12 @@ Requires Windows x64, the **.NET 10 SDK**, and **Godot 4.7.2 .NET**. The tools d
 
 The smoke test creates a separate new career in the local prototype vault on each run. It does not load or overwrite another career. Export requires the official Godot 4.7.2 .NET templates: put `windows_release_x86_64.exe`, `windows_debug_x86_64.exe` and `version.txt` from the [official templates archive](https://godotengine.org/download/archive/4.7.2-stable/) under `.tools/appdata/Godot/export_templates/4.7.2.stable.mono`. They are already present in this workspace.
 
-The current executable is `artifacts/windows-341fe097/FootballTycoon.exe`, including promotion/relegation, the domestic cup and midseason recruitment. Keep its `.pck`, `data_FootballTycoon.Desktop_windows_x86_64` and `licenses` folders beside it. The previous cup build remains under `artifacts/windows-ea39cc4f`. Subsequent export-script runs use a new output directory and report its location. Exported execution was tested on this development PC; a clean-machine acceptance run is still required. See the delivery tracker for validation of this build.
+The current executable is `artifacts/windows-f618441b/FootballTycoon.exe`, including training investment, annual player development, contract decisions, the dated calendar, promotion/relegation, the domestic cup and midseason recruitment. This package uses schema 10. A portable archive is available at `artifacts/FootballTycoon-training-windows.zip`; extract it before launching. Keep its `.pck`, `data_FootballTycoon.Desktop_windows_x86_64` and `licenses` folders beside it. The previous cup build remains under `artifacts/windows-ea39cc4f`. Subsequent export-script runs use a new output directory and report its location. Exported execution was tested on this development PC; a clean-machine acceptance run is still required. See the delivery tracker for validation of this build.
 
 ## Play the ownership loop
 
 1. Open **Owner Desk**, inspect Stonebridge FC, and review the £2.8m acquisition. Paying the seller leaves £2.2m personal reserve and £1.4m in the club.
-2. Choose one opening plan: preserve cash, pay £650k for hospitality, or authorize a £550k forward search with a disclosed wage ceiling. Preview shows cash lows, signed commitments, uncertainty and blocking reasons.
+2. Choose one opening plan: preserve cash, pay £650k for hospitality or a first training upgrade, or authorize a £550k forward search with a disclosed wage ceiling. Preview shows cash lows, signed commitments, uncertainty and blocking reasons.
 3. Advance by week or to the next monthly review. Staff negotiate the authorized search; the manager selects the team. Recruitment can fail without spending the fee.
 4. Inspect **Football** for the cup, table and match moments. During the January window (approvals from the first Saturday of January, with deals complete by 1 February), compare the director’s two forward recommendations or choose to keep the squad. Preview exact terms before authorizing a negotiation. **Business** holds forecasts and reconciliation, **People** the roster, and **History** original mandate terms and outcomes.
 5. Save or use **Load / recover**. At the end of June in 2027 and 2028, review the season report and confirm next-season renewals, then choose a fresh capital plan. The close of the 2028/29 season (June 2029) completes this milestone; ownership exits remain deferred. Every screen shows real dates; see [dated calendar](docs/CALENDAR.md).
@@ -50,6 +50,7 @@ The interface now follows the supplied Owner Loop / Season Line design: navy-and
 dotnet run --project src/FootballTycoon.Headless -- PreserveReserve 2026 artifacts/reserve-2026
 dotnet run --project src/FootballTycoon.Headless -- Hospitality 2026 artifacts/hospitality-2026
 dotnet run --project src/FootballTycoon.Headless -- Recruitment 2026 artifacts/recruitment-2026
+dotnet run --project src/FootballTycoon.Headless -- Training 2026 artifacts/training-2026
 ```
 
 If using this workspace's local SDK, replace `dotnet` with `./.tools/dotnet/dotnet.exe`. The selected strategy applies to season one; subsequent seasons retain cash. Each run uses the same application commands, weekly checkpoints and core as the game and prints a gameplay SHA256 for replay comparisons. It does not represent a validated strategy or guarantee three distinct sporting outcomes.
@@ -75,7 +76,7 @@ Every pull request runs [CI](.github/workflows/build.yml), and `main` accepts ch
 |---|---|
 | Core | `dotnet format --verify-no-changes`, Release build with warnings as errors, all xUnit tests, NuGet vulnerability audit |
 | Desktop | Installs the pinned Godot 4.7.2 .NET editor (SHA-512 verified), format check, Godot build, resource import, headless engine smoke test |
-| Headless | Each strategy (PreserveReserve, Hospitality, Recruitment) plays a full three-season career; outcomes and gameplay hashes appear in the run summary |
+| Headless | Each strategy (PreserveReserve, Hospitality, Recruitment, Training) plays a full three-season career; outcomes and gameplay hashes appear in the run summary |
 
 Run `dotnet format FootballTycoon.slnx` and `dotnet format src/FootballTycoon.Desktop/FootballTycoon.Desktop.csproj` before pushing to satisfy the format check.
 
@@ -87,7 +88,7 @@ The desktop uses Godot's local `user://saves/offline` directory. The run script 
 
 Each immutable `.ftsave` contains bounded metadata, gzip JSON, and a SHA256 over metadata plus payload. Writes flush to a temporary file, reopen and validate, then rename within the vault. The application publishes a changed world only after persistence succeeds. The save browser orders bounded file headers, then fully validates the 20 checkpoints on the displayed page. Older/newer navigation keeps the remaining checkpoints accessible; corrupt files are preserved and omitted from selection. No file pruning is implemented: three logical rotating autosave slot names keep **all** physical snapshots, plus manual, pre-commit recovery and post-commit checkpoints. Disk usage therefore grows. Future retention must preserve branch ancestry and unique recovery points.
 
-Loading any snapshot forks on the next successful write. Duplicate command receipts persist. Unsupported versions are rejected without modifying their source. Current source uses schema 9 and migrates schemas 1–8 in memory without overwriting the original file (schema 6 adds the dated calendar, 7 match detail and availability, 8 contract decisions, 9 annual player development); the packaged executable `windows-341fe097` predates the dated calendar and uses schema 5. Steam Cloud is not implemented.
+Loading any snapshot forks on the next successful write. Duplicate command receipts persist. Unsupported versions are rejected without modifying their source. Current source uses schema 10 and migrates schemas 1–9 in memory without overwriting the original file (schema 6 adds the dated calendar, 7 match detail and availability, 8 contract decisions, 9 annual player development, 10 training investment); the packaged executable `windows-f618441b` also uses schema 10. Steam Cloud is not implemented.
 
 Players now age and can improve or decline at each season close, before contract recommendations. People shows their development outlook; season reports preserve named before/after results. See [annual player development](docs/PLAYER_DEVELOPMENT.md) for the rules, migration behavior and remaining scope.
 
@@ -98,3 +99,5 @@ See [football calendar and ownership research](docs/FOOTBALL_RESEARCH.md) for th
 See [season rollover scope and validation](docs/SEASON_LOOP.md) for annual renewals, save migration and remaining limits.
 
 The current build adds promotion/relegation, tier-based renewal previews, a complete domestic knockout cup and [midseason recruitment](docs/RECRUITMENT_MARKET.md). See [complete-game delivery tracking](docs/DELIVERY_PROGRESS.md) for validation and the remaining full-game scope.
+
+Source also supports [training investment](docs/TRAINING.md): three upgrades, 32-week delivery, additive upkeep and uncertain development benefits based on each player's actual exposure.
