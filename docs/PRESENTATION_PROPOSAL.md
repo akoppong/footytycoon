@@ -8,7 +8,7 @@ Football Tycoon's simulation is honest, but players don't yet experience that ho
 
 The main lesson from the market comes from Football Manager 26 (November 2025). The most established game in the genre rebuilt its interface around tiles, widgets and pop-ups. At launch in November 2025 its Steam rating fell to Mostly Negative, the series' lowest. The complaints focused on extra clicks, wasted screen space, league tables and statistics buried several screens deep, and no UI scaling. Among the most welcomed patches were ones that made the interface *faster*, such as an option to turn off or slow transitions. So we should be **dramatic in identity and feedback, and conservative in navigation and data layout.**
 
-Recommended sequence: (1) remove friction and developer notes, (2) build a component layer and give the club a visual identity, (3) replace text lists with charts and tables, (4) add matchday and story presentation, (5) add sound, motion and ceremonies, with accessibility built in at every step. Each phase can be shipped, measured and tested with players on its own.
+Recommended sequence: (1) remove friction and developer notes, (2) build a component layer and give the club a visual identity, (3) replace text lists with charts and tables, (4) add matchday and story presentation, (5) add sound, motion and ceremonies, with accessibility built in at every step. Each phase can be shipped to `main` and checked internally on its own. Outside players only see the game in Phase 5, once it is polished; before the costly phases, an internal review stands in for a player test.
 
 ## 1. What other games teach us
 
@@ -196,13 +196,13 @@ Effort: **M** for the systems plus an asset budget for sound (a licensed commerc
 | **Black (risks)** | Presentation work could hide an unproven core loop: a beautiful game that isn't fun is still not fun. Art and sound need budget and taste the team may not have. Generated portraits can fall into an uncanny, cheap look. More UI means more screenshot tests to maintain. |
 | **Yellow (benefits)** | Presentation is what shows up in store screenshots and the first trailer (PRD B requires an owner decision and its consequence on screen). Clear charts directly serve the "30 seconds to find the main risk" gate. Accessibility tags widen the audience on Steam. |
 | **Green (ideas)** | A "board pack" print view (PDF export of the annual report) for players who like to share. A photo-mode-style "club poster" at the end of a season. Club-colour kits in portraits. |
-| **Blue (process)** | Put component plumbing (B) before visual work. Run the 5–8 player checkpoint test before Phase 3, then a short test of 5 or more players after each later phase against PRD M1 and M4 prompts. Stop and reassess after Phase 3 if comprehension doesn't improve. |
+| **Blue (process)** | Put component plumbing (B) before visual work. Run an internal review before Phase 3, and put the finished game in front of outside players in Phase 5 against PRD M1 and M4 prompts. Internal reviews are also the exit method for Phases 3 and 4. Stop and reassess if the review at the end of Phase 3 shows the screens still need prose to explain. |
 
 ### Premortem: "It's a year from now and the presentation work failed. Why?"
 
-1. **We polished before proving.** Playtests showed the ownership loop itself was dull, and six months of art didn't help. *Mitigation:* run a 5–8 player test of the current three-season build **before** Phase 3, alongside Phases 1–2. Those phases are cheap and worth doing anyway.
+1. **We polished before proving.** Phase 5 playtests showed the ownership loop itself was dull, and months of art didn't help. *Mitigation:* an internal review **before** Phase 3: play the three seasons against the "main risk in 30 seconds" and cash-explanation checks, and confirm with the headless runs that no opening plan dominates. If either check fails, revise the loop before starting Phase 3. Outside players still arrive only in Phase 5, so this risk is accepted, not removed.
 2. **It got slower.** Transitions and count-ups made every click feel sticky, and players turned everything off. *Mitigation:* a frame-time budget (under 16 ms per interaction at 1280×720 on integrated graphics), motion defaults tuned in testing, and a transitions toggle from day one.
-3. **Art quality was uneven.** Generated crests looked fine but portraits looked cheap, and the result was worse than no portraits. *Mitigation:* ship crests and grounds first. Portraits only ship if a blind comparison with initials-only chips favours them. Otherwise keep initials, which is honest and clean.
+3. **Art quality was uneven.** Generated crests looked fine but portraits looked cheap, and the result was worse than no portraits. *Mitigation:* ship crests and grounds first. Initials-only chips stay the default until Phase 5. Portraits switch on only if the Phase 5 playtest, comparing both without saying which is new, favours them. Otherwise keep initials, which is honest and clean.
 4. **Scaling broke at 175%+ and nobody noticed.** *Mitigation:* extend the existing smoke screenshot probe to 200% (and 1280×800 if Decision 3 opts in), and add a layout-overflow assertion.
 5. **The newspaper became repetitive or wrong.** *Mitigation:* template variety rules, a fact-only generator with unit tests comparing text against the recorded data, and a "last N headlines" repetition check.
 6. **It drifted from the simulation.** A ticker showed a goal in the wrong minute, or the table flashed stale data. *Mitigation:* every presented number comes from `GameView`, and a test replays the headless strategies and compares presentation-model output with the recorded data.
@@ -219,10 +219,10 @@ Effort: **M** for the systems plus an asset budget for sound (a licensed commerc
 |---|---|---|
 | **1 · Friction** | A1–A5 (A4 as a Commitments list built from `History`; review dates and decision links follow in Phase 3), H (contrast test on the existing colour constants, non-colour cues) | No developer notes in the UI. Every workspace fact reachable in two clicks or fewer. Smoke captures pass at 100/125/150%. |
 | **2 · Foundation and identity** | B (components, tokens and art direction guide), contrast test moved onto the tokens, C0, C1, C2, C3, C5, C6, F5, full-interface scaling to 200% | Every club mention shows a crest. No `Label(...)` rebuilds in the converted screens. Scroll position and focus are kept on refresh. Smoke captures pass at 200%. |
-| **Checkpoint** | Test with 5–8 players (PRD M1/M4 prompts) on the current loop and the Phase 1–2 UI | Can players find the main risk in 30 seconds and explain club cash versus personal cash? Do they report wanting to continue? |
-| **3 · Honest pictures** | D1–D7, A4 read-model links | Players answer "where did the money go?" and "what happens if this goes badly?" without reading prose. |
-| **4 · Matchday and memory** | E1–E5, F1–F4, C4 (conditional) | Match presentation is fully skippable and matches the recorded data in automated tests. Players recall a named player or moment (M4). |
-| **5 · Feel and ceremony** | G, H finished, Steam accessibility tags | Interaction frame budget is met. Reduced-motion and transitions toggles work. Sound mix and ceremonies are tested for fatigue over a three-season run. |
+| **Checkpoint** | Internal review of the current loop and the Phase 1–2 UI, plus headless strategy runs | Can the main risk be found in 30 seconds and club versus personal cash be explained from the screens alone? Do the headless runs show that no single opening plan dominates? If either check fails, revise the loop before starting Phase 3. |
+| **3 · Honest pictures** | D1–D7, A4 read-model links | In internal review, "where did the money go?" and "what happens if this goes badly?" are answerable without reading prose. |
+| **4 · Matchday and memory** | E1–E5, F1–F4, C4 (built behind initials; ships only if the Phase 5 playtest favours it) | Match presentation is fully skippable and matches the recorded data in automated tests. |
+| **5 · Feel, ceremony and players** | G, H finished, Steam accessibility tags, first outside playtests (PRD M1/M4 prompts) | Interaction frame budget is met. Reduced-motion and transitions toggles work. Sound mix and ceremonies are tested for fatigue over a three-season run. Players find the main risk in 30 seconds, explain club versus personal cash, recall a named player or moment, and report wanting to continue. |
 
 Each phase follows the project's existing rules: an independent review, the smoke probe extended to the new screens, and screenshots at every text scale.
 
@@ -231,7 +231,7 @@ Each phase follows the project's existing rules: an independent review, the smok
 1. **Art and sound budget:** in-house generated art only, or budget for a sound designer and an illustrator for crest symbols, grounds and ceremony cards?
 2. **Portraits:** commit to generated portraits (C4), or decide now that initials-only chips are the house style? The second option needs a PRD H4 change.
 3. **Steam Deck:** make 1280×800 and controller focus an optional target (affects H and every layout), or stay Windows desktop-first? Mandatory Deck or controller verification remains a PRD non-goal either way.
-4. **Playtest timing:** agree to the checkpoint test before Phase 3? This proposal recommends it strongly.
+4. **Playtest timing:** decided. Outside players test only the finished game in Phase 5; an internal review guards Phase 3.
 
 ## Sources
 
