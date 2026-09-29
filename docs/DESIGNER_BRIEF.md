@@ -1,5 +1,7 @@
 # Football Tycoon — UI/UX product brief
 
+> For presentation, identity and promo-screen work, use [DESIGNER_PROMPT.md](DESIGNER_PROMPT.md) (29 September 2026). This brief predates promotion/relegation, the cup and multi-season play.
+
 Designer handoff · 16 September 2026 · Working title
 
 ## The product
