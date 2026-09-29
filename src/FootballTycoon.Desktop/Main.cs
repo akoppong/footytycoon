@@ -178,8 +178,13 @@ public partial class Main : Control
         staff.AddChild(Label("Mara Ellis · CEO · Cautious operator\nJonas Reed · Sporting director · Values immediate readiness\nCallum Price · Manager · Selects the squad independently"));
         staff.AddChild(Label("Appointments are fixed in this prototype. Hiring, dismissal, personality policies and contract negotiations are future systems.", 14));
         var squad = Card(); squad.AddChild(Label("Senior squad", 24));
+        squad.AddChild(Label("Development is reviewed at season end, before renewal decisions. Playing time can help younger players; progress is uncertain. Ages advance with each completed season.", 14));
         foreach (var player in view.Squad.OrderBy(p => p.Role).ThenByDescending(p => p.Ability))
-            squad.AddChild(Label($"{player.Name} · {player.Role} · Age {player.Age} · Ability {player.Ability}\n{Money.Format(player.WeeklyWage)}/week · Contract through {Calendar.FullDay(player.ContractEndWeek)}", 16));
+        {
+            var progress = view.SeasonSummaries.LastOrDefault()?.Development.FirstOrDefault(p => p.PlayerId == player.Id);
+            var change = progress is null ? "" : $" · Last season {progress.Change:+0;-0;0}";
+            squad.AddChild(Label($"{player.Name} · {player.Role} · Age {player.Age} · Ability {player.Ability}{change}\n{PlayerDevelopment.Outlook(player)}\n{Money.Format(player.WeeklyWage)}/week · Contract through {Calendar.FullDay(player.ContractEndWeek)}", 16));
+        }
     }
 
     private void History()

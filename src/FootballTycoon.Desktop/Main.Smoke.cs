@@ -244,6 +244,25 @@ public partial class Main
                 Navigate("History"); await Capture("Three-season-history");
                 if (view.Status != CareerStatus.PrototypeComplete || view.SeasonSummaries.Length != 3)
                     throw new InvalidOperationException("Three-season milestone did not finish.");
+                if (view.SeasonSummaries.Any(s => s.Development.IsEmpty)
+                    || view.SeasonSummaries.Last().Development.Any(p => view.Squad.Single(s => s.Id == p.PlayerId).Age != p.AgeBefore + 1))
+                    throw new InvalidOperationException("Season development did not reach the final report and squad.");
+                Navigate("People"); await Capture("Three-season-development");
+                Navigate("History"); await Settled();
+                await Press("Collapse chart");
+                foreach (var scale in new[] { 100, 150 })
+                {
+                    textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render(); await Settled();
+                    await Press("Show season 3 player reviews");
+                    if (content.GetParent() is ScrollContainer developmentList)
+                    {
+                        developmentList.ScrollVertical = 500 * scale / 100;
+                        await Capture("Annual-development-reviews");
+                        developmentList.ScrollVertical = 0;
+                    }
+                    await Press("Hide season 3 player reviews");
+                }
+                GD.Print("DEVELOPMENT SMOKE PASS: three annual reports and aged final squad.");
                 GD.Print("SEASON SMOKE PASS: renewal UI, contract recommendations with an override and accept-all, annual plans, three season reports and final endpoint.");
             }
             GD.Print($"SMOKE PASS: acquisition, all plan previews, final confirmations, required-decision guards, next review, six workspaces at three text scales, chart collapse, review filing/restoration, funding terms, settings, save/load and resume; {DisplayServer.GetName()}");

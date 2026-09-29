@@ -15,6 +15,7 @@ public static class Seasons
     public static void Close(World world)
     {
         if (world.SeasonSummaries.Any(s => s.Season == world.Season)) return;
+        var development = world.SchemaVersion >= 9 ? PlayerDevelopment.CloseSeason(world) : [];
         var lines = world.Journal.Where(j => j.Account == WorldFactory.Account(world.OwnedClubId)
             && j.Sequence > world.SeasonOpeningLedgerSequence).ToArray();
         var plan = world.History.LastOrDefault(h => h.Week >= StartWeek(world) && IsCapitalPlan(h.Command.Allocation));
@@ -26,7 +27,8 @@ public static class Seasons
         {
             Division = world.OwnedClub.Division,
             CupResult = Cups.Status(world, world.OwnedClubId),
-            CupPrize = lines.Where(j => j.Kind == CashKind.Prize).Sum(j => j.Amount)
+            CupPrize = lines.Where(j => j.Kind == CashKind.Prize).Sum(j => j.Amount),
+            Development = development
         });
     }
 

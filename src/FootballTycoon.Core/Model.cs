@@ -91,6 +91,13 @@ public sealed record SeasonSummary(int Season, int EndWeek, long OpeningCash, lo
     public int Division { get; init; }
     public string CupResult { get; init; } = "Not entered";
     public long CupPrize { get; init; }
+    // Empty for seasons completed before schema 9. Values and names are retained after a player leaves.
+    public ImmutableArray<PlayerProgress> Development { get; init; } = [];
+}
+public sealed record PlayerProgress(PersonId PlayerId, string Name, Role Role, int AgeBefore, int AbilityBefore,
+    int AbilityAfter, int Appearances, string Evidence)
+{
+    [JsonIgnore] public int Change => AbilityAfter - AbilityBefore;
 }
 public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long RenewedAnnualWages,
     long AnnualBroadcast, long AnnualSponsor, long AnnualOperations, long Arrears)
@@ -147,8 +154,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 8;
-    public string SimulationVersion { get; set; } = "contracts-8";
+    public int SchemaVersion { get; set; } = 9;
+    public string SimulationVersion { get; set; } = "development-9";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -254,6 +261,13 @@ public static class WorldCodec
             // Earlier commands carry no contract choices and earlier renewals no contract reviews. Proposals are never
             // saved, so a save paused at a season review simply receives the director's recommendations when reopened.
             world.SchemaVersion = 8; world.SimulationVersion = "contracts-8";
+        }
+        if (world.SchemaVersion == 8)
+        {
+            WorldFactory.Validate(world, priorContracts: true);
+            // Do not age players or fabricate development for an already completed season.
+            world.SeasonSummaries = world.SeasonSummaries.Select(s => s with { Development = [] }).ToList();
+            world.SchemaVersion = 9; world.SimulationVersion = "development-9";
         }
         WorldFactory.Validate(world);
         return world;

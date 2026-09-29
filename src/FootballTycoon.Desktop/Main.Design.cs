@@ -531,6 +531,26 @@ public partial class Main
         Fact(card, "Cup prize money", Money.Format(season.CupPrize));
         card.AddChild(Label(season.Plan));
         card.AddChild(Label("Recorded at the final weekly settlement. Later owner funding remains in the cash journal.", 12));
+        if (!season.Development.IsEmpty)
+        {
+            card.AddChild(Label("Squad development", 22));
+            card.AddChild(Label($"{season.Development.Count(p => p.Change > 0)} improved · {season.Development.Count(p => p.Change == 0)} held level · {season.Development.Count(p => p.Change < 0)} declined", 16));
+            var details = new VBoxContainer { Visible = false };
+            var toggle = Button($"Show season {season.Season} player reviews", () => { });
+            toggle.Pressed += () =>
+            {
+                if (busy) return;
+                details.Visible = !details.Visible;
+                toggle.Text = $"{(details.Visible ? "Hide" : "Show")} season {season.Season} player reviews";
+            };
+            card.AddChild(toggle); card.AddChild(details);
+            details.AddChild(Label("Ability changes are settled before renewal recommendations. Appearances include league and cup, including any played before joining. These are observations, not promises for next season.", 14));
+            foreach (var player in season.Development.OrderByDescending(p => Math.Abs(p.Change)).ThenBy(p => p.Role).ThenBy(p => p.Name))
+            {
+                details.AddChild(Label($"{player.Name} · {player.Role} · Age {player.AgeBefore} → {player.AgeBefore + 1}\nAbility {player.AbilityBefore} → {player.AbilityAfter} ({player.Change:+0;-0;0}) · {player.Appearances} recorded appearances", 16));
+                details.AddChild(Label(player.Evidence, 13));
+            }
+        }
     }
     private void MatchCard(MatchResult match, bool full = false)
     {
