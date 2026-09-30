@@ -58,7 +58,7 @@ public static class Finance
             // Beyond the authored season, no unsigned broadcast/sponsor or invented fixtures finance commitments.
             var earned = Pyramid.TradingBudget(club, club.HistoricalCommercial) / 52;
             if (home) earned = checked(earned + Pyramid.TradingBudget(club, club.HistoricalTickets) / 15 + Pyramid.TradingBudget(club, club.HistoricalHospitality) / 15);
-            var levels = club.HospitalityLevel + world.Projects.Count(p => p.ClubId == id && p.CompletionWeek > world.Week && week > p.CompletionWeek)
+            var levels = club.HospitalityLevel + world.Projects.Count(p => p.ClubId == id && p.Kind == FacilityKind.Hospitality && p.CompletionWeek > world.Week && week > p.CompletionWeek)
                 + (hospitality && week >= extraStarts ? 1 : 0);
             if (home) earned += levels * 1600000L;
             baseCash = checked(baseCash + known + earned);
@@ -95,7 +95,7 @@ public static class Proposals
         if (world.Status == CareerStatus.SeasonReview && command.Allocation is not (Allocation.StartNextSeason or Allocation.InjectCapital)) reasons.Add("Review and renew the next season before choosing its capital plan.");
         if (world.Status != CareerStatus.Acquisition && command.Allocation == Allocation.Acquire) reasons.Add("Only one acquisition is allowed.");
         if (world.Status == CareerStatus.Administration && command.Allocation != Allocation.InjectCapital) reasons.Add("Administration restricts new spending. Fund outstanding payroll first.");
-        if (command.Allocation is Allocation.Hospitality or Allocation.Recruitment or Allocation.PreserveReserve && world.AllocationChosen)
+        if (Seasons.IsCapitalPlan(command.Allocation) && world.AllocationChosen)
             reasons.Add("This season's capital plan is already committed.");
         if (RecruitmentMarket.IsMidseason(command.Allocation))
         {
@@ -122,6 +122,15 @@ public static class Proposals
                 if (world.Projects.Any(p => p.ClubId == club.Id && p.CompletionWeek > world.Week)) reasons.Add("Only one construction project may run at a time.");
                 if (club.HospitalityLevel >= 3) reasons.Add("This facility is at its three-step limit.");
                 uncertainty = $"Upfront construction payment; 28-week build. Extra receipts depend on home matches and demand. Upkeep begins the week after opening and is committed through {Calendar.FullDay(Seasons.EndWeek(world) + Seasons.Weeks)}. Recoverable construction value: 40%; cancellation UI is deferred.";
+                break;
+            case Allocation.Training:
+                title = $"Upgrade training center to level {Math.Min(3, club.TrainingLevel + 1)}";
+                upfront = Facilities.TrainingCost(club.TrainingLevel); weekly = Facilities.TrainingUpkeep(club.TrainingLevel);
+                review = world.Week + Facilities.TrainingBuildWeeks;
+                total = checked(upfront + weekly * Math.Max(0, Seasons.EndWeek(world) + Seasons.Weeks - review));
+                if (world.Projects.Any(p => p.ClubId == club.Id && p.CompletionWeek > world.Week)) reasons.Add("Only one construction project may run at a time.");
+                if (club.TrainingLevel >= 3) reasons.Add("This facility is at its three-step limit.");
+                uncertainty = $"Pay upfront for a 32-week build. Training starts the week after delivery and improves younger players' growth chances, in proportion to time trained; it cannot guarantee improvement or reverse aging. Each upgrade adds upkeep, starting the week after delivery, committed through {Calendar.FullDay(Seasons.EndWeek(world) + Seasons.Weeks)} and reviewed for renewal afterward. Level 1/2/3 offers up to 10/16/20 percentage points of extra annual growth chance for players aged 23 or younger; ages 24–27 receive half. No extra match income or resale proceeds are forecast. Recoverable construction value: 40%; cancellation UI is deferred.";
                 break;
             case Allocation.Recruitment:
             case Allocation.MidseasonRecruitment:
@@ -174,8 +183,8 @@ public static class Proposals
         // The forecast runs the actual rollover on a clone, so it includes the chosen renewal wages and releases.
         if (renewal is not null) { forecastWorld = WorldCodec.Clone(world); Seasons.StartNext(forecastWorld, command.ContractOverrides); }
         var forecast = Finance.Forecast(forecastWorld, club.Id, upfront, weekly,
-            command.Allocation == Allocation.Hospitality ? review + 1 : world.Week + 2, command.Allocation == Allocation.Hospitality);
-        if (command.Allocation == Allocation.Hospitality || RecruitmentMarket.IsSigning(command.Allocation))
+            Facilities.IsConstruction(command.Allocation) ? review + 1 : world.Week + 2, command.Allocation == Allocation.Hospitality);
+        if (Facilities.IsConstruction(command.Allocation) || RecruitmentMarket.IsSigning(command.Allocation))
         {
             if (club.Cash < upfront) reasons.Add("The club cannot cover the upfront cash commitment.");
             if (forecast.LowestDownside < 0) reasons.Add("The downside forecast cannot cover essential obligations.");
@@ -218,10 +227,13 @@ public static class Proposals
                 world.OwnerInvested = Money.Add(world.OwnerInvested, proposal.Command.Amount);
                 break;
             case Allocation.Hospitality:
+            case Allocation.Training:
                 Finance.Post(world, WorldFactory.Account(club.Id), -proposal.UpfrontCash, CashKind.Construction, reference);
                 world.Projects.Add(new(new(world.Projects.Count + 1), club.Id, world.Week, proposal.ReviewWeek,
-                    proposal.UpfrontCash, Money.Scale(proposal.UpfrontCash, 0.4m), proposal.Forecast.Id));
-                WorldFactory.AddObligation(world, club.Id, proposal.ReviewWeek + 1, Seasons.EndWeek(world) + Seasons.Weeks, -proposal.WeeklyCost, CashKind.Operations, "Hospitality service and upkeep");
+                    proposal.UpfrontCash, Money.Scale(proposal.UpfrontCash, 0.4m), proposal.Forecast.Id)
+                { Kind = proposal.Command.Allocation == Allocation.Training ? FacilityKind.Training : FacilityKind.Hospitality });
+                WorldFactory.AddObligation(world, club.Id, proposal.ReviewWeek + 1, Seasons.EndWeek(world) + Seasons.Weeks, -proposal.WeeklyCost, CashKind.Operations,
+                    proposal.Command.Allocation == Allocation.Training ? "Training staff and upkeep" : "Hospitality service and upkeep");
                 break;
             case Allocation.Recruitment:
             case Allocation.MidseasonRecruitment:
@@ -232,7 +244,7 @@ public static class Proposals
                 world.Negotiations.Add(new(world.History.Count + 1, seller.Id, target.Id, Math.Min(world.Week + 2, windowEnd), proposal.UpfrontCash, proposal.WeeklyCost, proposal.Forecast.Id));
                 break;
         }
-        if (proposal.Command.Allocation is Allocation.Hospitality or Allocation.Recruitment or Allocation.PreserveReserve)
+        if (Seasons.IsCapitalPlan(proposal.Command.Allocation))
         {
             world.AllocationChosen = true;
             world.Decisions = world.Decisions.Select(d => !d.Resolved && d.Required ? d with { Resolved = true } : d).ToList();

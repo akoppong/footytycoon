@@ -108,7 +108,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        strategy: [PreserveReserve, Hospitality, Recruitment]
+        strategy: [PreserveReserve, Hospitality, Recruitment, Training]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6

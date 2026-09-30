@@ -4,8 +4,8 @@ using FootballTycoon.Core;
 using FootballTycoon.Infrastructure;
 
 var strategy = args.Length > 0 ? Enum.Parse<Allocation>(args[0], true) : Allocation.PreserveReserve;
-if (strategy is not (Allocation.PreserveReserve or Allocation.Hospitality or Allocation.Recruitment))
-    throw new ArgumentException("Choose PreserveReserve, Hospitality, or Recruitment.");
+if (!Seasons.IsCapitalPlan(strategy))
+    throw new ArgumentException("Choose PreserveReserve, Hospitality, Recruitment, or Training.");
 var seed = args.Length > 1 ? ulong.Parse(args[1]) : 2026;
 var directory = args.Length > 2 ? args[2] : Path.Combine("artifacts", "careers", $"{strategy}-{seed}");
 await using var session = new GameSession(new LocalSaveVault(directory), seed);

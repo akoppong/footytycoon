@@ -303,7 +303,7 @@ public partial class Main
         }
         var intro = Card(); intro.AddChild(Caption(inboxSelection == "resume" ? "WELCOME BACK · VALIDATED CHECKPOINT" : "OWNER BRIEF · MARA ELLIS, CEO"));
         intro.AddChild(Label(view.Status == CareerStatus.PrototypeComplete ? "Your three-season career is complete" : view.Status == CareerStatus.SeasonReview ? $"Season {view.Season} is complete" : view.Status == CareerStatus.LostControl ? "Your ownership has ended" : !view.AllocationChosen ? "Where should the money go?" : "Your club, this week", 30));
-        intro.AddChild(Label(!view.AllocationChosen ? "“We can back a forward, build hospitality, or protect our reserve. Each choice leaves something for later. Compare the cash path before you commit.”"
+        intro.AddChild(Label(!view.AllocationChosen ? "“We can back a forward, build hospitality, improve training, or protect our reserve. Each choice leaves something for later. Compare the cash path before you commit.”"
             : $"{Money.Format(view.ClubCash)} in club cash. {Standing()}. Your reserve is {Money.Format(view.PersonalReserve)}; it remains separate from the club."));
         if (!view.AllocationChosen && view.Status == CareerStatus.Active) { AllocationCards(); return; }
         if (view.Status == CareerStatus.SeasonReview)
@@ -351,18 +351,20 @@ public partial class Main
     private void AllocationCards()
     {
         var balance = Balance.Load();
-        var options = new GridContainer { Columns = textScale == 100 ? 3 : 1, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        var options = new GridContainer { Columns = textScale == 100 ? 2 : 1, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         options.AddThemeConstantOverride("h_separation", 1); content.AddChild(options);
-        foreach (var allocation in new[] { Allocation.Hospitality, Allocation.Recruitment, Allocation.PreserveReserve })
+        foreach (var allocation in new[] { Allocation.Hospitality, Allocation.Recruitment, Allocation.Training, Allocation.PreserveReserve })
         {
             var panel = Surface(White, 16); panel.SizeFlagsHorizontal = SizeFlags.ExpandFill; options.AddChild(panel);
-            var card = Stack(panel); var hospitality = allocation == Allocation.Hospitality; var recruitment = allocation == Allocation.Recruitment;
+            var card = Stack(panel); var hospitality = allocation == Allocation.Hospitality; var recruitment = allocation == Allocation.Recruitment; var training = allocation == Allocation.Training;
             card.AddChild(Caption(recruitment ? "JONAS REED · SPORTING DIRECTOR" : "MARA ELLIS · CEO"));
-            card.AddChild(Label(hospitality ? "Build hospitality" : recruitment ? "Back the forward search" : "Protect the reserve", 24));
+            card.AddChild(Label(hospitality ? "Build hospitality" : recruitment ? "Back the forward search" : training ? "Invest in training" : "Protect the reserve", 24));
             card.AddChild(Caption(hospitality ? $"{Money.Format(balance.HospitalityCost)} cash now · {Money.Format(balance.HospitalityWeeklyUpkeep)}/week after opening"
-                : recruitment ? $"{Money.Format(balance.TransferFeeCeiling)} fee ceiling · {Money.Format(balance.RecruitWeeklyWage)}/week wage ceiling" : "£0 new spending · retain the current squad and facilities", Navy, 13));
+                : recruitment ? $"{Money.Format(balance.TransferFeeCeiling)} fee ceiling · {Money.Format(balance.RecruitWeeklyWage)}/week wage ceiling"
+                : training ? $"{Money.Format(Facilities.TrainingCost(view.TrainingLevel))} cash now · adds {Money.Format(Facilities.TrainingUpkeep(view.TrainingLevel))}/week after opening" : "£0 new spending · retain the current squad and facilities", Navy, 13));
             card.AddChild(Label(hospitality ? $"A 28-week build. Future receipts depend on home matches and demand; upkeep runs through {Calendar.FullDay(view.SeasonEndWeek + Seasons.Weeks)}."
                 : recruitment ? "Authorize a search, not a guaranteed signing. Jonas negotiates within your ceiling; the fee is paid only if a deal completes."
+                : training ? $"A 32-week build toward training level {Math.Min(3, view.TrainingLevel + 1)}. Better growth chances for younger players, scaled by time trained. No guaranteed ability increase or extra receipts."
                 : "Keep capital available. Retaining cash is a valid plan; it cannot guarantee sporting success.", 13));
             card.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
             card.AddChild(Button("Compare this plan →", () => Preview(allocation)));
@@ -531,6 +533,26 @@ public partial class Main
         Fact(card, "Cup prize money", Money.Format(season.CupPrize));
         card.AddChild(Label(season.Plan));
         card.AddChild(Label("Recorded at the final weekly settlement. Later owner funding remains in the cash journal.", 12));
+        if (!season.Development.IsEmpty)
+        {
+            card.AddChild(Label("Squad development", 22));
+            card.AddChild(Label($"{season.Development.Count(p => p.Change > 0)} improved · {season.Development.Count(p => p.Change == 0)} held level · {season.Development.Count(p => p.Change < 0)} declined", 16));
+            var details = new VBoxContainer { Visible = false };
+            Button? toggle = null;
+            toggle = Button($"Show season {season.Season} player reviews", () =>
+            {
+                if (busy) return;
+                details.Visible = !details.Visible;
+                toggle!.Text = $"{(details.Visible ? "Hide" : "Show")} season {season.Season} player reviews";
+            });
+            card.AddChild(toggle); card.AddChild(details);
+            details.AddChild(Label("Ability changes are settled before renewal recommendations. Appearances include league and cup, including any played before joining. Players sold or released before season end are not listed. These are observations, not promises for next season.", 14));
+            foreach (var player in season.Development.OrderByDescending(p => Math.Abs(p.Change)).ThenBy(p => p.Role).ThenBy(p => p.Name))
+            {
+                details.AddChild(Label($"{player.Name} · {player.Role} · Age {player.AgeBefore} → {player.AgeBefore + 1}\nAbility {player.AbilityBefore} → {player.AbilityAfter} ({player.Change:+0;-0;0}) · {player.Appearances} recorded appearances", 16));
+                details.AddChild(Label(player.Evidence, 13));
+            }
+        }
     }
     private void MatchCard(MatchResult match, bool full = false)
     {
