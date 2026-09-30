@@ -50,6 +50,7 @@ public sealed record GameView(long Revision, int Week, CareerStatus Status, stri
     public int HospitalityLevel { get; init; }
     public ImmutableArray<Project> Projects { get; init; } = [];
     public ImmutableArray<PlayerDeparture> Departures { get; init; } = [];
+    public ImmutableArray<AcademyGraduate> AcademyGraduates { get; init; } = [];
 }
 
 // All reads, commands, checkpoints and loads share one queue. No engine state escapes to the UI.
@@ -159,7 +160,8 @@ public sealed class GameSession : IAsyncDisposable
             TrainingLevel = club.TrainingLevel,
             HospitalityLevel = club.HospitalityLevel,
             Projects = world.Projects.Where(p => p.ClubId == club.Id).ToImmutableArray(),
-            Departures = world.Departures.Where(p => p.ClubId == club.Id).OrderByDescending(p => p.Week).ThenBy(p => p.Name).ToImmutableArray()
+            Departures = world.Departures.Where(p => p.ClubId == club.Id).OrderByDescending(p => p.Week).ThenBy(p => p.Name).ToImmutableArray(),
+            AcademyGraduates = world.AcademyGraduates.Where(g => g.ClubId == club.Id).OrderByDescending(g => g.Week).ToImmutableArray()
         };
     });
 

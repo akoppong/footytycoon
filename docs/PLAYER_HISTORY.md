@@ -8,6 +8,6 @@ Schema 11 (`people-history-11`) migrates schemas 1–10. For older saves, the ow
 
 Departure entries are immutable snapshots. A later return to a club can coexist with an earlier departure record. Replayed command receipts and repeated save/load do not duplicate events. Invalid identities, clubs, dates, attributes and duplicate player/club/week entries are rejected when loading.
 
-This is a continuity foundation for academy intake, retirement and longer careers. Those systems are still pending. There is no free-agent market or player re-signing interface in this unit, and transfer departures are not added to this contract-release archive yet. The three-season boundary remains.
+This is a continuity foundation for retirement and longer careers, which remain pending. Newer source adds [baseline academy intake](ACADEMY.md). There is no free-agent market or player re-signing interface in this unit, and transfer departures are not added to this contract-release archive yet. The three-season boundary remains.
 
 Validation covers every club's actual releases, current squad removal, command idempotence, save/load identity, application read-model filtering and name retention, evidence-based schema-10 migration, current-name precedence, unknown-name handling and malformed records. The full desktop career smoke also verifies archive names and captures the People-screen departure list when releases occur. See [DELIVERY_PROGRESS.md](DELIVERY_PROGRESS.md) for recorded runs.

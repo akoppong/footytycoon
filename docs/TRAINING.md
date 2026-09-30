@@ -26,7 +26,7 @@ Each week records weighted exposure using the club's delivered level: 10, 16 or 
 
 At the annual review, exposure divided by 52 gives the youth bonus, rounded down to whole percentage points; ages 24–27 divide by 104 instead. The report stores this value before the counter resets. For example, 32 weeks at level 1 plus 20 at level 2 yields 640 units, or 12 extra percentage points for a player aged 23 or younger. A level-1 opening project delivered in week 32 contributes only weeks 33–52, yielding three percentage points in its first season. A full year follows in season two if the player stays.
 
-Higher levels have diminishing incremental benefits. An older squad or a short ownership horizon may make the investment wasteful. No economic return, star player or guaranteed promotion is promised. Individual potential, academy intake, staff competence, conditioning effects, retirement and autonomous rival investment remain future work.
+Higher levels have diminishing incremental benefits. An older squad or a short ownership horizon may make the investment wasteful. No economic return, star player or guaranteed promotion is promised. Individual potential, staff competence, conditioning effects, retirement and autonomous rival investment remain future work. Newer source adds [baseline academy intake](ACADEMY.md); admitted graduates use the same training exposure rules as other players.
 
 ## Saves and validation
 

@@ -179,7 +179,7 @@ public class TrainingTests
             foreach (var row in summary!["Development"]!.AsArray()) row!.AsObject().Remove("TrainingBonus");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var restored = WorldCodec.Decode(bytes);
-        Assert.Equal(original, bytes); Assert.Equal(11, restored.SchemaVersion);
+        Assert.Equal(original, bytes); Assert.Equal(12, restored.SchemaVersion);
         Assert.All(restored.Clubs, c => Assert.Equal(0, c.TrainingLevel));
         Assert.All(restored.Clubs.SelectMany(c => c.Players), p => Assert.Equal(0, p.TrainingExposure));
         Assert.Equal(FacilityKind.Hospitality, restored.Projects.Single().Kind);

@@ -110,7 +110,7 @@ public class PlayerDevelopmentTests
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var loaded = WorldCodec.Decode(bytes);
         Assert.Equal(original, bytes);
-        Assert.Equal(11, loaded.SchemaVersion);
+        Assert.Equal(12, loaded.SchemaVersion);
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), loaded.Clubs.SelectMany(c => c.Players));
         Assert.All(loaded.SeasonSummaries, s => Assert.Empty(s.Development));
         Assert.DoesNotContain(loaded.RandomStates.Keys.Except(world.RandomStates.Keys), key => key.StartsWith("development/"));

@@ -110,6 +110,8 @@ public static class WorldFactory
         "Fischer", "Richter", "Dubois", "Laurent", "Haddad", "Petrov", "Evans", "Morgan", "Pryce", "Jenkins", "Campbell", "Kendall"
     ];
 
+    internal static string AcademyName(World random, string stream) => $"{FirstNames[RandomStreams.Next(random, stream, FirstNames.Length)]} {Surnames[RandomStreams.Next(random, stream, Surnames.Length)]}";
+
     // A separate "identity/{club}" stream keeps the older "players/{club}" ability draws, and therefore match results, unchanged.
     private static void AddSquad(World world, Club club, int index, int division, long wageBill, HashSet<string> usedNames)
     {
@@ -169,9 +171,9 @@ public static class WorldFactory
     public static void AddObligation(World world, ClubId club, int start, int end, long weekly, CashKind kind, string description) =>
         world.Obligations.Add(new(new(world.Obligations.Count + 1), club, start, end, weekly, kind, description));
 
-    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false, bool priorTraining = false)
+    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false, bool priorTraining = false, bool priorHistory = false)
     {
-        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : priorTraining ? 10 : 11) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : priorTraining ? "training-10" : "people-history-11") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
+        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : priorTraining ? 10 : priorHistory ? 11 : 12) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : priorTraining ? "training-10" : priorHistory ? "people-history-11" : "academy-12") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
             throw new InvalidDataException("Unsupported save, simulation, content or random version. The source was not changed.");
         if (world.Clubs.Count != 48 || world.Clubs.Select(c => c.Id).Distinct().Count() != 48
             || world.Clubs.Count(c => c.Id == world.OwnedClubId) != 1 || (legacy ? world.Week is < 0 or > 52 : world.Season is < 1 or > Seasons.PlayableSeasons || world.Week < Seasons.StartWeek(world) || world.Week > Seasons.EndWeek(world)) || world.Revision < 0
@@ -183,6 +185,13 @@ public static class WorldFactory
             || world.Fixtures.Any(f => f.Competition == Competition.League && f.Division is < 1 or > 3)))
             throw new InvalidDataException("Missing season division history.");
         var people = world.Clubs.SelectMany(c => c.Players).ToArray();
+        if (world.SchemaVersion >= 12 && (world.AcademyGraduates.Select(g => g.Player.Id).Distinct().Count() != world.AcademyGraduates.Count
+            || world.AcademyGraduates.GroupBy(g => (g.ClubId, g.Week)).Any(g => g.Count() > 2)
+            || world.AcademyGraduates.Any(g => g.Week < Seasons.Weeks || g.Week > world.Week || g.Week % Seasons.Weeks != 0
+                || world.Clubs.All(c => c.Id != g.ClubId) || g.Player.Id.Value < 100000 || string.IsNullOrWhiteSpace(g.Player.Name)
+                || !Enum.IsDefined(g.Player.Role) || g.Player.Age != 17 || g.Player.Ability is < 1 or > 100 || g.Player.WeeklyWage <= 0
+                || g.Player.ContractEndWeek != g.Week + Seasons.Weeks * Academy.ContractYears)))
+            throw new InvalidDataException("Invalid academy graduation history.");
         if (world.SchemaVersion >= 11 && (world.Departures.Select(d => (d.PlayerId, d.ClubId, d.Week)).Distinct().Count() != world.Departures.Count
             || world.Departures.Any(d => d.PlayerId.Value <= 0 || string.IsNullOrWhiteSpace(d.Name) || string.IsNullOrWhiteSpace(d.Reason)
                 || !Enum.IsDefined(d.Role) || d.Age is < 16 or > 100 || d.Ability is < 1 or > 100

@@ -35,7 +35,8 @@ public class PyramidTests
         foreach (var club in world.Clubs)
         {
             Assert.Equal(cash[club.Id], club.Cash);
-            Assert.Equal(salaries[club.Id], Finance.AnnualWages(club));
+            var academyWages = world.AcademyGraduates.Where(g => g.ClubId == club.Id).Sum(g => g.Player.WeeklyWage) * Seasons.Weeks;
+            Assert.Equal(salaries[club.Id] + academyWages, Finance.AnnualWages(club));
             Assert.Equal(Pyramid.Broadcast(club.Division), club.AnnualBroadcast);
         }
         foreach (var (division, table) in tables) Assert.Equal(table, Simulation.Table(world, division, 1).ToArray());
@@ -100,7 +101,7 @@ public class PyramidTests
         foreach (var fixture in legacy["Fixtures"]!.AsArray()) fixture!.AsObject().Remove("Division");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(source, bytes); Assert.Equal(11, migrated.SchemaVersion);
+        Assert.Equal(source, bytes); Assert.Equal(12, migrated.SchemaVersion);
         Assert.All(migrated.Fixtures.Where(f => f.Competition == Competition.League), f => Assert.Equal(migrated.Clubs.Single(c => c.Id == f.Home).Division, f.Division));
         Assert.Equal(16, migrated.Fixtures.Count(f => f.Competition == Competition.Cup && f.CupRound == 1));
         Assert.All(migrated.Clubs, c => Assert.Equal(c.Division, c.OpeningDivision));

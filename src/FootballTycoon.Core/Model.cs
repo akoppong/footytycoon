@@ -32,6 +32,7 @@ public sealed record OwnerCommand(Allocation Allocation, long Amount = 0, bool R
 {
     // Season renewal only: expiring players whose director recommendation the owner reverses (schema 8).
     public ImmutableArray<PersonId> ContractOverrides { get; init; } = [];
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool DeclineAcademy { get; init; }
 }
 public sealed record LedgerEntry(int Sequence, int Week, string Account, long Amount, CashKind Kind, string Reference);
 public sealed record Obligation(ObligationId Id, ClubId ClubId, int StartWeek, int EndWeek, long WeeklyAmount, CashKind Kind, string Description);
@@ -108,6 +109,7 @@ public sealed record PlayerProgress(PersonId PlayerId, string Name, Role Role, i
 }
 public sealed record PlayerDeparture(PersonId PlayerId, string Name, Role Role, int Age, int Ability,
     ClubId ClubId, int Week, string Reason);
+public sealed record AcademyGraduate(ClubId ClubId, int Week, Player Player);
 public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long RenewedAnnualWages,
     long AnnualBroadcast, long AnnualSponsor, long AnnualOperations, long Arrears)
 {
@@ -123,6 +125,9 @@ public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long Rene
     public long WageLimit { get; init; }
     public long RenewedCommitment { get; init; }
     public bool RaisesHeld { get; init; }
+    public ImmutableArray<Player> AcademyIntake { get; init; } = [];
+    [JsonIgnore] public long AcademyAnnualWages => checked(AcademyIntake.Sum(p => p.WeeklyWage) * Seasons.Weeks);
+    [JsonIgnore] public long TotalAnnualWagesAfter => checked(AnnualWagesAfter + AcademyAnnualWages);
     [JsonIgnore] public int Renewed => Contracts.Count(c => c.Chosen == ContractAction.Renew);
     [JsonIgnore] public int Released => Contracts.Count(c => c.Chosen == ContractAction.Release);
 }
@@ -164,8 +169,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 11;
-    public string SimulationVersion { get; set; } = "people-history-11";
+    public int SchemaVersion { get; set; } = 12;
+    public string SimulationVersion { get; set; } = "academy-12";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -179,6 +184,7 @@ public sealed class World
     public int SeasonOpeningLedgerSequence { get; set; }
     public List<SeasonSummary> SeasonSummaries { get; set; } = [];
     public List<PlayerDeparture> Departures { get; set; } = [];
+    public List<AcademyGraduate> AcademyGraduates { get; set; } = [];
     public Phase Phase { get; set; }
     public CareerStatus Status { get; set; }
     public ClubId OwnedClubId { get; set; }
@@ -298,6 +304,12 @@ public static class WorldCodec
             // Earlier rival releases were not recorded; do not invent those people or events.
             world.Departures = PlayerHistory.RecoverDepartures(world);
             world.SchemaVersion = 11; world.SimulationVersion = "people-history-11";
+        }
+        if (world.SchemaVersion == 11)
+        {
+            WorldFactory.Validate(world, priorHistory: true);
+            world.AcademyGraduates = [];
+            world.SchemaVersion = 12; world.SimulationVersion = "academy-12";
         }
         WorldFactory.Validate(world);
         return world;

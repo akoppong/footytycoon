@@ -21,7 +21,7 @@ The reported outcome is a bounded simulation result. Appearance counts are evide
 
 Schema 9 (`development-9`) adds immutable development rows to season summaries. Schemas 1–8 migrate in memory. Players retain their saved age and ability during migration; completed seasons keep empty development reports. An unfinished season receives its first update at its next close. Closing an already recorded season is idempotent. Original save files are never overwritten by migration.
 
-This is an annual development foundation within the three-season milestone. Individual potential, staff effects, academy intake, retirement, player morale and a balanced long career remain unimplemented. Annual aging does not itself make the current finite player pool suitable for 50 seasons.
+This is an annual development foundation within the three-season milestone. Individual potential, staff effects, retirement, player morale and a balanced long career remain unimplemented. Newer source adds [baseline academy intake](ACADEMY.md); aging and intake alone do not establish a sustainable 50-season population.
 
 ## Validation
 

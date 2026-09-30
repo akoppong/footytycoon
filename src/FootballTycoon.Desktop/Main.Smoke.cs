@@ -43,6 +43,17 @@ public partial class Main
                     ?? throw new InvalidOperationException("No enabled control: " + title);
                 button.EmitSignal(Godot.Button.SignalName.Pressed); await Settled();
             }
+            async Task CaptureSection(string heading, string name)
+            {
+                await Settled();
+                if (content.GetParent() is ScrollContainer list)
+                {
+                    var label = Descendants(content).OfType<Label>().First(l => l.Text == heading);
+                    list.ScrollVertical += (int)(label.GlobalPosition.Y - list.GlobalPosition.Y);
+                    await Capture(name);
+                    list.ScrollVertical = 0;
+                }
+            }
             foreach (var scale in new[] { 100, 125, 150 })
             {
                 textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render(); await Capture("Acquisition");
@@ -178,6 +189,7 @@ public partial class Main
             }
             if (OS.GetCmdlineUserArgs().Contains("--season-smoke-test"))
             {
+                var academyChecked = false;
                 for (var season = 1; season <= Seasons.PlayableSeasons; season++)
                 {
                     while (view.Week < season * Seasons.Weeks)
@@ -197,6 +209,21 @@ public partial class Main
                     textScale = 150; Theme.DefaultFontSize = 21; Render();
                     await Capture($"Season-{season + 1}-renewals");
                     textScale = 100; Theme.DefaultFontSize = 14; Render(); await Settled();
+                    var intake = selected.Renewal.AcademyIntake;
+                    if (!intake.IsEmpty)
+                    {
+                        await Press("Collapse chart");
+                        foreach (var scale in new[] { 100, 150 })
+                        {
+                            textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render();
+                            await CaptureSection("ACADEMY · THIS YEAR'S SENIOR INTAKE", "Academy-proposal");
+                        }
+                        textScale = 100; Theme.DefaultFontSize = 14; Render(); await Settled();
+                        await Press("Expand chart");
+                        await Press("Decline academy intake");
+                        if (selected is not { Command.DeclineAcademy: true, Renewal.AcademyIntake.IsEmpty: true })
+                            throw new InvalidOperationException("Declining academy intake did not remove the contracts.");
+                    }
                     var expiring = selected.Renewal.Contracts;
                     if (!expiring.IsEmpty)
                     {
@@ -229,14 +256,27 @@ public partial class Main
                         }
                         await Press("Expand chart");
                         await Press("Accept all recommendations");
+                        if (!intake.IsEmpty && !selected!.Command.DeclineAcademy)
+                            throw new InvalidOperationException("Resetting contract recommendations undid the declined academy intake.");
                         if (selected is not { Renewal: not null } || !selected.Command.ContractOverrides.IsEmpty || selected.Renewal.Contracts.Any(c => c.Chosen != c.Recommended))
                             throw new InvalidOperationException("Accepting all recommendations did not clear the overrides.");
                         await Press(ContractButtonText(pick));
                         if (!selected!.BlockingReasons.IsEmpty) throw new InvalidOperationException("Override blocked: " + string.Join("; ", selected.BlockingReasons));
                     }
+                    if (!intake.IsEmpty)
+                    {
+                        await Press("Reconsider academy intake");
+                        if (selected!.Command.DeclineAcademy || !selected.Renewal!.AcademyIntake.SequenceEqual(intake))
+                            throw new InvalidOperationException("Reconsidering academy intake rerolled the cohort.");
+                        academyChecked = true;
+                    }
+                    var confirmedIntake = selected!.Renewal!.AcademyIntake;
                     await Press("Review final terms");
+                    if (!confirmedIntake.IsEmpty) await CaptureSection("ACADEMY · THIS YEAR'S SENIOR INTAKE", "Academy-final-terms");
                     if (!expiring.IsEmpty) await Capture($"Season-{season + 1}-renewal-final-terms");
                     await Press("Confirm and commit");
+                    if (!view.AcademyGraduates.Where(g => g.Week == view.Week).Select(g => g.Player).SequenceEqual(confirmedIntake))
+                        throw new InvalidOperationException("Committed academy intake differs from confirmed terms.");
                     if (!expiring.IsEmpty && view.History.Last(h => h.Renewal is not null).Renewal!.Contracts.Count(c => c.Chosen != c.Recommended) != 1)
                         throw new InvalidOperationException("Renewal decision was not recorded against the recommendation.");
                     if (view.Season != season + 1 || view.Division != nextDivision || view.AllocationChosen || !view.Results.IsEmpty)
@@ -252,6 +292,17 @@ public partial class Main
                     || view.SeasonSummaries.Last().Development.Any(p => view.Squad.Single(s => s.Id == p.PlayerId).Age != p.AgeBefore + 1))
                     throw new InvalidOperationException("Season development did not reach the final report and squad.");
                 Navigate("People"); await Capture("Three-season-development");
+                if (OS.GetCmdlineUserArgs().Contains("--academy-smoke-test"))
+                {
+                    if (!academyChecked || view.AcademyGraduates.IsEmpty) throw new InvalidOperationException("The academy choice path was not exercised.");
+                    foreach (var scale in new[] { 100, 150 })
+                    {
+                        textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render();
+                        await CaptureSection("Academy graduates", "Academy-graduates");
+                    }
+                    textScale = 100; Theme.DefaultFontSize = 14; Render(); await Settled();
+                    GD.Print("ACADEMY SMOKE PASS: decline, contract reset preserves choice, reconsider, final terms and retained graduate history.");
+                }
                 if (view.Departures.Any(d => d.ClubId != view.ClubId || view.PlayerNames.GetValueOrDefault(d.PlayerId) != d.Name))
                     throw new InvalidOperationException("Departure records lost their club or historical name.");
                 if (view.Departures.Length > 0 && content.GetParent() is ScrollContainer peopleList)

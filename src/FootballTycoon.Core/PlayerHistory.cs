@@ -17,6 +17,7 @@ public static class PlayerHistory
     {
         var names = world.Clubs.SelectMany(c => c.Players).ToDictionary(p => p.Id, p => p.Name);
         foreach (var player in world.Departures) names.TryAdd(player.PlayerId, player.Name);
+        foreach (var graduate in world.AcademyGraduates) names.TryAdd(graduate.Player.Id, graduate.Player.Name);
         foreach (var player in world.SeasonSummaries.SelectMany(s => s.Development)) names.TryAdd(player.PlayerId, player.Name);
         foreach (var decision in world.History)
         {
