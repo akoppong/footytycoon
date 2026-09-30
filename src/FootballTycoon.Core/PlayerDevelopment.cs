@@ -48,7 +48,7 @@ public static class PlayerDevelopment
                 var evidence = ability > player.Ability ? "Progress during the development years; competitive exposure helps, but never guarantees growth."
                     : ability < player.Ability ? "Age-related decline; succession deserves a review before committing to another contract."
                     : player.Age <= 27 ? "No measurable improvement this season; youth and playing time do not guarantee progress."
-                    : "Held his level this season; age alone does not determine an individual's outcome.";
+                    : "Held their level this season; age alone does not determine an individual's outcome.";
                 if (training > 0) evidence += $" Training exposure added {training} percentage points to the growth chance; it did not guarantee this outcome.";
                 club.Players[i] = player with { Age = player.Age + 1, Ability = ability, TrainingExposure = 0 };
                 if (club.Id == world.OwnedClubId)

@@ -98,7 +98,7 @@ public sealed record SeasonSummary(int Season, int EndWeek, long OpeningCash, lo
     public int Division { get; init; }
     public string CupResult { get; init; } = "Not entered";
     public long CupPrize { get; init; }
-    // Empty for seasons completed before schema 9. Values and names are retained after a player leaves.
+    // Empty for seasons completed before schema 9. Covers players on the owned club at season close; a player who leaves later keeps the recorded values and name, one sold earlier in the season has no entry.
     public ImmutableArray<PlayerProgress> Development { get; init; } = [];
 }
 public sealed record PlayerProgress(PersonId PlayerId, string Name, Role Role, int AgeBefore, int AbilityBefore,

@@ -187,6 +187,28 @@ public class TrainingTests
     }
 
     [Fact]
+    public void SchemaNineMidSeasonMigrationKeepsAnInFlightHospitalityProject()
+    {
+        var world = Acquired(); SimulationTests.Commit(world, Allocation.Hospitality);
+        while (world.Week < 10) Simulation.AdvanceWeek(world);
+        var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        legacy["SchemaVersion"] = 9; legacy["SimulationVersion"] = "development-9";
+        foreach (var club in legacy["Clubs"]!.AsArray())
+        {
+            club!.AsObject().Remove("TrainingLevel");
+            foreach (var player in club["Players"]!.AsArray()) player!.AsObject().Remove("TrainingExposure");
+        }
+        foreach (var project in legacy["Projects"]!.AsArray()) project!.AsObject().Remove("Kind");
+        var restored = WorldCodec.Decode(Encoding.UTF8.GetBytes(legacy.ToJsonString()));
+        var inFlight = Assert.Single(restored.Projects);
+        Assert.Equal(FacilityKind.Hospitality, inFlight.Kind);
+        Assert.True(inFlight.CompletionWeek > restored.Week);
+        Assert.All(restored.Clubs, c => Assert.Equal(0, c.TrainingLevel));
+        while (restored.Week < inFlight.CompletionWeek) Simulation.AdvanceWeek(restored);
+        Assert.Equal(1, restored.OwnedClub.HospitalityLevel); Assert.Equal(0, restored.OwnedClub.TrainingLevel);
+    }
+
+    [Fact]
     public void InvalidTrainingStateIsRejected()
     {
         var world = WorldFactory.Create(1); world.OwnedClub.TrainingLevel = 4;

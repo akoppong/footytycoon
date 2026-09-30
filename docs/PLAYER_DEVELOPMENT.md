@@ -15,7 +15,7 @@ These are base rules before training bonuses and fictional balance assumptions, 
 
 Ability remains between 1 and 100. Each player uses a separate saved `development/{id}` random stream. Clubs follow identical rules; promotion, owner spending, match presentation and loading do not supply an artificial boost. The count includes league and cup appearances this season, across clubs when a player transfers. Pre-schema-7 matches lack line-ups and contribute no invented appearances.
 
-The reported outcome is a bounded simulation result. Appearance counts are evidence of exposure, not proof that the manager caused an individual's change. The age outlook is deliberately broad and makes no guarantee. Wages and contracts do not change during development; the later renewal proposal prices the updated squad.
+Reports list players on the owned club at the season close. A player sold or released earlier in the season has no entry; one who leaves afterwards keeps the recorded row and name. The reported outcome is a bounded simulation result. Appearance counts are evidence of exposure, not proof that the manager caused an individual's change. The age outlook is deliberately broad and makes no guarantee. Wages and contracts do not change during development; the later renewal proposal prices the updated squad.
 
 ## Persistence and scope
 
