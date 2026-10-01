@@ -16,6 +16,8 @@ public static class PlayerHistory
     public static ImmutableDictionary<PersonId, string> Names(World world)
     {
         var names = world.Clubs.SelectMany(c => c.Players).ToDictionary(p => p.Id, p => p.Name);
+        foreach (var free in world.FreeAgents) names.TryAdd(free.Player.Id, free.Player.Name);
+        foreach (var retired in world.Retirements) names.TryAdd(retired.PlayerId, retired.Name);
         foreach (var player in world.Departures) names.TryAdd(player.PlayerId, player.Name);
         foreach (var graduate in world.AcademyGraduates) names.TryAdd(graduate.Player.Id, graduate.Player.Name);
         foreach (var player in world.SeasonSummaries.SelectMany(s => s.Development)) names.TryAdd(player.PlayerId, player.Name);

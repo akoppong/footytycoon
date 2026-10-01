@@ -42,7 +42,7 @@ public static class Finance
     }
 
     public static Forecast Forecast(World world, ClubId id, long upfront = 0, long extraWeekly = 0, int extraStarts = 0,
-        bool hospitality = false)
+        bool hospitality = false, int extraEnds = int.MaxValue)
     {
         var club = world.Clubs.Single(c => c.Id == id);
         var baseCash = checked(club.Cash - upfront);
@@ -53,7 +53,7 @@ public static class Finance
         {
             var known = world.Obligations.Where(o => o.ClubId == id && o.StartWeek <= week && o.EndWeek >= week).Sum(o => o.WeeklyAmount);
             if (week == world.Week + 1) known -= world.Arrears.Where(a => a.ClubId == id).Sum(a => a.Amount);
-            if (week >= extraStarts) known = checked(known - extraWeekly);
+            if (week >= extraStarts && week <= extraEnds) known = checked(known - extraWeekly);
             var home = world.Fixtures.Any(f => f.Week == week && f.Home == id);
             // Beyond the authored season, no unsigned broadcast/sponsor or invented fixtures finance commitments.
             var earned = Pyramid.TradingBudget(club, club.HistoricalCommercial) / 52;
@@ -69,7 +69,8 @@ public static class Finance
         var low = array.MinBy(p => p.BaseCash)!;
         var down = array.MinBy(p => p.DownsideCash)!;
         var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
-            $"{Convert.ToHexString(SHA256.HashData(WorldCodec.Encode(world)))}:{id.Value}:{upfront}:{extraWeekly}:{extraStarts}:{hospitality}")));
+            $"{Convert.ToHexString(SHA256.HashData(WorldCodec.Encode(world)))}:{id.Value}:{upfront}:{extraWeekly}:{extraStarts}:{hospitality}"
+            + (extraEnds == int.MaxValue ? "" : $":ends/{extraEnds}"))));
         return new(identity, world.Week, 52, array, low.BaseCash, low.Week, down.DownsideCash, down.Week,
             "Signed payment schedule in both cases. Future commercial and scheduled home-match receipts are estimates; downside receives 72% of base. No speculative sales, cup prizes, unsigned sponsorship or borrowing. Dates beyond the current season are illustrative; unsigned renewals and unscheduled next-season fixtures are excluded.");
     }
@@ -145,10 +146,19 @@ public static class Proposals
                 review = world.Week + 1;
                 if (command.Allocation == Allocation.Recruitment && world.Week > Seasons.StartWeek(world) + 2) reasons.Add("This season's opening recruitment window has closed.");
                 if (recruitment is null) reasons.Add("No suitable surplus forward is available for this recommendation.");
-                if (world.Negotiations.Count > 0) reasons.Add("Let the current negotiation finish before authorizing another.");
+                if (world.Negotiations.Count > 0 || world.FreeAgentBids.Count > 0) reasons.Add("Let the current negotiation finish before authorizing another.");
                 if (checked(Finance.AnnualWages(club) + weekly * 52) > Money.Scale(Finance.EligibleRevenue(world, club.Id), b.WageLimit))
                     reasons.Add("The proposed wages exceed 75% of eligible recurring revenue.");
                 uncertainty = "Approval sets a maximum fee and wage mandate; no cash is deducted now. Jonas negotiates next week. The seller may refuse and affordability is checked again. The ceiling forecast reserves the full potential commitment. A signing adds competition for places; the manager selects the team. No resale proceeds are assumed and future development is uncertain.";
+                break;
+            case Allocation.FreeAgentRecruitment:
+                title = "Approach the recommended free agent"; executive = "Sporting director · Jonas Reed";
+                recruitment = FreeAgents.Recommend(world);
+                if (recruitment is null) reasons.Add("No eligible free agent is recommended within the current window, squad and wage limits. Outside a window, only genuine role shortages qualify.");
+                weekly = recruitment?.WeeklyWage ?? 0;
+                total = checked(weekly * ((recruitment?.ContractEndWeek ?? world.Week + 1) - world.Week - 1));
+                review = world.Week + 1;
+                uncertainty = "No transfer fee or payment on approval. The player may decline next week; squad space, reserve and wages are checked again. If signed, wages start the following week on the displayed contract. Deals end at an annual renewal review: the current season for ages 30+, the second season for ages 25–29, and the third for younger players. The first season is partial. A failed approach creates no new obligation. The director waits four weeks before approaching the same player again. Selection and future development remain uncertain.";
                 break;
             case Allocation.MidseasonWait:
                 title = "Keep the squad for the run-in";
@@ -184,7 +194,8 @@ public static class Proposals
         // The forecast runs the actual rollover on a clone, so it includes the chosen renewal wages and releases.
         if (renewal is not null) { forecastWorld = WorldCodec.Clone(world); Seasons.StartNext(forecastWorld, command.ContractOverrides, command.DeclineAcademy); }
         var forecast = Finance.Forecast(forecastWorld, club.Id, upfront, weekly,
-            Facilities.IsConstruction(command.Allocation) ? review + 1 : world.Week + 2, command.Allocation == Allocation.Hospitality);
+            Facilities.IsConstruction(command.Allocation) ? review + 1 : world.Week + 2, command.Allocation == Allocation.Hospitality,
+            recruitment is { IsFreeAgent: true } ? recruitment.ContractEndWeek : int.MaxValue);
         if (renewal is { AcademyIntake.IsEmpty: false } && forecast.LowestDownside < 0)
             reasons.Add("The downside forecast cannot cover these academy contracts. Decline this intake or add owner funding before renewal.");
         if (Facilities.IsConstruction(command.Allocation) || RecruitmentMarket.IsSigning(command.Allocation))
@@ -246,6 +257,11 @@ public static class Proposals
                 var seller = world.Clubs.Single(c => c.Players.Any(p => p.Id == target.Id));
                 var windowEnd = Seasons.StartWeek(world) + (proposal.Command.Allocation == Allocation.Recruitment ? 3 : RecruitmentMarket.Window(world).Closes + 1);
                 world.Negotiations.Add(new(world.History.Count + 1, seller.Id, target.Id, Math.Min(world.Week + 2, windowEnd), proposal.UpfrontCash, proposal.WeeklyCost, proposal.Forecast.Id));
+                break;
+            case Allocation.FreeAgentRecruitment:
+                var freeTerms = proposal.Recruitment!;
+                world.FreeAgentBids.Add(new(world.History.Count + 1, freeTerms.Player.Id, freeTerms.WeeklyWage,
+                    freeTerms.ContractEndWeek, world.Week + 1, proposal.Forecast.Id));
                 break;
         }
         if (Seasons.IsCapitalPlan(proposal.Command.Allocation))

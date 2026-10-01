@@ -171,9 +171,9 @@ public static class WorldFactory
     public static void AddObligation(World world, ClubId club, int start, int end, long weekly, CashKind kind, string description) =>
         world.Obligations.Add(new(new(world.Obligations.Count + 1), club, start, end, weekly, kind, description));
 
-    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false, bool priorTraining = false, bool priorHistory = false)
+    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false, bool priorTraining = false, bool priorHistory = false, bool priorAcademy = false)
     {
-        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : priorTraining ? 10 : priorHistory ? 11 : 12) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : priorTraining ? "training-10" : priorHistory ? "people-history-11" : "academy-12") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
+        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : priorTraining ? 10 : priorHistory ? 11 : priorAcademy ? 12 : 13) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : priorTraining ? "training-10" : priorHistory ? "people-history-11" : priorAcademy ? "academy-12" : "free-agents-13") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
             throw new InvalidDataException("Unsupported save, simulation, content or random version. The source was not changed.");
         if (world.Clubs.Count != 48 || world.Clubs.Select(c => c.Id).Distinct().Count() != 48
             || world.Clubs.Count(c => c.Id == world.OwnedClubId) != 1 || (legacy ? world.Week is < 0 or > 52 : world.Season is < 1 or > Seasons.PlayableSeasons || world.Week < Seasons.StartWeek(world) || world.Week > Seasons.EndWeek(world)) || world.Revision < 0
@@ -185,6 +185,30 @@ public static class WorldFactory
             || world.Fixtures.Any(f => f.Competition == Competition.League && f.Division is < 1 or > 3)))
             throw new InvalidDataException("Missing season division history.");
         var people = world.Clubs.SelectMany(c => c.Players).ToArray();
+        if (world.SchemaVersion >= 13)
+        {
+            if (world.FreeAgents is null || world.Retirements is null || world.FreeAgentBids is null)
+                throw new InvalidDataException("Missing free-agent lifecycle state.");
+            var living = people.Select(p => p.Id).Concat(world.FreeAgents.Select(f => f.Player.Id)).ToArray();
+            if (living.Distinct().Count() != living.Length
+                || world.Retirements.Select(r => r.PlayerId).Distinct().Count() != world.Retirements.Count
+                || world.Retirements.Any(r => living.Contains(r.PlayerId) || r.PlayerId.Value <= 0 || string.IsNullOrWhiteSpace(r.Name)
+                    || !Enum.IsDefined(r.Role) || r.Age < FreeAgents.RetirementAge(r.Role) || r.Age > 100 || r.Ability is < 1 or > 100
+                    || r.Week < 0 || r.Week > world.Week || world.Clubs.All(c => c.Id != r.LastClubId))
+                || world.FreeAgents.Any(f => f.Player.Id.Value <= 0 || string.IsNullOrWhiteSpace(f.Player.Name) || !Enum.IsDefined(f.Player.Role)
+                    || f.Player.Age < 16 || f.Player.Age >= FreeAgents.RetirementAge(f.Player.Role) || f.Player.Ability is < 1 or > 100
+                    || f.AvailableSinceWeek < 0 || f.AvailableSinceWeek > world.Week || f.Player.ContractEndWeek > f.AvailableSinceWeek
+                    || f.Player.WeeklyWage < 0 || f.Player.TrainingExposure != 0 || f.Player.SuspendedMatches < 0 || f.Player.SeasonYellows < 0
+                    || f.Player.InjuredUntilWeek < 0 || world.Clubs.All(c => c.Id != f.PreviousClubId)
+                    || world.Obligations.Any(o => o.Kind == CashKind.Wages && o.Description == $"Player contract {f.Player.ContractId.Value}" && o.EndWeek > world.Week)))
+                throw new InvalidDataException("Invalid free-agent identities or retirement history.");
+            if (world.FreeAgentBids.Count > 1 || world.FreeAgentBids.Count + world.Negotiations.Count > 1
+                || world.FreeAgentBids.Any(b => b.WeeklyWage <= 0 || b.ExpiryWeek < world.Week || b.ContractEndWeek <= b.ExpiryWeek
+                    || world.History.All(h => h.Command.Allocation != Allocation.FreeAgentRecruitment || h.OriginalForecast.Id != b.ForecastId
+                        || h.Recruitment is not { IsFreeAgent: true } t || t.Player.Id != b.PlayerId || t.WeeklyWage != b.WeeklyWage
+                        || t.ContractEndWeek != b.ContractEndWeek || b.ExpiryWeek != h.Week + 1)))
+                throw new InvalidDataException("Invalid free-agent mandate.");
+        }
         if (world.SchemaVersion >= 12 && (world.AcademyGraduates.Select(g => g.Player.Id).Distinct().Count() != world.AcademyGraduates.Count
             || world.AcademyGraduates.GroupBy(g => (g.ClubId, g.Week)).Any(g => g.Count() > 2)
             || world.AcademyGraduates.Any(g => g.Week < Seasons.Weeks || g.Week > world.Week || g.Week % Seasons.Weeks != 0

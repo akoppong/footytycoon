@@ -1,6 +1,6 @@
 # Retirement and squad replacement: next implementation unit
 
-Status: implementation plan, not shipped behavior. The academy and departure archive are implemented; retirement, a free-agent pool and all-club replacement recruitment are not. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
+Status: partially implemented in schema-13 source. The academy, departure archive, prospective free-agent pool, owner-approved approaches and uncontracted retirement are implemented; see [FREE_AGENTS.md](FREE_AGENTS.md). All-club replacement recruitment, contracted-player retirement and the population gates below remain planned. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
 
 ## Current constraint
 

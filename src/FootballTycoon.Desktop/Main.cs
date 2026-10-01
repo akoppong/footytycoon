@@ -182,6 +182,15 @@ public partial class Main : Control
         var staff = Card(); staff.AddChild(Label("Your leadership team", 24));
         staff.AddChild(Label("Mara Ellis · CEO · Cautious operator\nJonas Reed · Sporting director · Values immediate readiness\nCallum Price · Manager · Selects the squad independently"));
         staff.AddChild(Label("Appointments are fixed in this prototype. Hiring, dismissal, personality policies and contract negotiations are future systems.", 14));
+        var market = Card(); market.AddChild(Label("Director's free-agent recommendation", 24));
+        if (view.FreeAgentRecommendation is { } candidate)
+        {
+            market.AddChild(Label($"{candidate.Player.Name} · {candidate.Player.Role} · Age {candidate.Player.Age} · Ability {candidate.Player.Ability}\nNo transfer fee · proposed {Money.Format(candidate.WeeklyWage)}/week. Review the full contract and cash forecast before authorizing an approach.", 16));
+            market.AddChild(Button("Review free-agent approach", () => Preview(Allocation.FreeAgentRecruitment)));
+        }
+        else market.AddChild(Label(view.FreeAgentApproachPending
+            ? "Your approved approach is pending. The director will report the player's response next week; no new contract or payment exists yet."
+            : "No eligible recommendation now. The director looks for affordable cover or improvements in the opening and January windows; outside them, only role shortages qualify. No action is required.", 14));
         var squad = Card(); squad.AddChild(Label("Senior squad", 24));
         squad.AddChild(Label("Development is reviewed at season end, before renewal decisions. Playing time can help younger players; progress is uncertain. Ages advance with each completed season.", 14));
         foreach (var player in view.Squad.OrderBy(p => p.Role).ThenByDescending(p => p.Ability))
@@ -200,6 +209,10 @@ public partial class Main : Control
         if (view.Departures.IsEmpty) archive.AddChild(Label("No departures recorded.", 14));
         foreach (var departure in view.Departures)
             archive.AddChild(Label($"{departure.Name} · {departure.Role}\n{Calendar.FullDay(departure.Week)} · {departure.Reason}\nAt departure: age {departure.Age} · ability {departure.Ability}", 16));
+        foreach (var free in view.FormerPlayersAvailable)
+            archive.AddChild(Label($"{free.Player.Name} is currently without a club · age {free.Player.Age} · ability {free.Player.Ability}. Their former contract creates no continuing wages.", 14));
+        foreach (var retired in view.RetiredFormerPlayers)
+            archive.AddChild(Label($"{retired.Name} retired {Calendar.FullDay(retired.Week)} · age {retired.Age} · final ability {retired.Ability}.", 14));
     }
 
     private void History()

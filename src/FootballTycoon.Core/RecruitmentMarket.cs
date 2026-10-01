@@ -5,7 +5,7 @@ namespace FootballTycoon.Core;
 public static class RecruitmentMarket
 {
     public static bool IsMidseason(Allocation allocation) => allocation is Allocation.MidseasonRecruitment or Allocation.MidseasonValue or Allocation.MidseasonWait;
-    public static bool IsSigning(Allocation allocation) => allocation == Allocation.Recruitment || allocation is Allocation.MidseasonRecruitment or Allocation.MidseasonValue;
+    public static bool IsSigning(Allocation allocation) => allocation == Allocation.Recruitment || allocation is Allocation.MidseasonRecruitment or Allocation.MidseasonValue or Allocation.FreeAgentRecruitment;
 
     // Season-relative approval weeks; a mandate approved on the last day resolves the following week.
     // Dated seasons open on the first Saturday on or after 1 January and complete every deal by 1 February.
@@ -25,6 +25,7 @@ public static class RecruitmentMarket
 
     public static RecruitmentTerms? Recommend(World world, Allocation allocation)
     {
+        if (allocation == Allocation.FreeAgentRecruitment) return FreeAgents.Recommend(world);
         var b = Balance.Load();
         var sellers = world.Clubs.Where(c => c.Id != world.OwnedClubId && c.Division == world.OwnedClub.Division
             && c.Players.Count(p => p.Role == Role.Forward) > 2).OrderBy(c => c.Id.Value);

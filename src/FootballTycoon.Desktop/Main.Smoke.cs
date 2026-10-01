@@ -12,6 +12,8 @@ public partial class Main
         {
             await Settled();
             var trainingProbe = OS.GetCmdlineUserArgs().Contains("--training-smoke-test");
+            var freeAgentProbe = OS.GetCmdlineUserArgs().Contains("--free-agent-smoke-test");
+            var freeAgentChecked = false;
             // Verify the engine applied the weight axes; StringName keys silently used Archivo's 600 default.
             var textServer = TextServerManager.GetPrimaryInterface();
             var weightTag = textServer.NameToTag("wght");
@@ -284,7 +286,42 @@ public partial class Main
                     await Capture($"Season-{season + 1}-capital-plan");
                     Preview(Allocation.PreserveReserve); await Settled();
                     await Press("Review final terms"); await Press("Confirm and commit");
+                    if (freeAgentProbe && !freeAgentChecked && view.FreeAgentRecommendation is not null)
+                    {
+                        Navigate("People"); await Press("Collapse chart");
+                        await CaptureSection("Director's free-agent recommendation", "Free-agent-recommendation");
+                        await Press("Review free-agent approach");
+                        if (selected!.BlockingReasons.Any(r => r.Contains("reserve exception", StringComparison.OrdinalIgnoreCase)))
+                            await Press("Review explicit reserve exception");
+                        if (selected is not { Recruitment.IsFreeAgent: true } || !selected.BlockingReasons.IsEmpty)
+                            throw new InvalidOperationException("Free-agent terms unavailable: " + string.Join("; ", selected?.BlockingReasons ?? []));
+                        var terms = selected.Recruitment;
+                        foreach (var scale in new[] { 100, 150 })
+                        {
+                            textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render(); await Capture("Free-agent-proposal");
+                            await CaptureSection("DIRECTOR’S TARGET", "Free-agent-contract");
+                        }
+                        textScale = 100; Theme.DefaultFontSize = 14; Render(); await Settled();
+                        var cashBefore = view.ClubCash;
+                        await Press("Review final terms"); await Capture("Free-agent-final-terms"); await Press("Confirm and commit");
+                        if (view.ClubCash != cashBefore || !view.FreeAgentApproachPending)
+                            throw new InvalidOperationException("Free-agent approval spent cash or lost its pending mandate.");
+                        Save(); await Settled(); ShowSaves(); await Settled(); await Press("Load this checkpoint");
+                        if (!view.FreeAgentApproachPending) throw new InvalidOperationException("Reload lost the free-agent mandate.");
+                        Navigate("People"); await CaptureSection("Director's free-agent recommendation", "Free-agent-pending");
+                        await session.AdvanceAsync(AdvanceTarget.Week); view = await session.QueryAsync();
+                        if (view.FreeAgentApproachPending || !view.Reviews.Any(r => r.Week == view.Week && (r.Title == "Free agent signed" || r.Title == "Free-agent approach closed")))
+                            throw new InvalidOperationException("Free-agent negotiation did not report its outcome.");
+                        if (view.Squad.SingleOrDefault(p => p.Id == terms.Player.Id) is { } signed
+                            && (signed.WeeklyWage != terms.WeeklyWage || signed.ContractEndWeek != terms.ContractEndWeek))
+                            throw new InvalidOperationException("Signed free-agent terms differ from the approved mandate.");
+                        Navigate("History"); await Capture("Free-agent-outcome");
+                        await Press("Expand chart");
+                        freeAgentChecked = true;
+                        GD.Print("FREE AGENT SMOKE PASS: recommendation, two text scales, full terms, no payment on approval, pending-save reload and negotiation outcome.");
+                    }
                 }
+                if (freeAgentProbe && !freeAgentChecked) throw new InvalidOperationException("No free-agent approach was exercised.");
                 Navigate("History"); await Capture("Three-season-history");
                 if (view.Status != CareerStatus.PrototypeComplete || view.SeasonSummaries.Length != 3)
                     throw new InvalidOperationException("Three-season milestone did not finish.");

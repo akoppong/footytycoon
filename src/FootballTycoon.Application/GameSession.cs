@@ -51,6 +51,10 @@ public sealed record GameView(long Revision, int Week, CareerStatus Status, stri
     public ImmutableArray<Project> Projects { get; init; } = [];
     public ImmutableArray<PlayerDeparture> Departures { get; init; } = [];
     public ImmutableArray<AcademyGraduate> AcademyGraduates { get; init; } = [];
+    public RecruitmentTerms? FreeAgentRecommendation { get; init; }
+    public bool FreeAgentApproachPending { get; init; }
+    public ImmutableArray<FreeAgent> FormerPlayersAvailable { get; init; } = [];
+    public ImmutableArray<PlayerRetirement> RetiredFormerPlayers { get; init; } = [];
 }
 
 // All reads, commands, checkpoints and loads share one queue. No engine state escapes to the UI.
@@ -161,7 +165,11 @@ public sealed class GameSession : IAsyncDisposable
             HospitalityLevel = club.HospitalityLevel,
             Projects = world.Projects.Where(p => p.ClubId == club.Id).ToImmutableArray(),
             Departures = world.Departures.Where(p => p.ClubId == club.Id).OrderByDescending(p => p.Week).ThenBy(p => p.Name).ToImmutableArray(),
-            AcademyGraduates = world.AcademyGraduates.Where(g => g.ClubId == club.Id).OrderByDescending(g => g.Week).ToImmutableArray()
+            AcademyGraduates = world.AcademyGraduates.Where(g => g.ClubId == club.Id).OrderByDescending(g => g.Week).ToImmutableArray(),
+            FreeAgentRecommendation = FreeAgents.Recommend(world),
+            FreeAgentApproachPending = world.FreeAgentBids.Count > 0,
+            FormerPlayersAvailable = world.FreeAgents.Where(f => world.Departures.Any(d => d.PlayerId == f.Player.Id && d.ClubId == club.Id)).ToImmutableArray(),
+            RetiredFormerPlayers = world.Retirements.Where(r => world.Departures.Any(d => d.PlayerId == r.PlayerId && d.ClubId == club.Id)).ToImmutableArray()
         };
     });
 
