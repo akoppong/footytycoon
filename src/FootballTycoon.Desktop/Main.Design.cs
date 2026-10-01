@@ -306,7 +306,7 @@ public partial class Main
         if (!view.AllocationChosen && view.Status == CareerStatus.Active) { AllocationCards(); return; }
         var intro = Card(); intro.AddChild(Caption(inboxSelection == "resume" ? "WELCOME BACK · VALIDATED CHECKPOINT" : "OWNER BRIEF · MARA ELLIS, CEO"));
         intro.AddChild(Label(view.Status == CareerStatus.PrototypeComplete ? "Your three-season career is complete" : view.Status == CareerStatus.SeasonReview ? $"Season {view.Season} is complete" : view.Status == CareerStatus.LostControl ? "Your ownership has ended" : !view.AllocationChosen ? "Where should the money go?" : "Your club, this week", 30));
-        intro.AddChild(Label(!view.AllocationChosen ? "“We can back a forward, build hospitality, or protect our reserve. Each choice leaves something for later. Compare the cash path before you commit.”"
+        intro.AddChild(Label(!view.AllocationChosen ? "“We can back a forward, build hospitality, improve training, or protect our reserve. Each choice leaves something for later. Compare the cash path before you commit.”"
             : $"{Money.Format(view.ClubCash)} in club cash. {Standing()}. Your reserve is {Money.Format(view.PersonalReserve)}; it remains separate from the club."));
         if (view.Status == CareerStatus.SeasonReview)
         {
@@ -513,6 +513,26 @@ public partial class Main
         Fact(card, "Cup prize money", Money.Format(season.CupPrize));
         card.AddChild(Label(season.Plan));
         card.AddChild(Label("Recorded at the final weekly settlement. Later owner funding remains in the cash journal.", 12));
+        if (!season.Development.IsEmpty)
+        {
+            card.AddChild(Label("Squad development", 22));
+            card.AddChild(Label($"{season.Development.Count(p => p.Change > 0)} improved · {season.Development.Count(p => p.Change == 0)} held level · {season.Development.Count(p => p.Change < 0)} declined", 16));
+            var details = new VBoxContainer { Visible = false };
+            Button? toggle = null;
+            toggle = Button($"Show season {season.Season} player reviews", () =>
+            {
+                if (busy) return;
+                details.Visible = !details.Visible;
+                toggle!.Text = $"{(details.Visible ? "Hide" : "Show")} season {season.Season} player reviews";
+            });
+            card.AddChild(toggle); card.AddChild(details);
+            details.AddChild(Label("Ability changes are settled before renewal recommendations. Appearances include league and cup, including any played before joining. Players sold or released before season end are not listed. These are observations, not promises for next season.", 14));
+            foreach (var player in season.Development.OrderByDescending(p => Math.Abs(p.Change)).ThenBy(p => p.Role).ThenBy(p => p.Name))
+            {
+                details.AddChild(Label($"{player.Name} · {player.Role} · Age {player.AgeBefore} → {player.AgeBefore + 1}\nAbility {player.AbilityBefore} → {player.AbilityAfter} ({player.Change:+0;-0;0}) · {player.Appearances} recorded appearances", 16));
+                details.AddChild(Label(player.Evidence, 13));
+            }
+        }
     }
     private void MatchCard(MatchResult match, bool full = false)
     {

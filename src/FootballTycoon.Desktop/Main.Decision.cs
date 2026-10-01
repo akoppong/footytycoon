@@ -8,7 +8,7 @@ public partial class Main
 {
     private static readonly Color Deep = new("0b1626"), Panel = new("13233a"), Ink = new("f2eee4"), InkSoft = new("c4cbd6"), InkMuted = new("93a1b5"),
         Lime = new("b9db3f"), Gold = new("e8a93a"), Coral = new("f0a58e"), Divider = new("22344b");
-    private static readonly Allocation[] OpeningOrder = [Allocation.Hospitality, Allocation.Recruitment, Allocation.PreserveReserve];
+    private static readonly Allocation[] OpeningOrder = [Allocation.Hospitality, Allocation.Recruitment, Allocation.Training, Allocation.PreserveReserve];
     private Proposal[]? openingPlans;
     private string openingPlansKey = "", openingPlansFailedKey = "";
     private Allocation? planFocus;
@@ -91,15 +91,16 @@ public partial class Main
         var detail = OpenPlan(chosen, full: false); detail.SizeFlagsHorizontal = SizeFlags.ExpandFill; layout.AddChild(detail);
     }
 
-    private static string PlanLetter(Allocation a) => a == Allocation.Hospitality ? "A" : a == Allocation.Recruitment ? "B" : "C";
-    private static string PlanTitle(Allocation a) => a == Allocation.Hospitality ? "Build hospitality suites" : a == Allocation.Recruitment ? "Search for a forward" : "Keep the reserve";
-    private static string PlanShort(Allocation a) => a == Allocation.Hospitality ? "Hospitality build" : a == Allocation.Recruitment ? "Forward search" : "Keep the reserve";
-    private static string PlanByline(Allocation a) => a == Allocation.Recruitment ? "proposed by Jonas Reed" : a == Allocation.Hospitality ? "proposed by Mara Ellis" : "your call";
+    private static string PlanLetter(Allocation a) => ((char)('A' + Array.IndexOf(OpeningOrder, a))).ToString();
+    private static string PlanTitle(Allocation a) => a == Allocation.Hospitality ? "Build hospitality suites" : a == Allocation.Recruitment ? "Search for a forward" : a == Allocation.Training ? "Invest in training" : "Keep the reserve";
+    private static string PlanShort(Allocation a) => a == Allocation.Hospitality ? "Hospitality build" : a == Allocation.Recruitment ? "Forward search" : a == Allocation.Training ? "Training build" : "Keep the reserve";
+    private static string PlanByline(Allocation a) => a == Allocation.Recruitment ? "proposed by Jonas Reed" : a != Allocation.PreserveReserve ? "proposed by Mara Ellis" : "your call";
     private string PlanFigure(Proposal p) => p.Command.Allocation switch
     {
         Allocation.Recruitment => "≤ " + ShortMoney(p.UpfrontCash), Allocation.PreserveReserve => "£0 spent", _ => ShortMoney(p.UpfrontCash)
     };
     private string PlanBasis(Proposal p) => p.Command.Allocation == Allocation.Hospitality ? $"Cash now · {p.ReviewWeek - view.Week}-week build · {Money.Format(p.WeeklyCost)}/week upkeep after opening"
+        : p.Command.Allocation == Allocation.Training ? $"Cash now · {p.ReviewWeek - view.Week}-week build · {Money.Format(p.WeeklyCost)}/week upkeep after opening"
         : p.Command.Allocation == Allocation.Recruitment ? $"Fee paid only if a player signs · up to {Money.Format(p.WeeklyCost)}/week wage"
         : $"Nothing committed · {ShortMoney(view.ClubCash)} held · the midseason window stays open";
     private Forecast Ghost(Proposal p) => openingPlans!.First(o => o.Command.Allocation == (p.Command.Allocation == Allocation.PreserveReserve ? Allocation.Hospitality : Allocation.PreserveReserve)).Forecast;
@@ -131,7 +132,7 @@ public partial class Main
         return button;
     }
     private (string Name, string Role, string Initials) Person(Allocation a) => a == Allocation.Recruitment ? ("Jonas Reed", "Sporting director · accountable", "JR")
-        : a == Allocation.Hospitality ? ("Mara Ellis", "CEO · accountable", "ME") : ("You, the owner", "Mara Ellis manages the cash", "YOU");
+        : a != Allocation.PreserveReserve ? ("Mara Ellis", "CEO · accountable", "ME") : ("You, the owner", "Mara Ellis manages the cash", "YOU");
 
     private Control RailPlan(Proposal p, bool open)
     {
@@ -160,7 +161,7 @@ public partial class Main
         box.AddChild(Tone($"{PlanByline(a)} · {PlanBasis(p)}", 13, InkSoft));
 
         var ghostName = a == Allocation.PreserveReserve ? "if you build hospitality" : a == Allocation.Recruitment ? "if no player signs" : "if you keep the reserve";
-        var drop = a == Allocation.Hospitality ? $"▼ −{ShortMoney(p.UpfrontCash)} on approval" : a == Allocation.Recruitment ? "▼ ceiling set aside now" : "No commitment · cash follows the season";
+        var drop = a is Allocation.Hospitality or Allocation.Training ? $"▼ −{ShortMoney(p.UpfrontCash)} on approval" : a == Allocation.Recruitment ? "▼ ceiling set aside now" : "No commitment · cash follows the season";
         var chart = new DecisionChart(p.Forecast, Ghost(p), ghostName, view.ReserveTarget, view.ClubCash, monoFont, textScale, drop, .02f, a == Allocation.PreserveReserve ? .6f : .2f);
         chart.CustomMinimumSize = new Vector2(0, (full ? 230 : 170) * (1 + (textScale - 100) / 150f)); box.AddChild(chart);
 

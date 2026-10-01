@@ -169,9 +169,9 @@ public static class WorldFactory
     public static void AddObligation(World world, ClubId club, int start, int end, long weekly, CashKind kind, string description) =>
         world.Obligations.Add(new(new(world.Obligations.Count + 1), club, start, end, weekly, kind, description));
 
-    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false)
+    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false)
     {
-        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : 8) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : "contracts-8") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
+        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : 10) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : "training-10") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
             throw new InvalidDataException("Unsupported save, simulation, content or random version. The source was not changed.");
         if (world.Clubs.Count != 48 || world.Clubs.Select(c => c.Id).Distinct().Count() != 48
             || world.Clubs.Count(c => c.Id == world.OwnedClubId) != 1 || (legacy ? world.Week is < 0 or > 52 : world.Season is < 1 or > Seasons.PlayableSeasons || world.Week < Seasons.StartWeek(world) || world.Week > Seasons.EndWeek(world)) || world.Revision < 0
@@ -183,6 +183,16 @@ public static class WorldFactory
             || world.Fixtures.Any(f => f.Competition == Competition.League && f.Division is < 1 or > 3)))
             throw new InvalidDataException("Missing season division history.");
         var people = world.Clubs.SelectMany(c => c.Players).ToArray();
+        if (world.SchemaVersion >= 10 && (world.Clubs.Any(c => c.TrainingLevel is < 0 or > 3)
+            || people.Any(p => p.TrainingExposure < 0 || p.TrainingExposure > 20 * Seasons.WeekInSeason(world.Week, world.Season))
+            || world.Projects.Any(p => !Enum.IsDefined(p.Kind))
+            || world.SeasonSummaries.Any(s => s.Development.Any(p => p.TrainingBonus is < 0 or > 20))))
+            throw new InvalidDataException("Invalid training development state.");
+        if (world.SchemaVersion >= 9 && (people.Any(p => p.Age is < 16 or > 100)
+            || world.SeasonSummaries.Any(s => s.Development.Select(p => p.PlayerId).Distinct().Count() != s.Development.Length
+                || s.Development.Any(p => p.AgeBefore is < 16 or > 99 || p.AbilityBefore is < 1 or > 100
+                    || p.AbilityAfter is < 1 or > 100 || p.Appearances < 0 || Math.Abs(p.Change) > 3))))
+            throw new InvalidDataException("Invalid player development history.");
         if (people.Select(p => p.Id).Distinct().Count() != people.Length || people.Any(p => p.WeeklyWage < 0 || p.Ability is < 1 or > 100)
             || world.Obligations.Select(o => o.Id).Distinct().Count() != world.Obligations.Count
             || world.Obligations.Any(o => !world.Clubs.Any(c => c.Id == o.ClubId) || o.StartWeek > o.EndWeek)

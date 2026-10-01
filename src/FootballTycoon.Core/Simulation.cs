@@ -22,10 +22,20 @@ public static class Simulation
         foreach (var fixture in world.Fixtures.Where(f => f.Week == world.Week).OrderBy(f => f.Id.Value)) Resolve(world, fixture);
         Cups.AdvanceDraw(world);
         world.Phase = Phase.Development;
+        Facilities.AccrueTraining(world);
         foreach (var project in world.Projects.Where(p => p.CompletionWeek == world.Week))
         {
-            world.Clubs.Single(c => c.Id == project.ClubId).HospitalityLevel++;
-            world.Reviews.Add(new(world.Week, "Hospitality opens", "Mara Ellis delivered the expansion. Extra receipts now depend on actual home dates and demand; construction cost is already paid.", project.ForecastId));
+            var club = world.Clubs.Single(c => c.Id == project.ClubId);
+            if (project.Kind == FacilityKind.Training)
+            {
+                club.TrainingLevel++;
+                world.Reviews.Add(new(world.Week, "Training center opens", "Mara Ellis delivered the upgrade. From next week, training contributes to younger players' chances of development. Results are reviewed at season end; no ability increase or resale receipt is guaranteed. Staffing and maintenance start next week.", project.ForecastId));
+            }
+            else
+            {
+                club.HospitalityLevel++;
+                world.Reviews.Add(new(world.Week, "Hospitality opens", "Mara Ellis delivered the expansion. Extra receipts now depend on actual home dates and demand; construction cost is already paid.", project.ForecastId));
+            }
         }
         world.Phase = Phase.Reporting;
         var (windowOpens, windowCloses) = RecruitmentMarket.Window(world);
@@ -39,7 +49,7 @@ public static class Simulation
         }
         if (world.Week % 4 == 0)
         {
-            var history = world.History.LastOrDefault(h => h.Command.Allocation is Allocation.Hospitality or Allocation.Recruitment or Allocation.PreserveReserve);
+            var history = world.History.LastOrDefault(h => Seasons.IsCapitalPlan(h.Command.Allocation));
             var point = history?.OriginalForecast.Points.FirstOrDefault(p => p.Week == world.Week);
             world.Reviews.Add(new(world.Week, "Owner review", point is null ? "No opening allocation forecast to compare."
                 : $"{history!.Intent}: club cash {Money.Format(world.OwnedClub.Cash)} versus original base {Money.Format(point.BaseCash)} and downside {Money.Format(point.DownsideCash)}. Match receipts vary with results and demand; an allocation cannot guarantee a result.", history?.OriginalForecast.Id));
