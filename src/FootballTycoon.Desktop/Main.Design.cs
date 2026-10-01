@@ -177,7 +177,9 @@ public partial class Main
                 : view.Status == CareerStatus.SeasonReview ? "SEASON COMPLETE  ·  Review next season’s renewals before continuing."
                 : "NEEDS YOU  ·  Choose this season’s capital plan before continuing.", new Color("785411"), 11));
         }
-        if (view.Status != CareerStatus.Acquisition && auxiliary == "") BuildSeasonLine();
+        // The opening decision carries its own per-plan cash charts; the season chart has nothing to show before a plan is chosen.
+        var openingDecision = view.Status == CareerStatus.Active && !view.AllocationChosen && workspace == "Owner Desk" && selected is null && inboxSelection is "brief" or "resume";
+        if (view.Status != CareerStatus.Acquisition && auxiliary == "" && !openingDecision) BuildSeasonLine();
         var body = new HBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill }; body.AddThemeConstantOverride("separation", 0); shell.AddChild(body);
         var acquisition = view.Status == CareerStatus.Acquisition && workspace == "Owner Desk" && selected is null && auxiliary == "";
         if (!acquisition && auxiliary == "") BuildInbox(Pane(body, new Color("f1ede3"), textScale == 150 ? 235 : 218));
@@ -301,11 +303,11 @@ public partial class Main
             card.AddChild(Label("The original forecast is kept as it was when you committed. It is an estimate, not a promise. Recruitment approval does not guarantee a signing."));
             card.AddChild(Button("Open decision history", () => Navigate("History"))); return;
         }
+        if (!view.AllocationChosen && view.Status == CareerStatus.Active) { AllocationCards(); return; }
         var intro = Card(); intro.AddChild(Caption(inboxSelection == "resume" ? "WELCOME BACK · VALIDATED CHECKPOINT" : "OWNER BRIEF · MARA ELLIS, CEO"));
         intro.AddChild(Label(view.Status == CareerStatus.PrototypeComplete ? "Your three-season career is complete" : view.Status == CareerStatus.SeasonReview ? $"Season {view.Season} is complete" : view.Status == CareerStatus.LostControl ? "Your ownership has ended" : !view.AllocationChosen ? "Where should the money go?" : "Your club, this week", 30));
         intro.AddChild(Label(!view.AllocationChosen ? "“We can back a forward, build hospitality, or protect our reserve. Each choice leaves something for later. Compare the cash path before you commit.”"
             : $"{Money.Format(view.ClubCash)} in club cash. {Standing()}. Your reserve is {Money.Format(view.PersonalReserve)}; it remains separate from the club."));
-        if (!view.AllocationChosen && view.Status == CareerStatus.Active) { AllocationCards(); return; }
         if (view.Status == CareerStatus.SeasonReview)
         {
             SeasonReport(view.SeasonSummaries.Last());
@@ -347,26 +349,6 @@ public partial class Main
             Fact(card, obligation.Key.ToString(), Money.Format(obligation.Sum(o => o.WeeklyAmount)) + "/week · signed net");
         card.AddChild(Label("The purchase pays the seller. The club receives no new cash. No opening debt; ownership authority covers capital and priorities, while staff run football operations.", 13));
         var buy = Button("Review acquisition terms →", () => Preview(Allocation.Acquire)); Primary(buy); card.AddChild(buy);
-    }
-    private void AllocationCards()
-    {
-        var balance = Balance.Load();
-        var options = new GridContainer { Columns = textScale == 100 ? 3 : 1, SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        options.AddThemeConstantOverride("h_separation", 1); content.AddChild(options);
-        foreach (var allocation in new[] { Allocation.Hospitality, Allocation.Recruitment, Allocation.PreserveReserve })
-        {
-            var panel = Surface(White, 16); panel.SizeFlagsHorizontal = SizeFlags.ExpandFill; options.AddChild(panel);
-            var card = Stack(panel); var hospitality = allocation == Allocation.Hospitality; var recruitment = allocation == Allocation.Recruitment;
-            card.AddChild(Caption(recruitment ? "JONAS REED · SPORTING DIRECTOR" : "MARA ELLIS · CEO"));
-            card.AddChild(Label(hospitality ? "Build hospitality" : recruitment ? "Back the forward search" : "Protect the reserve", 24));
-            card.AddChild(Caption(hospitality ? $"{Money.Format(balance.HospitalityCost)} cash now · {Money.Format(balance.HospitalityWeeklyUpkeep)}/week after opening"
-                : recruitment ? $"{Money.Format(balance.TransferFeeCeiling)} fee ceiling · {Money.Format(balance.RecruitWeeklyWage)}/week wage ceiling" : "£0 new spending · retain the current squad and facilities", Navy, 13));
-            card.AddChild(Label(hospitality ? $"A 28-week build. Future receipts depend on home matches and demand; upkeep runs through {Calendar.FullDay(view.SeasonEndWeek + Seasons.Weeks)}."
-                : recruitment ? "Authorize a search, not a guaranteed signing. Jonas negotiates within your ceiling; the fee is paid only if a deal completes."
-                : "Keep capital available. Retaining cash is a valid plan; it cannot guarantee sporting success.", 13));
-            card.AddChild(new Control { SizeFlagsVertical = SizeFlags.ExpandFill });
-            card.AddChild(Button("Compare this plan →", () => Preview(allocation)));
-        }
     }
     private void RecruitmentHistory(VBoxContainer card, DecisionRecord decision)
     {
