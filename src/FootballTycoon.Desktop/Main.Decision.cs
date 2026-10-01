@@ -97,7 +97,9 @@ public partial class Main
     private static string PlanByline(Allocation a) => a == Allocation.Recruitment ? "proposed by Jonas Reed" : a != Allocation.PreserveReserve ? "proposed by Mara Ellis" : "your call";
     private string PlanFigure(Proposal p) => p.Command.Allocation switch
     {
-        Allocation.Recruitment => "≤ " + ShortMoney(p.UpfrontCash), Allocation.PreserveReserve => "£0 spent", _ => ShortMoney(p.UpfrontCash)
+        Allocation.Recruitment => "≤ " + ShortMoney(p.UpfrontCash),
+        Allocation.PreserveReserve => "£0 spent",
+        _ => ShortMoney(p.UpfrontCash)
     };
     private string PlanBasis(Proposal p) => p.Command.Allocation == Allocation.Hospitality ? $"Cash now · {p.ReviewWeek - view.Week}-week build · {Money.Format(p.WeeklyCost)}/week upkeep after opening"
         : p.Command.Allocation == Allocation.Training ? $"Cash now · {p.ReviewWeek - view.Week}-week build · {Money.Format(p.WeeklyCost)}/week upkeep after opening"
