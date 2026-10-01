@@ -191,6 +191,21 @@ public partial class Main : Control
         else market.AddChild(Label(view.FreeAgentApproachPending
             ? "Your approved approach is pending. The director will report the player's response next week; no new contract or payment exists yet."
             : "No eligible recommendation now. The director looks for affordable cover or improvements in the opening and January windows; outside them, only role shortages qualify. No action is required.", 14));
+        var rivals = Card(); rivals.AddChild(Label("Recent rival recruitment", 24));
+        rivals.AddChild(Label("Rival directors seek affordable replacements after departures. Offers can fail; no club is guaranteed cover. Latest eight approaches shown.", 14));
+        if (view.RivalApproaches.IsEmpty) rivals.AddChild(Label("No rival approaches recorded yet.", 14));
+        foreach (var approach in view.RivalApproaches.Reverse().Take(8))
+        {
+            var result = approach.Outcome switch
+            {
+                ApproachOutcome.Pending => "Awaiting the player's response",
+                ApproachOutcome.Signed => "Signed · wages start the week after agreement",
+                ApproachOutcome.Declined => "Player declined · no new contract",
+                ApproachOutcome.Unavailable => "Player no longer available · no new contract",
+                _ => "Squad or affordability checks failed · no new contract"
+            };
+            rivals.AddChild(Label($"{Calendar.FullDay(approach.ResolvedWeek ?? approach.ApprovedWeek)} · {ClubName(approach.ClubId)}\n{approach.Player.Name} · {approach.Player.Role} · {result}\nOffered {Money.Format(approach.WeeklyWage)}/week through {Calendar.FullDay(approach.ContractEndWeek)} · no fee", 14));
+        }
         var squad = Card(); squad.AddChild(Label("Senior squad", 24));
         squad.AddChild(Label("Development is reviewed at season end, before renewal decisions. Playing time can help younger players; progress is uncertain. Ages advance with each completed season.", 14));
         foreach (var player in view.Squad.OrderBy(p => p.Role).ThenByDescending(p => p.Ability))

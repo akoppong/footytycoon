@@ -16,6 +16,9 @@ public class FreeAgentTests
         var free = world.FreeAgents.First(f => f.PreviousClubId != world.OwnedClubId);
         world.FreeAgents = [free with { Player = free.Player with { Age = 25, Ability = 90, WeeklyWage = 10000 } }];
         world.Seed = seed;
+        // These owner-only scenarios isolate the candidate from autonomous rival offers.
+        foreach (var rival in world.Clubs.Where(c => c.Id != world.OwnedClubId))
+            rival.Players = rival.Players.Select(p => p with { Ability = 100 }).ToList();
         Assert.NotNull(FreeAgents.Recommend(world)); WorldFactory.Validate(world);
         return world;
     }
@@ -196,7 +199,7 @@ public class FreeAgentTests
         legacy.Remove("FreeAgents"); legacy.Remove("Retirements"); legacy.Remove("FreeAgentBids");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(original, bytes); Assert.Equal(13, migrated.SchemaVersion);
+        Assert.Equal(original, bytes); Assert.Equal(14, migrated.SchemaVersion);
         Assert.Empty(migrated.FreeAgents); Assert.Empty(migrated.Retirements); Assert.Empty(migrated.FreeAgentBids);
         Assert.Equal(world.Departures, migrated.Departures);
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), migrated.Clubs.SelectMany(c => c.Players));
