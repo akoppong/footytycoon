@@ -32,7 +32,7 @@ public static class Seasons
         });
     }
 
-    public static RenewalTerms Terms(World world, IEnumerable<PersonId>? contractOverrides = null)
+    public static RenewalTerms Terms(World world, IEnumerable<PersonId>? contractOverrides = null, bool declineAcademy = false)
     {
         var club = world.OwnedClub;
         var nextDivision = Pyramid.NextDivisions(world)[club.Id];
@@ -54,19 +54,22 @@ public static class Seasons
             AnnualWagesAfter = plan.WagesAfter,
             WageLimit = plan.WageLimit,
             RenewedCommitment = checked(renewed.Sum(r => r.OfferedWage * Weeks * r.Years)),
-            RaisesHeld = plan.RaisesHeld
+            RaisesHeld = plan.RaisesHeld,
+            AcademyIntake = declineAcademy ? [] : Academy.Recommend(world, club, nextDivision, plan)
         };
     }
 
     // Called only on a preview clone or a private transaction candidate. No cash or RNG changes at rollover.
     // The owner's contract overrides apply to the owned club; every rival follows its director's recommendations.
-    public static void StartNext(World world, IEnumerable<PersonId>? contractOverrides = null)
+    public static void StartNext(World world, IEnumerable<PersonId>? contractOverrides = null, bool declineAcademy = false)
     {
         if (world.Status != CareerStatus.SeasonReview || world.Week != EndWeek(world) || world.Season >= PlayableSeasons)
             throw new InvalidOperationException("A completed season review is required before starting the next season.");
         var destinations = Pyramid.NextDivisions(world);
         // Plans use this season's divisions and revenue, so they match the previewed terms.
         var plans = world.Clubs.ToDictionary(c => c.Id, c => Contracts.Plan(world, c, destinations[c.Id], c.Id == world.OwnedClubId ? contractOverrides : null));
+        var intakes = world.Clubs.ToDictionary(c => c.Id, c => c.Id == world.OwnedClubId && declineAcademy
+            ? ImmutableArray<Player>.Empty : Academy.Recommend(world, c, destinations[c.Id], plans[c.Id]));
         var previousDivision = world.OwnedClub.Division;
         foreach (var club in world.Clubs)
         {
@@ -91,6 +94,7 @@ public static class Seasons
                 WorldFactory.AddObligation(world, club.Id, world.Week + 1, end, obligation.WeeklyAmount,
                     obligation.Kind, obligation.Description);
             Contracts.Execute(world, club, plans[club.Id].Reviews);
+            Academy.Admit(world, club, intakes[club.Id]);
         }
         var own = plans[world.OwnedClubId].Reviews;
         var rivals = plans.Where(p => p.Key != world.OwnedClubId).SelectMany(p => p.Value.Reviews).ToArray();
@@ -98,12 +102,15 @@ public static class Seasons
         var squad = own.IsEmpty ? "No player contracts expired."
             : $"You renewed {Count(own.Count(r => r.Chosen == ContractAction.Renew))} and released {own.Count(r => r.Chosen == ContractAction.Release)}; released players left on free transfers and their wages ended with their contracts.";
         var market = rivals.Length == 0 ? "" : $" Rival clubs renewed {Count(rivals.Count(r => r.Chosen == ContractAction.Renew))} and released {rivals.Count(r => r.Chosen == ContractAction.Release)}.";
+        var academy = intakes[world.OwnedClubId];
+        var youth = academy.IsEmpty ? " No academy graduates joined the senior squad."
+            : $" Academy graduates joined on three-year contracts: {string.Join(", ", academy.Select(p => p.Name))}. Their wages begin next week; development and playing time remain uncertain.";
         WorldFactory.AddSeasonFixtures(world);
         world.AllocationChosen = false;
         world.Decisions.Add(new(new(world.Decisions.Count + 1), world.Week, true, $"Choose season {world.Season}'s capital plan"));
         world.Status = world.Arrears.Any(a => a.ClubId == world.OwnedClubId) ? CareerStatus.Administration : CareerStatus.Active;
         // Administration deadlines remain absolute; crossing a season never resets a creditor's clock.
         world.Reviews.Add(new(world.Week, $"Season {world.Season} begins",
-            $"{Pyramid.Outcome(previousDivision, world.OwnedClub.Division)} Annual broadcast and sponsor agreements use the new tier’s published rates. Operating contracts were extended for one season at unchanged costs. {squad}{market} Choose this season’s capital plan; inherited commitments and arrears remain payable.", null));
+            $"{Pyramid.Outcome(previousDivision, world.OwnedClub.Division)} Annual broadcast and sponsor agreements use the new tier’s published rates. Operating contracts were extended for one season at unchanged costs. {squad}{market}{youth} Choose this season’s capital plan; inherited commitments and arrears remain payable.", null));
     }
 }

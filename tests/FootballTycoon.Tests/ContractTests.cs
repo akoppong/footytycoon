@@ -228,7 +228,7 @@ public class ContractTests
             Assert.All(club.Players, p => Assert.InRange(p.ContractEndWeek, 104, 208));
             var active = world.Obligations.Where(o => o.ClubId == club.Id && o.Kind == CashKind.Wages && o.StartWeek <= 53 && o.EndWeek >= 53).Sum(o => o.WeeklyAmount);
             Assert.Equal(-club.Players.Sum(p => p.WeeklyWage), active);
-            released += before[club.Id] - club.Players.Count;
+            released += before[club.Id] - club.Players.Count + world.AcademyGraduates.Count(g => g.ClubId == club.Id);
         }
         Assert.InRange(released, 1, 47 * 2);
         Assert.Contains(world.Reviews, r => r.Title == "Season 2 begins" && r.Evidence.Contains("Rival clubs"));
@@ -270,7 +270,7 @@ public class ContractTests
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(10, migrated.SchemaVersion); Assert.Equal("training-10", migrated.SimulationVersion);
+        Assert.Equal(12, migrated.SchemaVersion); Assert.Equal("academy-12", migrated.SimulationVersion);
         Assert.Equal(CareerStatus.SeasonReview, migrated.Status);
         Assert.All(migrated.History, h => { Assert.Null(h.Renewal); Assert.Empty(h.Command.ContractOverrides); });
         Assert.Equal(world.OwnedClub.Players, migrated.OwnedClub.Players);
@@ -279,6 +279,6 @@ public class ContractTests
         Assert.Equal(18, proposal.Renewal!.Contracts.Length);
         Proposals.Commit(migrated, "renew", migrated.Revision, proposal);
         Assert.Equal(2, migrated.Season);
-        Assert.Equal(proposal.Renewal.Renewed, migrated.OwnedClub.Players.Count);
+        Assert.Equal(proposal.Renewal.Renewed + proposal.Renewal.AcademyIntake.Length, migrated.OwnedClub.Players.Count);
     }
 }

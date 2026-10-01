@@ -190,6 +190,16 @@ public partial class Main : Control
             var change = progress is null ? "" : $" · Last season {progress.Change:+0;-0;0}";
             squad.AddChild(Label($"{player.Name} · {player.Role} · Age {player.Age} · Ability {player.Ability}{change}\n{PlayerDevelopment.Outlook(player)}\n{Money.Format(player.WeeklyWage)}/week · Contract through {Calendar.FullDay(player.ContractEndWeek)}", 16));
         }
+        var academy = Card(); academy.AddChild(Label("Academy graduates", 24));
+        academy.AddChild(Label("Young players who joined through your inherited academy. First-team places and future improvement must be earned.", 14));
+        if (view.AcademyGraduates.IsEmpty) academy.AddChild(Label("No senior graduates recorded yet. The sporting director reviews the next intake at season end.", 14));
+        foreach (var graduate in view.AcademyGraduates)
+            academy.AddChild(Label($"{graduate.Player.Name} · {graduate.Player.Role} · Joined {Calendar.FullDay(graduate.Week)}\nAt graduation: age {graduate.Player.Age} · ability {graduate.Player.Ability}", 14));
+        var archive = Card(); archive.AddChild(Label("Player departures", 24));
+        archive.AddChild(Label("Names and career details recorded when players left your club. Earlier saves recover confirmed owner release decisions; unrecorded departures are not reconstructed.", 14));
+        if (view.Departures.IsEmpty) archive.AddChild(Label("No departures recorded.", 14));
+        foreach (var departure in view.Departures)
+            archive.AddChild(Label($"{departure.Name} · {departure.Role}\n{Calendar.FullDay(departure.Week)} · {departure.Reason}\nAt departure: age {departure.Age} · ability {departure.Ability}", 16));
     }
 
     private void History()
@@ -206,10 +216,10 @@ public partial class Main : Control
         if (view.History.IsEmpty) content.AddChild(Label("Your ownership history begins with the acquisition."));
     }
 
-    private void Preview(Allocation allocation, long amount = 0, bool reserveException = false, System.Collections.Immutable.ImmutableArray<PersonId> contractOverrides = default) => Start(async () =>
+    private void Preview(Allocation allocation, long amount = 0, bool reserveException = false, System.Collections.Immutable.ImmutableArray<PersonId> contractOverrides = default, bool declineAcademy = false) => Start(async () =>
     {
         confirming = false;
-        selected = await session.PreviewAsync(new(allocation, amount, reserveException) { ContractOverrides = contractOverrides.IsDefault ? [] : contractOverrides }, view.Revision);
+        selected = await session.PreviewAsync(new(allocation, amount, reserveException) { ContractOverrides = contractOverrides.IsDefault ? [] : contractOverrides, DeclineAcademy = declineAcademy }, view.Revision);
         retryCommandId = Guid.NewGuid().ToString("N");
         return "Review the exact terms before committing.";
     });
