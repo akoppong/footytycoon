@@ -378,7 +378,11 @@ public partial class Main
 
     private void RenewalHistory(VBoxContainer card, DecisionRecord decision)
     {
-        if (decision.Renewal is not { Contracts.IsEmpty: false } terms) return;
+        if (decision.Renewal is not { } terms) return;
+        if (!terms.AcademyIntake.IsEmpty)
+            card.AddChild(Label("Academy intake: " + string.Join("; ", terms.AcademyIntake.Select(p => $"{p.Name} · {p.Role} · age {p.Age} · ability {p.Ability} · {Money.Format(p.WeeklyWage)}/wk through {Calendar.FullDay(p.ContractEndWeek)}")), 14));
+        else if (decision.Command.DeclineAcademy) card.AddChild(Label("You declined this year's academy intake.", 14));
+        if (terms.Contracts.IsEmpty) return;
         var changed = terms.Contracts.Where(c => c.Chosen != c.Recommended).ToArray();
         var released = terms.Contracts.Where(c => c.Chosen == ContractAction.Release).Select(c => c.Name).ToArray();
         card.AddChild(Label($"Expiring contracts: {terms.Renewed} renewed, {terms.Released} released. Annual wages {Money.Format(terms.ExpiringAnnualWages)} → {Money.Format(terms.RenewedAnnualWages)}.\n"
@@ -413,7 +417,7 @@ public partial class Main
         }
         card.AddChild(Label(overrides.IsEmpty ? "Showing Jonas's recommendations. Choose a player to reverse his advice; the terms and forecast update."
             : $"{overrides.Length} of {renewal.PlayerContracts} recommendations reversed.", 13));
-        if (!overrides.IsEmpty) card.AddChild(Button("Accept all recommendations", () => Preview(Allocation.StartNextSeason)));
+        if (!overrides.IsEmpty) card.AddChild(Button("Accept all recommendations", () => Preview(Allocation.StartNextSeason, declineAcademy: proposal.Command.DeclineAcademy)));
         foreach (var contract in renewal.Contracts)
         {
             var row = Stack(card, 2);
@@ -422,11 +426,25 @@ public partial class Main
             var toggled = (overrides.Contains(contract.PlayerId) ? overrides.Remove(contract.PlayerId) : overrides.Add(contract.PlayerId))
                 .Sort((a, b) => a.Value.CompareTo(b.Value));
             var id = contract.PlayerId;
-            var button = Button(ContractButtonText(contract), () => { contractFocus = id; Preview(Allocation.StartNextSeason, contractOverrides: toggled); });
+            var button = Button(ContractButtonText(contract), () => { contractFocus = id; Preview(Allocation.StartNextSeason, contractOverrides: toggled, declineAcademy: proposal.Command.DeclineAcademy); });
             if (contract.Chosen != contract.Recommended) button.AddThemeColorOverride("font_color", new Color("785411"));
             row.AddChild(button);
             if (contractFocus == id) { contractFocus = null; button.CallDeferred(Control.MethodName.GrabFocus); }
         }
+    }
+
+    private void AcademyChoices(VBoxContainer card, Proposal proposal, RenewalTerms renewal)
+    {
+        card.AddChild(Caption("ACADEMY · THIS YEAR'S SENIOR INTAKE"));
+        card.AddChild(Label("Graduates from your existing academy: up to two each year, subject to squad space, the wage budget and cash above your reserve. Development and first-team places are uncertain.", 14));
+        foreach (var player in renewal.AcademyIntake)
+            card.AddChild(Label($"{player.Name} · {player.Role} · Age {player.Age} · Ability {player.Ability}\n{Money.Format(player.WeeklyWage)}/week from {Calendar.FullDay(view.Week + 1)} through {Calendar.FullDay(player.ContractEndWeek)} · no fee", 14));
+        if (renewal.AcademyIntake.IsEmpty) card.AddChild(Label(proposal.Command.DeclineAcademy ? "You have declined this intake. No academy wages will be added."
+            : "No graduates are recommended within the squad, wage and cash limits this year.", 14));
+        else Fact(card, "Academy wages · annual / full three-year commitment", $"{Money.Format(renewal.AcademyAnnualWages)} / {Money.Format(renewal.AcademyAnnualWages * Academy.ContractYears)}");
+        if (!confirming && (!renewal.AcademyIntake.IsEmpty || proposal.Command.DeclineAcademy))
+            card.AddChild(Button(proposal.Command.DeclineAcademy ? "Reconsider academy intake" : "Decline academy intake",
+                () => Preview(Allocation.StartNextSeason, contractOverrides: proposal.Command.ContractOverrides, declineAcademy: !proposal.Command.DeclineAcademy)));
     }
 
     private void DesignProposal(Proposal proposal)
@@ -457,11 +475,12 @@ public partial class Main
                 var change = renewal.RenewedAnnualWages - renewal.ExpiringAnnualWages;
                 Fact(card, "Annual wages · expiring contracts → renewed", $"{Money.Format(renewal.ExpiringAnnualWages)} → {Money.Format(renewal.RenewedAnnualWages)} · {(change > 0 ? "+" : "")}{Money.Format(change)} a year");
             }
-            Fact(card, "Wage budget next season · squad wages / 75% limit", $"{Money.Format(renewal.AnnualWagesAfter)} of {Money.Format(renewal.WageLimit)} · {(renewal.WageLimit == 0 ? 0 : (decimal)renewal.AnnualWagesAfter / renewal.WageLimit):P0} used", renewal.AnnualWagesAfter > renewal.WageLimit ? Red : null);
+            Fact(card, "Wage budget next season · squad wages / 75% limit", $"{Money.Format(renewal.TotalAnnualWagesAfter)} of {Money.Format(renewal.WageLimit)} · {(renewal.WageLimit == 0 ? 0 : (decimal)renewal.TotalAnnualWagesAfter / renewal.WageLimit):P0} used", renewal.TotalAnnualWagesAfter > renewal.WageLimit ? Red : null);
             Fact(card, "Cash forecast low with these choices · expected / worst case", $"{Money.Format(proposal.Forecast.LowestBase)} / {Money.Format(proposal.Forecast.LowestDownside)}", proposal.Forecast.LowestDownside < view.ReserveTarget ? Red : null);
             Fact(card, "Annual operations run rate · including carried contracts", Money.Format(renewal.AnnualOperations));
             Fact(card, "Arrears carried forward", Money.Format(renewal.Arrears));
             Fact(card, "Cash on confirmation · unchanged", Money.Format(view.ClubCash));
+            AcademyChoices(card, proposal, renewal);
             ContractChoices(card, proposal, renewal);
         }
         else

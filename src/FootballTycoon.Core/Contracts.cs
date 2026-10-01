@@ -121,6 +121,9 @@ public static class Contracts
             club.Players[i] = player with { ContractId = contractId, ContractEndWeek = end, WeeklyWage = review.OfferedWage };
             WorldFactory.AddObligation(world, club.Id, world.Week + 1, end, -review.OfferedWage, CashKind.Wages, $"Player contract {contractId.Value}");
         }
-        club.Players.RemoveAll(p => reviews.Any(r => r.PlayerId == p.Id && r.Chosen == ContractAction.Release));
+        var released = club.Players.Where(p => reviews.Any(r => r.PlayerId == p.Id && r.Chosen == ContractAction.Release)).ToArray();
+        foreach (var player in released)
+            world.Departures.Add(new(player.Id, player.Name, player.Role, player.Age, player.Ability, club.Id, world.Week, PlayerHistory.ContractRelease));
+        club.Players.RemoveAll(p => released.Any(r => r.Id == p.Id));
     }
 }
