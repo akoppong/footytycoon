@@ -21,6 +21,9 @@ while ((await session.QueryAsync()).Status is CareerStatus.Active or CareerStatu
     if (current.Status == CareerStatus.SeasonReview)
     {
         var renewal = await session.PreviewAsync(new(Allocation.StartNextSeason), current.Revision);
+        // Optional graduate wages must not stop a non-interactive run when the downside cannot fund them.
+        if (!renewal.BlockingReasons.IsEmpty && renewal.Renewal is { AcademyIntake.IsEmpty: false })
+            renewal = await session.PreviewAsync(new(Allocation.StartNextSeason) { DeclineAcademy = true }, current.Revision);
         await session.CommitAsync($"renew-{current.Season}", current.Revision, renewal);
         current = await session.QueryAsync();
         // The selected strategy applies to season one; later seasons retain cash.
