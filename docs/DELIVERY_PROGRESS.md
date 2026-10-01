@@ -4,7 +4,7 @@ Goal: a complete, compelling Football Tycoon game, from consequential ownership 
 
 ## Current evidence and next work
 
-The current development executable is artifacts/windows-f618441b/FootballTycoon.exe (schema 10, training investment and annual player development). It includes promotion/relegation, tier-based revenue renewals, historical division membership, the cross-season head-to-head correction, the domestic cup and midseason recruitment. This remains a three-season development milestone, not the complete game or a production release.
+The current development executable is artifacts/windows-a241ab2f/FootballTycoon.exe (schema 12, academy intake and retained player career records; it supersedes the schema-10 package windows-f618441b). It includes training investment, annual player development, promotion/relegation, tier-based revenue renewals, historical division membership, the cross-season head-to-head correction, the domestic cup and midseason recruitment. This remains a three-season development milestone, not the complete game or a production release.
 
 | Required area | Current state / evidence needed to finish |
 |---|---|
