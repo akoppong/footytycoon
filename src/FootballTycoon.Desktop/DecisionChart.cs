@@ -90,9 +90,9 @@ public partial class DecisionChart : Control
         var dx = X(downLow.Week); var dy = Y(downLow.DownsideCash);
         DrawColoredPolygon([new(dx, dy - 5), new(dx + 5, dy), new(dx, dy + 5), new(dx - 5, dy)], Coral);
         var callout = "Lowest · " + Calendar.Day(downLow.Week);
-        var below = Y(baseLow.BaseCash) > (PlotTop + PlotBottom) / 2;
+        var below = dy > (PlotTop + PlotBottom) / 2;
         Text(new Vector2(Math.Clamp(dx - fs * 3, Left, Math.Max(Left, Right - font.GetStringSize(callout, HorizontalAlignment.Left, -1, fs).X)),
-            below ? Y(baseLow.BaseCash) - fs * 1.1f : dy + fs * 1.8f), callout, Amber);
+            below ? dy - fs * 1.1f : dy + fs * 1.8f), callout, Amber);
         if (note.Length > 0) Text(new Vector2(Left + (Right - Left) * noteX, PlotTop + (PlotBottom - PlotTop) * noteY), note, note.StartsWith('▼') ? Coral : Muted);
 
         var months = 5;

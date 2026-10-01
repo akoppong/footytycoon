@@ -3,7 +3,7 @@ using FootballTycoon.Core;
 
 namespace FootballTycoon.Desktop;
 
-// Hero shot 2 "The decision": three opening plans, one expanded with its own cash path. Every figure comes from the previewed proposals.
+// Hero shot 2 "The decision": the opening plans, one expanded with its own cash path. Every figure comes from the previewed proposals.
 public partial class Main
 {
     private static readonly Color Deep = new("0b1626"), Panel = new("13233a"), Ink = new("f2eee4"), InkSoft = new("c4cbd6"), InkMuted = new("93a1b5"),
@@ -25,7 +25,7 @@ public partial class Main
     // Keeps the status line (for example a commit receipt) unless the load fails.
     private void LoadOpeningPlans()
     {
-        var key = PlansKey; var revision = view.Revision; var keep = status.Text.StartsWith("Could not load") ? "Compare the three plans, then review the exact terms before committing." : status.Text;
+        var key = PlansKey; var revision = view.Revision; var keep = status.Text.StartsWith("Could not load") ? "Compare the plans, then review the exact terms before committing." : status.Text;
         Start(async () =>
         {
             try
@@ -54,10 +54,10 @@ public partial class Main
         var hero = new PanelContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill }; content.AddChild(hero);
         hero.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = Deep, ContentMarginLeft = 20, ContentMarginRight = 20, ContentMarginTop = 18, ContentMarginBottom = 18 });
         var page = Stack(hero, 14);
-        var fixture = view.Fixtures.OrderBy(f => f.Week).FirstOrDefault(f => f.Week > view.Week && f.Competition == Competition.League);
-        var opponent = fixture is null ? "the opening fixture" : ClubName(fixture.Home == view.ClubId ? fixture.Away : fixture.Home);
+        var fixture = view.Fixtures.OrderBy(f => f.Week).FirstOrDefault(f => f.Week > view.Week);
+        var opponent = fixture is null ? "the next fixture" : ClubName(fixture.Home == view.ClubId ? fixture.Away : fixture.Home);
         var side = fixture is null ? "" : fixture.Home == view.ClubId ? " (H)" : " (A)";
-        page.AddChild(Tone($"FIRST ALLOCATION · {ShortMoney(view.ClubCash).ToUpperInvariant()} CLUB CASH · {opponent.ToUpperInvariant()}{side}{(fixture is null ? "" : " " + Calendar.Day(fixture.Week).ToUpperInvariant())}", 12, InkMuted, true));
+        page.AddChild(Tone($"{(view.Season == 1 ? "FIRST ALLOCATION" : $"SEASON {view.Season} ALLOCATION")} · {ShortMoney(view.ClubCash).ToUpperInvariant()} CLUB CASH · {opponent.ToUpperInvariant()}{side}{(fixture is null ? "" : " " + Calendar.Day(fixture.Week).ToUpperInvariant())}", 12, InkMuted, true));
         page.AddChild(Tone(fixture is null ? "Tonight is the money." : $"{opponent} is next.\nTonight is the money.", GetViewportRect().Size.X >= 1700 ? 36 : 28, Ink));
         if (openingPlans is null || openingPlansKey != PlansKey)
         {
@@ -66,7 +66,7 @@ public partial class Main
                 page.AddChild(Tone("The cash forecasts could not be loaded. Nothing has been committed.", 14, Coral));
                 page.AddChild(Button("Retry loading forecasts", () => { openingPlansFailedKey = ""; Render(); })); return;
             }
-            page.AddChild(Tone("Loading the three cash forecasts…", 14, InkMuted)); LoadOpeningPlans(); return;
+            page.AddChild(Tone("Loading the cash forecasts for all four plans…", 14, InkMuted)); LoadOpeningPlans(); return;
         }
         var wide = GetViewportRect().Size.X - 218 - 258 >= 1150;
         if (!openingPlans.Any(p => p.Command.Allocation == openingChoice)) openingChoice = OpeningOrder[0];
