@@ -40,7 +40,7 @@ The supplied architecture received an independent subagent review before the imp
 
 ## Complete-game delivery
 
-[DELIVERY_PROGRESS.md](DELIVERY_PROGRESS.md) tracks the full-game goal and current academy work. The Windows package `windows-384e462e` includes academy intake, retained player history, training investment, annual development, contract decisions, the dated calendar, promotion/relegation, the domestic cup and midseason recruitment, using schema 12.
+[DELIVERY_PROGRESS.md](DELIVERY_PROGRESS.md) tracks the full-game goal and current academy work. The Windows package `windows-a241ab2f` includes academy intake, retained player history, training investment, annual development, contract decisions, the dated calendar, promotion/relegation, the domestic cup and midseason recruitment, using schema 12.
 
 ## Current season-loop update
 
