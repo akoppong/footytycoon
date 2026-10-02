@@ -13,7 +13,9 @@ public static class Simulation
             return new(world.Week, world.Status.ToString(), world.Revision);
         if (world.Status == CareerStatus.Active && world.Decisions.Any(d => d.Required && !d.Resolved && d.DueWeek <= world.Week + 1))
             return new(world.Week, "Owner decision required", world.Revision);
+        RetirementLifecycle.CompleteDue(world);
         world.Week++;
+        RetirementLifecycle.Announce(world);
         world.Phase = Phase.Payments;
         Settle(world);
         world.Phase = Phase.Negotiation;
@@ -64,6 +66,7 @@ public static class Simulation
                 : "The three-season milestone is complete. All season reports and original decisions remain available.", null));
         }
         world.Phase = Phase.Decisions;
+        if (world.Status != CareerStatus.SeasonReview) RetirementLifecycle.CompleteDue(world);
         world.Revision++;
         WorldFactory.Validate(world);
         return new(world.Week, world.Status == CareerStatus.Active ? (world.Week % 4 == 0 ? "Monthly review" : "Week completed") : world.Status.ToString(), world.Revision);
@@ -120,6 +123,7 @@ public static class Simulation
             var forecast = Finance.Forecast(world, buyer.Id, bid.FeeCeiling, bid.WeeklyWage, world.Week + 1);
             var minimum = history.Command.ReserveException ? 0 : world.ReserveTarget;
             var canSign = world.Week <= bid.ExpiryWeek && world.Status == CareerStatus.Active && player is not null
+                && !RetirementLifecycle.Announced(world, player.Id)
                 && seller.Players.Count(p => p.Role == Role.Forward) > 2
                 && (!RecruitmentMarket.IsMidseason(history.Command.Allocation) || RecruitmentMarket.Window(world) is var (opens, closes)
                     && world.Week - Seasons.StartWeek(world) > opens && world.Week - Seasons.StartWeek(world) <= closes + 1)

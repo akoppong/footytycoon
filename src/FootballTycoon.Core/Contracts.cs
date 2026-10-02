@@ -11,6 +11,14 @@ public static class Contracts
     public static readonly ImmutableArray<(Role Role, int Minimum)> Minimum =
         [(Role.Goalkeeper, 2), (Role.Defender, 5), (Role.Midfielder, 5), (Role.Forward, 3)];
     public const int MinimumSquad = 16;
+    public static ImmutableArray<string> Shortages(IEnumerable<Player> players)
+    {
+        var squad = players.ToArray();
+        var gaps = Minimum.Where(m => squad.Count(p => p.Role == m.Role) < m.Minimum)
+            .Select(m => $"{m.Role}: {squad.Count(p => p.Role == m.Role)} contracted players; cover target {m.Minimum}").ToList();
+        if (squad.Length < MinimumSquad) gaps.Add($"Total squad: {squad.Length}; cover target {MinimumSquad}");
+        return gaps.ToImmutableArray();
+    }
     // Midpoint of generated ability in a division (75 - 8d plus 0 to 19); the director judges players against next season's division.
     public static int Par(int division) => 84 - 8 * division;
     // Opening squad wage in a division; the reference for renewals after promotion or relegation.
@@ -39,7 +47,7 @@ public static class Contracts
         var held = Breaches(before, After(club, reviews), limit);
         if (held) reviews = Recommend(world, club, nextDivision, true);
         var flip = overrides?.ToHashSet() ?? [];
-        reviews = reviews.Select(r => flip.Contains(r.PlayerId)
+        reviews = reviews.Select(r => flip.Contains(r.PlayerId) && r.Recommended != ContractAction.Retire
             ? r with { Chosen = r.Recommended == ContractAction.Renew ? ContractAction.Release : ContractAction.Renew } : r).ToImmutableArray();
         return new(reviews, held, before, After(club, reviews), limit);
     }
@@ -56,18 +64,21 @@ public static class Contracts
         // After promotion or relegation, new deals start halfway between the current wage and the next division's standard wage.
         long Basis(Player p) => next == club.Division ? p.WeeklyWage : (p.WeeklyWage + StandardWage(next)) / 2;
         var expiring = club.Players.Where(p => p.ContractEndWeek <= world.Week).ToArray();
-        var counts = Minimum.ToDictionary(m => m.Role, m => club.Players.Count(p => p.Role == m.Role));
+        var retiring = expiring.Where(p => RetirementLifecycle.Due(world, p.Id)).Select(p => p.Id).ToHashSet();
+        var counts = Minimum.ToDictionary(m => m.Role, m => club.Players.Count(p => p.Role == m.Role && !retiring.Contains(p.Id)));
         var minimum = Minimum.ToDictionary(m => m.Role, m => m.Minimum);
-        var total = club.Players.Count;
+        var total = club.Players.Count - retiring.Count;
         var release = new HashSet<PersonId>(); var cover = new HashSet<PersonId>();
         // Weakest first; a release that would breach the minimum squad keeps the player as cover instead.
-        foreach (var p in expiring.Where(p => Candidate(p, par)).OrderBy(p => p.Ability).ThenByDescending(p => p.Age).ThenBy(p => p.Id.Value))
+        foreach (var p in expiring.Where(p => !retiring.Contains(p.Id) && Candidate(p, par)).OrderBy(p => p.Ability).ThenByDescending(p => p.Age).ThenBy(p => p.Id.Value))
         {
             if (total - 1 >= MinimumSquad && counts[p.Role] - 1 >= minimum[p.Role]) { release.Add(p.Id); total--; counts[p.Role]--; }
             else cover.Add(p.Id);
         }
         return expiring.OrderBy(p => p.Role).ThenByDescending(p => p.Ability).ThenBy(p => p.Id.Value).Select(p =>
         {
+            if (retiring.Contains(p.Id)) return new ContractReview(p.Id, p.Name, p.Role, p.Age, p.Ability, p.WeeklyWage,
+                ContractAction.Retire, ContractAction.Retire, 0, 0, "Announced retirement at contract expiry · fixed departure, no renewal offer");
             var aging = p.Age >= 31 && p.Ability < par + 5;
             var standard = $"Division {next} standard";
             var (label, change, years) = release.Contains(p.Id) ? (aging ? $"Aging, {p.Age}, below {standard}" : $"Below {standard}, {p.Age}", -.10m, 1)
@@ -93,7 +104,7 @@ public static class Contracts
         var released = plan.Reviews.Where(r => r.Chosen == ContractAction.Release).ToArray();
         if (released.Length > 0)
         {
-            var remaining = club.Players.Where(p => released.All(r => r.PlayerId != p.Id)).ToArray();
+            var remaining = club.Players.Where(p => plan.Reviews.All(r => r.PlayerId != p.Id || r.Chosen == ContractAction.Renew)).ToArray();
             foreach (var (role, minimum) in Minimum)
             {
                 var count = remaining.Count(p => p.Role == role);
@@ -128,5 +139,7 @@ public static class Contracts
             FreeAgents.Release(world, club, player);
         }
         club.Players.RemoveAll(p => released.Any(r => r.Id == p.Id));
+        foreach (var player in club.Players.Where(p => reviews.Any(r => r.PlayerId == p.Id && r.Chosen == ContractAction.Retire)).ToArray())
+            RetirementLifecycle.Complete(world, club, player);
     }
 }

@@ -54,6 +54,8 @@ public sealed record GameView(long Revision, int Week, CareerStatus Status, stri
     public RecruitmentTerms? FreeAgentRecommendation { get; init; }
     public bool FreeAgentApproachPending { get; init; }
     public ImmutableArray<RivalApproach> RivalApproaches { get; init; } = [];
+    public ImmutableArray<RetirementNotice> PendingRetirements { get; init; } = [];
+    public ImmutableArray<string> SquadShortages { get; init; } = [];
     public ImmutableArray<FreeAgent> FormerPlayersAvailable { get; init; } = [];
     public ImmutableArray<PlayerRetirement> RetiredFormerPlayers { get; init; } = [];
 }
@@ -170,6 +172,8 @@ public sealed class GameSession : IAsyncDisposable
             FreeAgentRecommendation = FreeAgents.Recommend(world),
             FreeAgentApproachPending = world.FreeAgentBids.Count > 0,
             RivalApproaches = world.RivalApproaches.ToImmutableArray(),
+            PendingRetirements = world.RetirementNotices.Where(n => n.ClubId == club.Id && world.Retirements.All(r => r.PlayerId != n.PlayerId)).ToImmutableArray(),
+            SquadShortages = Contracts.Shortages(club.Players),
             FormerPlayersAvailable = world.FreeAgents.Where(f => world.Departures.Any(d => d.PlayerId == f.Player.Id && d.ClubId == club.Id)).ToImmutableArray(),
             RetiredFormerPlayers = world.Retirements.Where(r => world.Departures.Any(d => d.PlayerId == r.PlayerId && d.ClubId == club.Id)).ToImmutableArray()
         };

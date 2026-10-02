@@ -326,7 +326,8 @@ public partial class Main
                 if (view.Status != CareerStatus.PrototypeComplete || view.SeasonSummaries.Length != 3)
                     throw new InvalidOperationException("Three-season milestone did not finish.");
                 if (view.SeasonSummaries.Any(s => s.Development.IsEmpty)
-                    || view.SeasonSummaries.Last().Development.Any(p => view.Squad.Single(s => s.Id == p.PlayerId).Age != p.AgeBefore + 1))
+                    || view.SeasonSummaries.Last().Development.Any(p => (view.Squad.SingleOrDefault(s => s.Id == p.PlayerId)?.Age
+                        ?? view.RetiredFormerPlayers.SingleOrDefault(r => r.PlayerId == p.PlayerId)?.Age) != p.AgeBefore + 1))
                     throw new InvalidOperationException("Season development did not reach the final report and squad.");
                 Navigate("People"); await Capture("Three-season-development");
                 if (OS.GetCmdlineUserArgs().Contains("--rival-smoke-test"))
@@ -385,6 +386,77 @@ public partial class Main
                     GD.Print("TRAINING SMOKE PASS: proposal, confirmed cost, saved project, delivery, upkeep and seasonal development evidence.");
                 }
                 GD.Print("SEASON SMOKE PASS: renewal UI, contract recommendations with an override and accept-all, annual plans, three season reports and final endpoint.");
+            }
+            if (OS.GetCmdlineUserArgs().Contains("--retirement-smoke-test"))
+            {
+                // Explicit controlled age fixture; normal seed careers do not reach the cutoff in three years.
+                var fixture = WorldFactory.Create(2026);
+                void CommitFixture(Allocation allocation)
+                {
+                    var proposal = Proposals.Preview(fixture, new OwnerCommand(allocation) { DeclineAcademy = allocation == Allocation.StartNextSeason }, fixture.Revision);
+                    Proposals.Commit(fixture, Guid.NewGuid().ToString("N"), fixture.Revision, proposal);
+                }
+                CommitFixture(Allocation.Acquire); CommitFixture(Allocation.PreserveReserve);
+                var keepers = fixture.OwnedClub.Players.Where(p => p.Role == Role.Goalkeeper).ToArray();
+                var forward = fixture.OwnedClub.Players.First(p => p.Role == Role.Forward);
+                foreach (var player in keepers.Append(forward))
+                {
+                    var end = player.Role == Role.Goalkeeper ? 52 : 156;
+                    fixture.OwnedClub.Players[fixture.OwnedClub.Players.IndexOf(player)] = player with { Age = player.Role == Role.Goalkeeper ? 41 : 37, ContractEndWeek = end };
+                    fixture.Obligations = fixture.Obligations.Select(o => o.Description == $"Player contract {player.ContractId.Value}" ? o with { EndWeek = end } : o).ToList();
+                }
+                async Task LoadFixture()
+                {
+                    var vault = new FootballTycoon.Infrastructure.LocalSaveVault(saveDirectory);
+                    var checkpoint = vault.Write(WorldCodec.Encode(fixture), Guid.NewGuid().ToString("N"), Guid.NewGuid().ToString("N"), null, "retirement-probe");
+                    await session.LoadAsync(checkpoint.SnapshotId); view = await session.QueryAsync();
+                    selected = null; confirming = false; chartExpanded = false;
+                    Navigate("People"); await Settled();
+                }
+                while (fixture.Week < 51) Simulation.AdvanceWeek(fixture);
+                await LoadFixture();
+                if (view.PendingRetirements.Length != 2) throw new InvalidOperationException("Expected two announced goalkeeper retirements.");
+                foreach (var scale in new[] { 100, 150 })
+                {
+                    textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render();
+                    await CaptureSection("Retirement plans", "Retirement-announcements");
+                }
+                await session.AdvanceAsync(AdvanceTarget.Week); view = await session.QueryAsync();
+                Preview(Allocation.StartNextSeason, declineAcademy: true); await Settled();
+                if (selected is not { Renewal.Retired: 2 } || !selected.BlockingReasons.IsEmpty
+                    || !selected.Renewal.Shortages.Any(s => s.StartsWith("Goalkeeper: 0")))
+                    throw new InvalidOperationException("Fixed retirement terms must disclose the shortage and permit renewal.");
+                foreach (var scale in new[] { 100, 150 })
+                {
+                    textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render();
+                    await CaptureSection("JONAS REED · SPORTING DIRECTOR · EXPIRING CONTRACTS", "Retirement-contracts");
+                }
+                await Press("Review final terms"); await CaptureSection("JONAS REED · SPORTING DIRECTOR · EXPIRING CONTRACTS", "Retirement-final-terms");
+                await Press("Confirm and commit");
+                if (view.RetiredFormerPlayers.Length != 2 || view.Squad.Any(p => p.Role == Role.Goalkeeper))
+                    throw new InvalidOperationException("Renewal did not apply the mandatory departures.");
+                Preview(Allocation.PreserveReserve); await Settled();
+                await Press("Review final terms"); await Press("Confirm and commit");
+                var saved = await session.SaveAsync("retirement-result"); await session.LoadAsync(saved.SnapshotId);
+                await session.AdvanceAsync(AdvanceTarget.Week); view = await session.QueryAsync();
+                if (view.Week != 53 || view.RetiredFormerPlayers.Length != 2)
+                    throw new InvalidOperationException("Saved retirements or shortage advance failed.");
+                fixture = WorldCodec.Decode(await session.ExportCheckpointAsync());
+                while (fixture.Week < 155)
+                {
+                    if (fixture.Status == CareerStatus.SeasonReview)
+                    { CommitFixture(Allocation.StartNextSeason); CommitFixture(Allocation.PreserveReserve); }
+                    var previousWeek = fixture.Week;
+                    Simulation.AdvanceWeek(fixture);
+                    if (fixture.Week == previousWeek) throw new InvalidOperationException("Retirement fixture stopped before its final season: " + fixture.Status);
+                }
+                await LoadFixture(); await session.AdvanceAsync(AdvanceTarget.Week); view = await session.QueryAsync();
+                if (view.Status != CareerStatus.PrototypeComplete || !view.RetiredFormerPlayers.Any(p => p.PlayerId == forward.Id && p.Age == 40)
+                    || !view.SeasonSummaries.Last().Development.Any(p => p.PlayerId == forward.Id))
+                    throw new InvalidOperationException("Final-season retirement lost the named development history.");
+                textScale = 100; Theme.DefaultFontSize = 14; Navigate("People");
+                await CaptureSection("Player departures", "Retirement-archive");
+                GD.Print("RETIREMENT SMOKE PASS: controlled announcements, fixed renewal, shortage advance, saved retirements and final-season history.");
             }
             GD.Print($"SMOKE PASS: acquisition, all plan previews, final confirmations, required-decision guards, next review, six workspaces at three text scales, chart collapse, review filing/restoration, funding terms, settings, save/load and resume; {DisplayServer.GetName()}");
             GetTree().Quit();

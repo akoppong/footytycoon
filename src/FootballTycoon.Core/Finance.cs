@@ -176,8 +176,8 @@ public static class Proposals
                     review = world.Week + 4;
                     total = checked(terms.RenewedCommitment + terms.AnnualOperations + terms.AcademyAnnualWages * Academy.ContractYears);
                     var overrides = command.ContractOverrides;
-                    if (overrides.Distinct().Count() != overrides.Length || overrides.Any(id => terms.Contracts.All(c => c.PlayerId != id)))
-                        reasons.Add("Contract choices must name expiring players at your club, once each.");
+                    if (overrides.Distinct().Count() != overrides.Length || overrides.Any(id => terms.Contracts.All(c => c.PlayerId != id || c.Recommended == ContractAction.Retire)))
+                        reasons.Add("Contract choices must name expiring players at your club, once each. Announced retirements cannot be reversed.");
                     reasons.AddRange(Contracts.Blocking(club, new(terms.Contracts, terms.RaisesHeld, terms.AnnualWagesBefore, terms.AnnualWagesAfter, terms.WageLimit)));
                 }
                 uncertainty = "No upfront payment. Annual broadcast and sponsorship renew at the published next-tier rates. Jonas Reed recommends renewing or releasing each expiring player contract; your choices set the new wages and lengths from next week. Released players leave on free transfers. Any academy intake shown below joins on three-year contracts, with wages from next week; you can decline the entire intake. It is not a guaranteed replacement for released players. Operating contracts extend for one season at unchanged rates. Existing wages, facility upkeep and arrears carry forward; no cash or personal reserve resets. Trading demand follows the new tier; contracts that are not expiring keep their wages after relegation. Choose a new capital plan after confirmation.";

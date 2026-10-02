@@ -385,7 +385,7 @@ public partial class Main
         if (terms.Contracts.IsEmpty) return;
         var changed = terms.Contracts.Where(c => c.Chosen != c.Recommended).ToArray();
         var released = terms.Contracts.Where(c => c.Chosen == ContractAction.Release).Select(c => c.Name).ToArray();
-        card.AddChild(Label($"Expiring contracts: {terms.Renewed} renewed, {terms.Released} released. Annual wages {Money.Format(terms.ExpiringAnnualWages)} → {Money.Format(terms.RenewedAnnualWages)}.\n"
+        card.AddChild(Label($"Expiring contracts: {terms.Renewed} renewed, {terms.Released} released, {terms.Retired} retired. Annual wages {Money.Format(terms.ExpiringAnnualWages)} → {Money.Format(terms.RenewedAnnualWages)}.\n"
             + $"Released on free transfers: {(released.Length == 0 ? "none" : string.Join(", ", released))}.\n"
             + (changed.Length == 0 ? "You accepted every recommendation from Jonas Reed." : "Your changes to Jonas Reed's advice: " + string.Join("; ", changed.Select(Override)) + "."), 14));
     }
@@ -405,7 +405,11 @@ public partial class Main
         }
         var overrides = proposal.Command.ContractOverrides;
         card.AddChild(Caption("JONAS REED · SPORTING DIRECTOR · EXPIRING CONTRACTS"));
-        card.AddChild(Label($"Squad minimum: {string.Join(", ", Contracts.Minimum.Select(m => $"{m.Minimum} {m.Role.ToString().ToLowerInvariant()}s"))} and {Contracts.MinimumSquad} players in all. Released players are not replaced automatically.", 12));
+        card.AddChild(Label($"Voluntary release minimum: {string.Join(", ", Contracts.Minimum.Select(m => $"{m.Minimum} {m.Role.ToString().ToLowerInvariant()}s"))} and {Contracts.MinimumSquad} players in all. Announced retirement is fixed even when it leaves a shortage. Replacements are not automatic.", 12));
+        if (renewal.Retired > 0)
+            card.AddChild(Label("Fixed retirements: " + string.Join(", ", renewal.Contracts.Where(c => c.Chosen == ContractAction.Retire).Select(c => c.Name)) + ". Wages end with the existing contracts; unpaid arrears remain owed.", 14));
+        if (!renewal.Shortages.IsEmpty)
+            card.AddChild(Label("Expected cover after these terms and any proposed academy intake: " + string.Join("; ", renewal.Shortages) + ". Fixed retirements can leave a shortage; voluntary releases still require minimum cover. Young graduates do not guarantee first-team readiness; affordable replacements are not guaranteed.", 14));
         if (renewal.RaisesHeld) card.AddChild(Label("Raises are held at current wages so the recommended renewals stay within the wage budget.", 13));
         if (confirming)
         {
@@ -415,7 +419,9 @@ public partial class Main
             card.AddChild(Label(changed.Length == 0 ? "You are accepting every recommendation." : "Your changes to the director's advice: " + string.Join("; ", changed.Select(Override)) + ".", 14));
             return;
         }
-        card.AddChild(Label(overrides.IsEmpty ? "Showing Jonas's recommendations. Choose a player to reverse his advice; the terms and forecast update."
+        card.AddChild(Label(overrides.IsEmpty ? renewal.Contracts.All(c => c.Chosen == ContractAction.Retire)
+            ? "Every expiring contract is a fixed retirement. Review the final terms to record these departures."
+            : "Showing Jonas's recommendations. Choose a non-retiring player to reverse his advice; the terms and forecast update."
             : $"{overrides.Length} of {renewal.PlayerContracts} recommendations reversed.", 13));
         if (!overrides.IsEmpty) card.AddChild(Button("Accept all recommendations", () => Preview(Allocation.StartNextSeason, declineAcademy: proposal.Command.DeclineAcademy)));
         foreach (var contract in renewal.Contracts)
@@ -423,6 +429,7 @@ public partial class Main
             var row = Stack(card, 2);
             row.AddChild(Label($"{contract.Name} · {contract.Role} · Age {contract.Age} · Ability {contract.Ability} · now {Money.Format(contract.CurrentWage)}/wk", 14));
             row.AddChild(Label(contract.Reason, 12));
+            if (contract.Chosen == ContractAction.Retire) continue;
             var toggled = (overrides.Contains(contract.PlayerId) ? overrides.Remove(contract.PlayerId) : overrides.Add(contract.PlayerId))
                 .Sort((a, b) => a.Value.CompareTo(b.Value));
             var id = contract.PlayerId;
@@ -469,7 +476,7 @@ public partial class Main
             Fact(card, "Annual broadcast · current → next", $"{Money.Format(renewal.CurrentAnnualBroadcast)} → {Money.Format(renewal.AnnualBroadcast)}");
             Fact(card, "Annual sponsorship · current → next", $"{Money.Format(renewal.CurrentAnnualSponsor)} → {Money.Format(renewal.AnnualSponsor)}");
             Fact(card, "Expiring player contracts", renewal.PlayerContracts == 0 ? "None this season"
-                : $"{renewal.PlayerContracts} · {renewal.Renewed} renewed · {renewal.Released} released");
+                : $"{renewal.PlayerContracts} · {renewal.Renewed} renewed · {renewal.Released} released · {renewal.Retired} retired");
             if (renewal.PlayerContracts > 0)
             {
                 var change = renewal.RenewedAnnualWages - renewal.ExpiringAnnualWages;

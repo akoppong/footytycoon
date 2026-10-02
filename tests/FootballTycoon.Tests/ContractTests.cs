@@ -8,7 +8,7 @@ namespace FootballTycoon.Tests;
 
 public class ContractTests
 {
-    // Season one ends with every contract expiring (generated contracts otherwise first expire at week 104).
+    // Controlled first review with every contract expiring; generated terms otherwise span the first three annual boundaries.
     // Wage obligations are cut to the same week, so the world stays consistent with a real expiry.
     internal static World Expiring(Func<Player, bool>? keep = null)
     {
@@ -270,7 +270,7 @@ public class ContractTests
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(14, migrated.SchemaVersion); Assert.Equal("rival-market-14", migrated.SimulationVersion);
+        Assert.Equal(15, migrated.SchemaVersion); Assert.Equal("retirement-15", migrated.SimulationVersion);
         Assert.Equal(CareerStatus.SeasonReview, migrated.Status);
         Assert.All(migrated.History, h => { Assert.Null(h.Renewal); Assert.Empty(h.Command.ContractOverrides); });
         Assert.Equal(world.OwnedClub.Players, migrated.OwnedClub.Players);

@@ -113,6 +113,7 @@ public sealed record AcademyGraduate(ClubId ClubId, int Week, Player Player);
 // Player's wage and contract here describe the expired deal; the pool has no wage obligation.
 public sealed record FreeAgent(Player Player, ClubId PreviousClubId, int AvailableSinceWeek);
 public sealed record PlayerRetirement(PersonId PlayerId, string Name, Role Role, int Age, int Ability, ClubId LastClubId, int Week);
+public sealed record RetirementNotice(PersonId PlayerId, string Name, Role Role, ClubId ClubId, ContractId ContractId, int AnnouncedWeek, int RetirementWeek);
 public sealed record FreeAgentBid(int DecisionId, PersonId PlayerId, long WeeklyWage, int ContractEndWeek, int ExpiryWeek, string ForecastId);
 public enum ApproachOutcome { Pending, Signed, Declined, Unavailable, ChecksFailed }
 public sealed record RivalApproach(int Id, ClubId ClubId, int ApprovedWeek, Player Player, long WeeklyWage,
@@ -137,8 +138,10 @@ public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long Rene
     [JsonIgnore] public long TotalAnnualWagesAfter => checked(AnnualWagesAfter + AcademyAnnualWages);
     [JsonIgnore] public int Renewed => Contracts.Count(c => c.Chosen == ContractAction.Renew);
     [JsonIgnore] public int Released => Contracts.Count(c => c.Chosen == ContractAction.Release);
+    [JsonIgnore] public int Retired => Contracts.Count(c => c.Chosen == ContractAction.Retire);
+    public ImmutableArray<string> Shortages { get; init; } = [];
 }
-public enum ContractAction { Renew, Release }
+public enum ContractAction { Renew, Release, Retire }
 // OfferedWage and Years are the renewal terms, also quoted for a recommended release in case the owner keeps the player.
 public sealed record ContractReview(PersonId PlayerId, string Name, Role Role, int Age, int Ability, long CurrentWage,
     ContractAction Recommended, ContractAction Chosen, long OfferedWage, int Years, string Reason);
@@ -180,8 +183,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 14;
-    public string SimulationVersion { get; set; } = "rival-market-14";
+    public int SchemaVersion { get; set; } = 15;
+    public string SimulationVersion { get; set; } = "retirement-15";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -198,6 +201,7 @@ public sealed class World
     public List<AcademyGraduate> AcademyGraduates { get; set; } = [];
     public List<FreeAgent> FreeAgents { get; set; } = [];
     public List<PlayerRetirement> Retirements { get; set; } = [];
+    public List<RetirementNotice> RetirementNotices { get; set; } = [];
     public List<FreeAgentBid> FreeAgentBids { get; set; } = [];
     public List<RivalApproach> RivalApproaches { get; set; } = [];
     public Phase Phase { get; set; }
@@ -337,6 +341,13 @@ public static class WorldCodec
             WorldFactory.Validate(world, priorFreeAgents: true);
             world.RivalApproaches = [];
             world.SchemaVersion = 14; world.SimulationVersion = "rival-market-14";
+        }
+        if (world.SchemaVersion == 14)
+        {
+            WorldFactory.Validate(world, priorRivalMarket: true);
+            world.RetirementNotices = [];
+            world.SchemaVersion = 15; world.SimulationVersion = "retirement-15";
+            RetirementLifecycle.Announce(world);
         }
         WorldFactory.Validate(world);
         return world;

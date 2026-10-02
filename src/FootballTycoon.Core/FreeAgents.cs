@@ -35,17 +35,17 @@ public static class FreeAgents
     internal static void Release(World world, Club club, Player player)
     {
         var free = new FreeAgent(player with { TrainingExposure = 0 }, club.Id, world.Week);
-        if (player.Age >= RetirementAge(player.Role)) Retire(world, free);
+        if (player.Age >= RetirementAge(player.Role)) RecordRetirement(world, free);
         else world.FreeAgents.Add(free);
     }
 
     internal static void CloseSeason(World world)
     {
         foreach (var free in world.FreeAgents.Where(f => f.Player.Age >= RetirementAge(f.Player.Role)).ToArray())
-        { Retire(world, free); world.FreeAgents.Remove(free); }
+        { RecordRetirement(world, free); world.FreeAgents.Remove(free); }
     }
 
-    private static void Retire(World world, FreeAgent free)
+    internal static void RecordRetirement(World world, FreeAgent free)
     {
         var p = free.Player;
         world.Retirements.Add(new(p.Id, p.Name, p.Role, p.Age, p.Ability, free.PreviousClubId, world.Week));
