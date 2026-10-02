@@ -138,3 +138,30 @@ All 133 Release tests passed in `artifacts/test-results/retirement-full.trx` (6 
 The source graphical probe passed RETIREMENT SMOKE PASS and SMOKE PASS in `artifacts/retirement-smoke-final.log`; announcement and fixed-renewal screens at 150% were visually inspected and independently reviewed. The explicitly controlled fixture changes ages and contract expiries to exercise retirements within the three-season boundary; it is not a population or balance sample. Review corrected the probe's academy flag on non-renewal commands, the final development assertion for archived retirees, and wording that had implied every contract could be reversed. All code, test and documentation findings were resolved before packaging.
 
 The fresh self-contained package `windows-c2d8933c` passed export and headless executable smoke with DOTNET_ROOT cleared. The portable archive is `artifacts/FootballTycoon-retirement-windows.zip`; extract before launch and keep its runtime, game pack and font licenses together. The packaged graphical run also passed DEVELOPMENT, SEASON, RETIREMENT and general SMOKE PASS, with DOTNET_ROOT cleared. Logs are in `artifacts/windows-c2d8933c/career-smoke.log` and `career-smoke-errors.log`; only the known sandbox certificate-store diagnostic appeared. Captures are in `artifacts/retirement-package-screenshots`, with retirement instructions, final terms and departure records visually inspected. The ZIP contains 199 entries: the executable, game pack, 194 runtime files and three font licenses. Clean-machine acceptance and the 100-world/50-season lifecycle and economy gates remain open. The playable boundary remains three seasons.
+
+## Current unit: isolated lifecycle endurance diagnostics
+
+The new `FootballTycoon.Endurance` project compiles the actual core with a diagnostic 50-season limit. Shipped core, desktop and ordinary headless careers remain at three seasons. Opening terms are independently fixed at one to three years, preserving generated squads and wages. The runner uses ordinary owner proposals and weekly simulation, validates population identity accounting, round-trips annual worlds and reports per-club role counts, cash, wages and arrears. It retains full history and does not fabricate replacements, inject money or reset stopped careers. See [ENDURANCE.md](ENDURANCE.md) for commands, owner policy and metric definitions.
+
+The initial five diagnostic tests passed in `artifacts/test-results/endurance-focused.trx`, including an actual four-season run. Subsequent checks strengthen the gameplay parity comparison to a full season, reject invalid options, and verify recorded binary provenance. Independent review found no code defects; its metric wording clarification is incorporated. Final regression and pilot evidence follow below.
+
+The first measured pilot completed 10 seasons/520 weeks with seed 2026 and PreserveReserve, using the disclosed owner policy. It started from base commit `70e2208` plus the uncommitted diagnostic implementation, before the final binary-metadata and output-directory guard additions. Its exact executable and provenance are preserved under `artifacts/endurance-pilot-2026/runner` and `PROVENANCE.txt`; the metrics and summary are beside them. This is one world, not the PRD's 100 varied fifty-season runs.
+
+| Pilot measure | Observed result |
+|---|---:|
+| Active players, opening → final | 864 → 1,147 |
+| Final contracted / available players | 825 / 322 |
+| Actual graduates / retained retirees | 418 / 135 |
+| Active-player minimum / maximum | 864 / 1,176 |
+| Simulated weeks outside 1,100–1,500 | 312 of 520 |
+| Club-weeks below minimum cover | 225 |
+| Clubs below cover / with arrears at final review | 0 / 0 |
+| Aggregate club cash, opening → final | £72.8m → £695.75m |
+| Elapsed / longest weekly simulation call | 479.05 seconds / 9,270 ms |
+| Final uncompressed world JSON | 80,372,993 bytes |
+
+Every annual codec round trip preserved bytes; population accounting found no missing or duplicate people. Final state SHA256: `0525BE1D73FC85B45E9FD7F8089AFA1514EDA116194E28A1C1B72D4B023827F8`. The final observation is the frozen season-ten review, before season-eleven retirement/intake decisions. The early pilot overlapped focused tests on this development machine, so elapsed measurements are not a controlled performance baseline. Cash accumulation, the large available pool, temporary cover gaps and growing history warrant profiling and balance work before a larger suite; none is hidden by resetting the world. The playable boundary remains three seasons.
+
+The final runner also completed a two-season CLI sample with seed 2027 (`artifacts/endurance-cli-final`), ending at 913 active players. Its configuration records build and binary provenance. CLI verification caught and fixed an unhandled-exception path on a nonempty output directory; it now exits 64 cleanly and the existing metrics SHA256 remains unchanged. A deliberately tiny time limit returned exit 1 and an `Incomplete` summary at week zero (`artifacts/endurance-cli-timeout-final`), confirming that partial evidence is not reported as success. No further simulation changes were made after the ten-season pilot.
+
+All 143 Release tests passed in `artifacts/test-results/endurance-final.trx` (5 minutes 20 seconds). This includes full-season byte parity between diagnostic and production cores, unchanged opening terms, normal-reader rejection beyond three seasons, an actual four-season diagnostic run, conservation failures, option bounds, provenance and partial-run reporting. Core-solution formatting and diff whitespace checks passed. The final CLI error wrapper was rebuilt with zero warnings/errors and verified directly after the suite began; it changes no simulation or measurement behavior. Independent review covers the runner, tests, isolation, documentation and pilot evidence.

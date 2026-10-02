@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <DefineConstants>$(DefineConstants);ENDURANCE</DefineConstants>
+  </PropertyGroup>
+  <!-- Compile the real simulation in an isolated diagnostic assembly. No desktop/application reference. -->
+  <ItemGroup>
+    <Compile Include="../FootballTycoon.Core/*.cs" Link="Core/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../FootballTycoon.Core/Content/opening.json" LogicalName="FootballTycoon.Core.Content.opening.json" />
+  </ItemGroup>
+</Project>
