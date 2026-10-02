@@ -120,7 +120,7 @@ public static class Simulation
             var player = seller.Players.SingleOrDefault(p => p.Id == bid.PlayerId);
             var buyer = world.OwnedClub;
             var history = world.History.Single(h => h.OriginalForecast.Id == bid.ForecastId);
-            var forecast = Finance.Forecast(world, buyer.Id, bid.FeeCeiling, bid.WeeklyWage, world.Week + 1);
+            var forecast = Finance.ProjectCash(world, buyer.Id, bid.FeeCeiling, bid.WeeklyWage, world.Week + 1);
             var minimum = history.Command.ReserveException ? 0 : world.ReserveTarget;
             var canSign = world.Week <= bid.ExpiryWeek && world.Status == CareerStatus.Active && player is not null
                 && !RetirementLifecycle.Announced(world, player.Id)

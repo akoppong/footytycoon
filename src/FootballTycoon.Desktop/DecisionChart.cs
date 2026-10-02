@@ -31,7 +31,7 @@ public partial class DecisionChart : Control
     }
 
     private float Left => fs * 4.6f;
-    private float Right => Size.X - fs * 8.6f;
+    private float Right => Size.X - fs * 12.4f;
     private float PlotTop => fs;
     private float PlotBottom => Size.Y - fs * 1.9f;
     private int Start => plan.Points[0].Week;
@@ -71,19 +71,18 @@ public partial class DecisionChart : Control
             DrawLine(new Vector2(Left, Y(0)), new Vector2(Right, Y(0)), Muted);
             Text(new Vector2(0, Y(0) + fs * .4f), "£0", Muted);
         }
-        else Text(new Vector2(0, PlotBottom + fs * .2f), "£0", Muted);
+        else if (Math.Abs(PlotBottom - Y(reserve)) > fs * 1.4f)
+            Text(new Vector2(0, PlotBottom + fs * .2f), "£0", Muted);
         Line(ghost.Points.Select(p => (p.Week, p.BaseCash)), Slate, 2, true, 3);
         Line(points.Select(p => (p.Week, p.BaseCash)), Ivory, 3.5f);
         Line(points.Select(p => (p.Week, p.DownsideCash)), Coral, 2.5f, true, 9);
 
         var labelX = Right + fs;
-        float baseY = Y(points[^1].BaseCash), downY = Math.Max(Y(points[^1].DownsideCash), baseY + fs * 1.3f);
-        Text(new Vector2(labelX, baseY + fs * .4f), "━ Base " + Main.ShortMoney(points[^1].BaseCash), Ivory);
-        Text(new Vector2(labelX, downY + fs * .4f), "╍ Downside " + Main.ShortMoney(points[^1].DownsideCash), Coral);
-        var ghostY = Y(ghost.Points[^1].BaseCash);
-        if (Math.Abs(ghostY - baseY) < fs * 3) ghostY = baseY - fs * 3;
-        DrawMultilineString(font, new Vector2(labelX, Math.Max(fs, ghostY)), ghostLabel, HorizontalAlignment.Left, Size.X - labelX, fs, 2, Muted);
-        Text(new Vector2(labelX, Y(reserve) + fs * 1.5f), "┄ Reserve", Lime);
+        // A fixed legend stays readable when end balances coincide or cluster near the top.
+        DrawMultilineString(font, new Vector2(labelX, PlotTop + fs), ghostLabel, HorizontalAlignment.Left, Size.X - labelX, fs, 2, Muted);
+        Text(new Vector2(labelX, PlotTop + fs * 4), "━ Base " + Main.ShortMoney(points[^1].BaseCash), Ivory);
+        Text(new Vector2(labelX, PlotTop + fs * 5.5f), "╍ Downside " + Main.ShortMoney(points[^1].DownsideCash), Coral);
+        Text(new Vector2(labelX, PlotTop + fs * 7), "┄ Reserve", Lime);
 
         var bx = X(baseLow.Week);
         DrawCircle(new Vector2(bx, Y(baseLow.BaseCash)), 7, new Color(Amber, .3f)); DrawCircle(new Vector2(bx, Y(baseLow.BaseCash)), 4.5f, Ivory);

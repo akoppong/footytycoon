@@ -173,6 +173,9 @@ public static class WorldFactory
 
     public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false, bool priorTraining = false, bool priorHistory = false, bool priorAcademy = false, bool priorFreeAgents = false, bool priorRivalMarket = false)
     {
+#if ENDURANCE
+        using var timing = DiagnosticTimings.Measure("world-validation");
+#endif
         if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : priorTraining ? 10 : priorHistory ? 11 : priorAcademy ? 12 : priorFreeAgents ? 13 : priorRivalMarket ? 14 : 15) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : priorTraining ? "training-10" : priorHistory ? "people-history-11" : priorAcademy ? "academy-12" : priorFreeAgents ? "free-agents-13" : priorRivalMarket ? "rival-market-14" : "retirement-15") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
             throw new InvalidDataException("Unsupported save, simulation, content or random version. The source was not changed.");
         if (world.Clubs.Count != 48 || world.Clubs.Select(c => c.Id).Distinct().Count() != 48
@@ -212,9 +215,12 @@ public static class WorldFactory
             if (world.FreeAgents is null || world.Retirements is null || world.FreeAgentBids is null)
                 throw new InvalidDataException("Missing free-agent lifecycle state.");
             var living = people.Select(p => p.Id).Concat(world.FreeAgents.Select(f => f.Player.Id)).ToArray();
-            if (living.Distinct().Count() != living.Length
+            var livingIds = living.ToHashSet();
+            var activeWageDescriptions = world.Obligations.Where(o => o.Kind == CashKind.Wages && o.EndWeek > world.Week)
+                .Select(o => o.Description).ToHashSet(StringComparer.Ordinal);
+            if (livingIds.Count != living.Length
                 || world.Retirements.Select(r => r.PlayerId).Distinct().Count() != world.Retirements.Count
-                || world.Retirements.Any(r => living.Contains(r.PlayerId) || r.PlayerId.Value <= 0 || string.IsNullOrWhiteSpace(r.Name)
+                || world.Retirements.Any(r => livingIds.Contains(r.PlayerId) || r.PlayerId.Value <= 0 || string.IsNullOrWhiteSpace(r.Name)
                     || !Enum.IsDefined(r.Role) || r.Age < FreeAgents.RetirementAge(r.Role) || r.Age > 100 || r.Ability is < 1 or > 100
                     || r.Week < 0 || r.Week > world.Week || world.Clubs.All(c => c.Id != r.LastClubId))
                 || world.FreeAgents.Any(f => f.Player.Id.Value <= 0 || string.IsNullOrWhiteSpace(f.Player.Name) || !Enum.IsDefined(f.Player.Role)
@@ -222,7 +228,7 @@ public static class WorldFactory
                     || f.AvailableSinceWeek < 0 || f.AvailableSinceWeek > world.Week || f.Player.ContractEndWeek > f.AvailableSinceWeek
                     || f.Player.WeeklyWage < 0 || f.Player.TrainingExposure != 0 || f.Player.SuspendedMatches < 0 || f.Player.SeasonYellows < 0
                     || f.Player.InjuredUntilWeek < 0 || world.Clubs.All(c => c.Id != f.PreviousClubId)
-                    || world.Obligations.Any(o => o.Kind == CashKind.Wages && o.Description == $"Player contract {f.Player.ContractId.Value}" && o.EndWeek > world.Week)))
+                    || activeWageDescriptions.Contains($"Player contract {f.Player.ContractId.Value}")))
                 throw new InvalidDataException("Invalid free-agent identities or retirement history.");
             if (world.FreeAgentBids.Count > 1 || world.FreeAgentBids.Count + world.Negotiations.Count > 1
                 || world.FreeAgentBids.Any(b => b.WeeklyWage <= 0 || b.ExpiryWeek < world.Week || b.ContractEndWeek <= b.ExpiryWeek
@@ -253,13 +259,18 @@ public static class WorldFactory
                 || s.Development.Any(p => p.AgeBefore is < 16 or > 99 || p.AbilityBefore is < 1 or > 100
                     || p.AbilityAfter is < 1 or > 100 || p.Appearances < 0 || Math.Abs(p.Change) > 3))))
             throw new InvalidDataException("Invalid player development history.");
+        // Rebuild local indexes on every validation; no cached state can outlive a mutation or load.
+        var clubIds = world.Clubs.Select(c => c.Id).ToHashSet();
+        var fixtures = new Dictionary<FixtureId, Fixture>();
+        foreach (var fixture in world.Fixtures)
+            if (!fixtures.TryAdd(fixture.Id, fixture)) throw new InvalidDataException("Invalid identities or references.");
         if (people.Select(p => p.Id).Distinct().Count() != people.Length || people.Any(p => p.WeeklyWage < 0 || p.Ability is < 1 or > 100)
             || world.Obligations.Select(o => o.Id).Distinct().Count() != world.Obligations.Count
-            || world.Obligations.Any(o => !world.Clubs.Any(c => c.Id == o.ClubId) || o.StartWeek > o.EndWeek)
+            || world.Obligations.Any(o => !clubIds.Contains(o.ClubId) || o.StartWeek > o.EndWeek)
             || world.Results.Select(r => r.FixtureId).Distinct().Count() != world.Results.Count
-            || world.Results.Any(r => !world.Fixtures.Any(f => f.Id == r.FixtureId))
-            || world.Fixtures.Count(f => f.Competition == Competition.League) != 720 * (legacy ? 1 : world.Season) || world.Fixtures.Select(f => f.Id).Distinct().Count() != world.Fixtures.Count
-            || world.Fixtures.Any(f => f.Home == f.Away || !world.Clubs.Any(c => c.Id == f.Home) || !world.Clubs.Any(c => c.Id == f.Away)))
+            || world.Results.Any(r => !fixtures.ContainsKey(r.FixtureId))
+            || world.Fixtures.Count(f => f.Competition == Competition.League) != 720 * (legacy ? 1 : world.Season)
+            || world.Fixtures.Any(f => f.Home == f.Away || !clubIds.Contains(f.Home) || !clubIds.Contains(f.Away)))
             throw new InvalidDataException("Invalid identities or references.");
         if (world.CalendarStartSeason < 1) throw new InvalidDataException("Invalid calendar history.");
         if (people.Any(p => p.InjuredUntilWeek < 0 || p.SuspendedMatches < 0 || p.SeasonYellows < 0)
@@ -268,7 +279,7 @@ public static class WorldFactory
             throw new InvalidDataException("Invalid availability or match detail.");
         if (!legacy && !priorCareer && !priorPyramid && (world.CupStartSeason < 1
             || world.Fixtures.Any(f => !Enum.IsDefined(f.Competition) || f.Competition == Competition.Cup && f.CupRound is < 1 or > 6)
-            || world.Results.Any(r => world.Fixtures.Single(f => f.Id == r.FixtureId).Competition == Competition.Cup
+            || world.Results.Any(r => fixtures[r.FixtureId].Competition == Competition.Cup
                 && r.Winner != r.Home && r.Winner != r.Away)
             || world.Fixtures.Count(f => f.Competition == Competition.Cup) > 47 * Math.Max(0, world.Season - world.CupStartSeason + 1)))
             throw new InvalidDataException("Invalid cup history.");
@@ -277,10 +288,15 @@ public static class WorldFactory
             || world.SeasonSummaries.Any(s => s.Season < 1 || s.Season > world.Season || s.EndWeek != s.Season * Seasons.Weeks)
             || (world.Status == CareerStatus.SeasonReview && world.Week != Seasons.EndWeek(world))))
             throw new InvalidDataException("Invalid season boundaries.");
+        var balances = world.Clubs.ToDictionary(c => Account(c.Id), _ => 0L, StringComparer.Ordinal);
+        balances.Add("owner", 0);
+        foreach (var line in world.Journal)
+            if (line.Account is not null && balances.TryGetValue(line.Account, out var total))
+                balances[line.Account] = checked(total + line.Amount);
         foreach (var club in world.Clubs)
-            if (club.Cash < 0 || checked(club.OpeningCash + world.Journal.Where(j => j.Account == Account(club.Id)).Sum(j => j.Amount)) != club.Cash)
+            if (club.Cash < 0 || checked(club.OpeningCash + balances[Account(club.Id)]) != club.Cash)
                 throw new InvalidDataException($"Cash journal does not reconcile for {club.Name}.");
-        if (checked(world.OpeningOwnerCash + world.Journal.Where(j => j.Account == "owner").Sum(j => j.Amount)) != world.OwnerCash)
+        if (checked(world.OpeningOwnerCash + balances["owner"]) != world.OwnerCash)
             throw new InvalidDataException("Personal cash journal does not reconcile.");
     }
 

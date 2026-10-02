@@ -21,7 +21,8 @@ public sealed record PopulationSample(string Kind, int Season, int Week, string 
     int Graduated, int Retired, int Departures, int RivalSignings, int OwnedSignings, long OwnerReserve, ClubSample[] Clubs);
 public sealed record RunResult(string Outcome, string Detail, RunOptions Options, int CompletedSeasons, int Week,
     int MinimumActive, int MaximumActive, int WeeksOutsidePopulationTarget, int ClubWeeksBelowCover,
-    double ElapsedSeconds, long MaximumWeekMilliseconds, long CheckpointBytes, string? GameplaySha256);
+    double ElapsedSeconds, long MaximumWeekMilliseconds, long CheckpointBytes, string? GameplaySha256,
+    Dictionary<string, DiagnosticTimings.Measurement> Timings);
 
 public static class EnduranceRun
 {
@@ -30,6 +31,7 @@ public static class EnduranceRun
     public static RunResult Execute(RunOptions options, TextWriter metrics, TextWriter progress)
     {
         options.Validate();
+        DiagnosticTimings.Reset();
         var timer = Stopwatch.StartNew();
         var world = WorldFactory.Create(options.Seed);
         var openingIds = world.Clubs.SelectMany(c => c.Players).Select(p => p.Id).ToHashSet();
@@ -113,7 +115,7 @@ public static class EnduranceRun
         }
         var checkpoint = WorldCodec.Encode(world);
         return new(outcome, detail, options, completed, world.Week, minimum, maximum, outside, shortWeeks,
-            timer.Elapsed.TotalSeconds, maximumWeek, checkpoint.LongLength, Convert.ToHexString(SHA256.HashData(checkpoint)));
+            timer.Elapsed.TotalSeconds, maximumWeek, checkpoint.LongLength, Convert.ToHexString(SHA256.HashData(checkpoint)), DiagnosticTimings.Snapshot());
     }
 
     public static void VerifyPeople(World world, IReadOnlySet<PersonId> openingIds)

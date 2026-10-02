@@ -74,6 +74,7 @@ public partial class Main
             foreach (var scale in new[] { 100, 125, 150 })
             {
                 textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render(); await Capture("Opening-comparison");
+                await CaptureSection("Build hospitality suites", "Opening-comparison-chart");
                 Preview(Allocation.Hospitality); await Settled(); await Capture("Hospitality-proposal");
                 await Press("Review final terms"); await Capture("Hospitality-terms");
                 await Press("Keep editing");
@@ -435,6 +436,12 @@ public partial class Main
                 await Press("Confirm and commit");
                 if (view.RetiredFormerPlayers.Length != 2 || view.Squad.Any(p => p.Role == Role.Goalkeeper))
                     throw new InvalidOperationException("Renewal did not apply the mandatory departures.");
+                Navigate("Owner Desk");
+                foreach (var scale in new[] { 100, 150 })
+                {
+                    textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render();
+                    await Capture("Retirement-next-capital-plan");
+                }
                 Preview(Allocation.PreserveReserve); await Settled();
                 await Press("Review final terms"); await Press("Confirm and commit");
                 var saved = await session.SaveAsync("retirement-result"); await session.LoadAsync(saved.SnapshotId);

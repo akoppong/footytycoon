@@ -12,6 +12,9 @@ public static class Finance
 
     public static long EligibleRevenue(World world, ClubId id)
     {
+#if ENDURANCE
+        using var timing = DiagnosticTimings.Measure("eligible-revenue");
+#endif
         var club = world.Clubs.Single(c => c.Id == id);
         if (world.Week < Seasons.Weeks) return EligibleRevenue(club);
         var account = WorldFactory.Account(id);
@@ -41,9 +44,13 @@ public static class Finance
         world.Journal.Add(new(world.Journal.Count + 1, world.Week, account, amount, kind, reference));
     }
 
-    public static Forecast Forecast(World world, ClubId id, long upfront = 0, long extraWeekly = 0, int extraStarts = 0,
+    // Pure cash path for internal affordability checks. Owner quotes still use the fingerprinted Forecast below.
+    public static CashProjection ProjectCash(World world, ClubId id, long upfront = 0, long extraWeekly = 0, int extraStarts = 0,
         bool hospitality = false, int extraEnds = int.MaxValue)
     {
+#if ENDURANCE
+        using var timing = DiagnosticTimings.Measure("cash-projection");
+#endif
         var club = world.Clubs.Single(c => c.Id == id);
         var baseCash = checked(club.Cash - upfront);
         var downsideCash = baseCash;
@@ -68,10 +75,24 @@ public static class Finance
         var array = points.ToImmutable();
         var low = array.MinBy(p => p.BaseCash)!;
         var down = array.MinBy(p => p.DownsideCash)!;
+        return new(world.Week, 52, array, low.BaseCash, low.Week, down.DownsideCash, down.Week);
+    }
+
+    public static Forecast Forecast(World world, ClubId id, long upfront = 0, long extraWeekly = 0, int extraStarts = 0,
+        bool hospitality = false, int extraEnds = int.MaxValue)
+    {
+#if ENDURANCE
+        using var timing = DiagnosticTimings.Measure("forecast-total");
+#endif
+        var projection = ProjectCash(world, id, upfront, extraWeekly, extraStarts, hospitality, extraEnds);
+#if ENDURANCE
+        using var identityTiming = DiagnosticTimings.Measure("forecast-identity");
+#endif
         var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
             $"{Convert.ToHexString(SHA256.HashData(WorldCodec.Encode(world)))}:{id.Value}:{upfront}:{extraWeekly}:{extraStarts}:{hospitality}"
             + (extraEnds == int.MaxValue ? "" : $":ends/{extraEnds}"))));
-        return new(identity, world.Week, 52, array, low.BaseCash, low.Week, down.DownsideCash, down.Week,
+        return new(identity, projection.CreatedWeek, projection.HorizonWeeks, projection.Points, projection.LowestBase,
+            projection.LowestBaseWeek, projection.LowestDownside, projection.LowestDownsideWeek,
             "Signed payment schedule in both cases. Future commercial and scheduled home-match receipts are estimates; downside receives 72% of base. No speculative sales, cup prizes, unsigned sponsorship or borrowing. Dates beyond the current season are illustrative; unsigned renewals and unscheduled next-season fixtures are excluded.");
     }
 }

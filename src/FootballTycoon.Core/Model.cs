@@ -82,6 +82,8 @@ public sealed record Project(ProjectId Id, ClubId ClubId, int StartedWeek, int C
 public sealed record Negotiation(int DecisionId, ClubId Seller, PersonId PlayerId, int ExpiryWeek, long FeeCeiling, long WeeklyWage, string ForecastId);
 public sealed record Decision(DecisionId Id, int DueWeek, bool Required, string Title, bool Resolved = false);
 public sealed record ForecastPoint(int Week, long BaseCash, long DownsideCash, long KnownNet);
+public sealed record CashProjection(int CreatedWeek, int HorizonWeeks, ImmutableArray<ForecastPoint> Points,
+    long LowestBase, int LowestBaseWeek, long LowestDownside, int LowestDownsideWeek);
 public sealed record Forecast(string Id, int CreatedWeek, int HorizonWeeks, ImmutableArray<ForecastPoint> Points,
     long LowestBase, int LowestBaseWeek, long LowestDownside, int LowestDownsideWeek, string Assumptions);
 public sealed record DecisionRecord(int Week, OwnerCommand Command, string Executive, string Intent, Forecast OriginalForecast)
