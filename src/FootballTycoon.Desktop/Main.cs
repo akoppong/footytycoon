@@ -287,7 +287,7 @@ public partial class Main : Control
                 card.AddChild(Label($"{save.Slot} · {Calendar.FullDay(save.Week)} · {save.CreatedAt.ToLocalTime():g} · Branch {save.BranchId[..6]}"));
                 card.AddChild(Button("Load this checkpoint", () => Start(async () =>
                 {
-                    await session.LoadAsync(save.SnapshotId); view = await session.QueryAsync(); selected = null; workspace = "Owner Desk"; auxiliary = ""; inboxSelection = "resume"; filedReviews.Clear(); showFiled = false; chosenReview = null; chosenMatch = null; chosenHistory = null; confirming = false;
+                    await session.LoadAsync(save.SnapshotId); view = await session.QueryAsync(); selected = null; workspace = "Owner Desk"; auxiliary = ""; inboxSelection = "resume"; filedReviews.Clear(); showFiled = false; chosenReview = null; chosenMatch = null; chosenHistory = null; confirming = false; openingPlans = null; openingPlansFailedKey = "";
                     return "Loaded validated checkpoint. Next save will preserve a new branch.";
                 })));
             }
