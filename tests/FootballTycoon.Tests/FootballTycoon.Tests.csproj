@@ -5,5 +5,6 @@
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0"><PrivateAssets>all</PrivateAssets></PackageReference>
     <ProjectReference Include="../../src/FootballTycoon.Infrastructure/FootballTycoon.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/FootballTycoon.Endurance/FootballTycoon.Endurance.csproj" Aliases="Endurance" />
   </ItemGroup>
 </Project>

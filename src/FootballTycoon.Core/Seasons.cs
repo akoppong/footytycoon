@@ -5,8 +5,13 @@ namespace FootballTycoon.Core;
 public static class Seasons
 {
     public const int Weeks = 52;
-    // A bounded playable milestone, not a claim of the PRD's 50-season production readiness.
+    // Only the separate diagnostic assembly defines ENDURANCE. Shipped careers remain bounded.
+#if ENDURANCE
+    public const int PlayableSeasons = 50;
+#else
     public const int PlayableSeasons = 3;
+#endif
+    public const int OpeningContractYears = 3;
     public static int StartWeek(World world) => (world.Season - 1) * Weeks;
     public static int EndWeek(World world) => world.Season * Weeks;
     public static int WeekInSeason(int careerWeek, int season) => careerWeek - (season - 1) * Weeks;
@@ -16,6 +21,7 @@ public static class Seasons
     {
         if (world.SeasonSummaries.Any(s => s.Season == world.Season)) return;
         var development = world.SchemaVersion >= 9 ? PlayerDevelopment.CloseSeason(world) : [];
+        if (world.SchemaVersion >= 15) RetirementLifecycle.Announce(world);
         var lines = world.Journal.Where(j => j.Account == WorldFactory.Account(world.OwnedClubId)
             && j.Sequence > world.SeasonOpeningLedgerSequence).ToArray();
         var plan = world.History.LastOrDefault(h => h.Week >= StartWeek(world) && IsCapitalPlan(h.Command.Allocation));
@@ -38,6 +44,7 @@ public static class Seasons
         var nextDivision = Pyramid.NextDivisions(world)[club.Id];
         var plan = Contracts.Plan(world, club, nextDivision, contractOverrides);
         var renewed = plan.Reviews.Where(r => r.Chosen == ContractAction.Renew).ToArray();
+        var intake = declineAcademy ? ImmutableArray<Player>.Empty : Academy.Recommend(world, club, nextDivision, plan);
         return new(world.Season + 1, plan.Reviews.Length, checked(renewed.Sum(r => r.OfferedWage) * Weeks),
             Pyramid.Broadcast(nextDivision), Pyramid.Sponsor(nextDivision),
             -world.Obligations.Where(o => o.ClubId == club.Id && o.Kind == CashKind.Operations && o.EndWeek >= world.Week)
@@ -55,7 +62,8 @@ public static class Seasons
             WageLimit = plan.WageLimit,
             RenewedCommitment = checked(renewed.Sum(r => r.OfferedWage * Weeks * r.Years)),
             RaisesHeld = plan.RaisesHeld,
-            AcademyIntake = declineAcademy ? [] : Academy.Recommend(world, club, nextDivision, plan)
+            AcademyIntake = intake,
+            Shortages = Contracts.Shortages(club.Players.Where(p => plan.Reviews.All(r => r.PlayerId != p.Id || r.Chosen == ContractAction.Renew)).Concat(intake))
         };
     }
 
@@ -100,8 +108,8 @@ public static class Seasons
         var rivals = plans.Where(p => p.Key != world.OwnedClubId).SelectMany(p => p.Value.Reviews).ToArray();
         static string Count(int n) => n == 1 ? "1 expiring contract" : $"{n} expiring contracts";
         var squad = own.IsEmpty ? "No player contracts expired."
-            : $"You renewed {Count(own.Count(r => r.Chosen == ContractAction.Renew))} and released {own.Count(r => r.Chosen == ContractAction.Release)}; released players left on free transfers and their wages ended with their contracts.";
-        var market = rivals.Length == 0 ? "" : $" Rival clubs renewed {Count(rivals.Count(r => r.Chosen == ContractAction.Renew))} and released {rivals.Count(r => r.Chosen == ContractAction.Release)}.";
+            : $"You renewed {Count(own.Count(r => r.Chosen == ContractAction.Renew))}, released {own.Count(r => r.Chosen == ContractAction.Release)}, and recorded {own.Count(r => r.Chosen == ContractAction.Retire)} retirements. Expired wages ended; any unpaid arrears remain owed.";
+        var market = rivals.Length == 0 ? "" : $" Rival clubs renewed {Count(rivals.Count(r => r.Chosen == ContractAction.Renew))}, released {rivals.Count(r => r.Chosen == ContractAction.Release)}, and recorded {rivals.Count(r => r.Chosen == ContractAction.Retire)} retirements.";
         var academy = intakes[world.OwnedClubId];
         var youth = academy.IsEmpty ? " No academy graduates joined the senior squad."
             : $" Academy graduates joined on three-year contracts: {string.Join(", ", academy.Select(p => p.Name))}. Their wages begin next week; development and playing time remain uncertain.";

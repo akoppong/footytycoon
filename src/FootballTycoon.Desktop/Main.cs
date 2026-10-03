@@ -182,6 +182,13 @@ public partial class Main : Control
         var staff = Card(); staff.AddChild(Label("Your leadership team", 24));
         staff.AddChild(Label("Mara Ellis · CEO · Cautious operator\nJonas Reed · Sporting director · Values immediate readiness\nCallum Price · Manager · Selects the squad independently"));
         staff.AddChild(Label("Appointments are fixed in this prototype. Hiring, dismissal, personality policies and contract negotiations are future systems.", 14));
+        var retirement = Card(); retirement.AddChild(Label("Retirement plans", 24));
+        retirement.AddChild(Label("Players announce retirement in their final contract year when they will reach the age cutoff: 40 for outfield roles, 42 for goalkeepers. Signed wages remain payable through expiry; departures cannot be reversed to preserve cover.", 14));
+        if (view.PendingRetirements.IsEmpty) retirement.AddChild(Label("No announced departures pending.", 14));
+        foreach (var notice in view.PendingRetirements)
+            retirement.AddChild(Label($"{notice.Name} · {notice.Role}\nAnnounced {Calendar.FullDay(notice.AnnouncedWeek)} · retiring {Calendar.FullDay(notice.RetirementWeek)}", 16));
+        if (!view.SquadShortages.IsEmpty)
+            retirement.AddChild(Label("Current squad cover: " + string.Join("; ", view.SquadShortages) + ". The manager can use out-of-position cover or play short. The director can seek an affordable free agent after the capital plan; a signing is not guaranteed.", 14));
         var market = Card(); market.AddChild(Label("Director's free-agent recommendation", 24));
         if (view.FreeAgentRecommendation is { } candidate)
         {
@@ -280,7 +287,7 @@ public partial class Main : Control
                 card.AddChild(Label($"{save.Slot} · {Calendar.FullDay(save.Week)} · {save.CreatedAt.ToLocalTime():g} · Branch {save.BranchId[..6]}"));
                 card.AddChild(Button("Load this checkpoint", () => Start(async () =>
                 {
-                    await session.LoadAsync(save.SnapshotId); view = await session.QueryAsync(); selected = null; workspace = "Owner Desk"; auxiliary = ""; inboxSelection = "resume"; filedReviews.Clear(); showFiled = false; chosenReview = null; chosenMatch = null; chosenHistory = null; confirming = false;
+                    await session.LoadAsync(save.SnapshotId); view = await session.QueryAsync(); selected = null; workspace = "Owner Desk"; auxiliary = ""; inboxSelection = "resume"; filedReviews.Clear(); showFiled = false; chosenReview = null; chosenMatch = null; chosenHistory = null; confirming = false; openingPlans = null; openingPlansFailedKey = "";
                     return "Loaded validated checkpoint. Next save will preserve a new branch.";
                 })));
             }

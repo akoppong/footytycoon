@@ -12,7 +12,7 @@ public static class Academy
     public static ImmutableArray<Player> Recommend(World world, Club club, int nextDivision, ContractPlan contracts)
     {
         if (world.Arrears.Any(a => a.ClubId == club.Id)) return [];
-        var remaining = club.Players.Count - contracts.Reviews.Count(r => r.Chosen == ContractAction.Release);
+        var remaining = club.Players.Count - contracts.Reviews.Count(r => r.Chosen != ContractAction.Renew);
         var annual = contracts.WagesAfter;
         var budget = Math.Max(0, club.Cash - world.ReserveTarget);
         var random = new World { Seed = world.Seed };
