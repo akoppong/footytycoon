@@ -51,9 +51,52 @@ public class EnduranceTests
     [Fact]
     public void DiagnosticWorldBeyondMilestoneCannotLoadInProduction()
     {
+        // A genuinely valid season-four world reached by ordinary progression, not a hand-edited snapshot.
         var world = Diagnostic.WorldFactory.Create(2026);
-        world.Season = 4; world.Week = 156;
-        Assert.Throws<InvalidDataException>(() => WorldCodec.Decode(Diagnostic.WorldCodec.Encode(world)));
+        Commit(world, Diagnostic.Allocation.Acquire); Commit(world, Diagnostic.Allocation.PreserveReserve);
+        while (world.Season < 4)
+        {
+            if (world.Status == Diagnostic.CareerStatus.SeasonReview)
+            {
+                Commit(world, Diagnostic.Allocation.StartNextSeason);
+                if (world.Status == Diagnostic.CareerStatus.Active) Commit(world, Diagnostic.Allocation.PreserveReserve);
+            }
+            Diagnostic.Simulation.AdvanceWeek(world);
+        }
+        Assert.Equal(4, world.Season);
+        var bytes = Diagnostic.WorldCodec.Encode(world);
+        Assert.Equal(bytes, Diagnostic.WorldCodec.Encode(Diagnostic.WorldCodec.Decode(bytes)));
+        Assert.Throws<InvalidDataException>(() => WorldCodec.Decode(bytes));
+    }
+
+    static void Commit(Diagnostic.World world, Diagnostic.Allocation allocation)
+    {
+        var proposal = Diagnostic.Proposals.Preview(world, new(allocation), world.Revision);
+        if (allocation == Diagnostic.Allocation.StartNextSeason && !proposal.BlockingReasons.IsEmpty && proposal.Renewal is { AcademyIntake.IsEmpty: false })
+            proposal = Diagnostic.Proposals.Preview(world, new Diagnostic.OwnerCommand(allocation) { DeclineAcademy = true }, world.Revision);
+        Diagnostic.Proposals.Commit(world, $"test/{world.Season}/{world.Week}/{world.History.Count}/{allocation}", world.Revision, proposal);
+    }
+
+    [Fact]
+    public void TimeLimitExpiringDuringSeasonReviewStopsBeforeAnotherWeek()
+    {
+        var calls = 0;
+        // The first 53 readings cover the weekly checks up to the season review; the renewal commands then exhaust the budget.
+        TimeSpan Clock() => ++calls <= 53 ? TimeSpan.Zero : TimeSpan.FromMinutes(5);
+        var result = Probe.EnduranceRun.Execute(new(4, 2026, Diagnostic.Allocation.PreserveReserve, TimeSpan.FromMinutes(1)), new StringWriter(), new StringWriter(), Clock);
+        Assert.Equal("Incomplete", result.Outcome); Assert.Equal(52, result.Week); Assert.Equal(1, result.CompletedSeasons);
+        Assert.Contains("partial", result.Detail);
+    }
+
+    [Fact]
+    public void InitializationValidationFailureIsReportedAsFailedRun()
+    {
+        var metrics = new StringWriter();
+        var result = Probe.EnduranceRun.Execute(new(1, 2026, Diagnostic.Allocation.PreserveReserve, TimeSpan.FromMinutes(1)), metrics, new StringWriter(),
+            createWorld: _ => throw new InvalidDataException("bad opening world"));
+        Assert.Equal("Failed", result.Outcome); Assert.Contains("bad opening world", result.Detail);
+        Assert.Equal(0, result.Week); Assert.Null(result.GameplaySha256);
+        Assert.Contains("\"Kind\":\"failure\"", metrics.ToString());
     }
 
     [Fact]
