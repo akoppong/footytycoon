@@ -329,6 +329,20 @@ public partial class Main
                     || view.SeasonSummaries.Last().Development.Any(p => view.Squad.Single(s => s.Id == p.PlayerId).Age != p.AgeBefore + 1))
                     throw new InvalidOperationException("Season development did not reach the final report and squad.");
                 Navigate("People"); await Capture("Three-season-development");
+                if (OS.GetCmdlineUserArgs().Contains("--rival-smoke-test"))
+                {
+                    if (view.RivalApproaches.IsEmpty || view.RivalApproaches.Any(a => a.Outcome == ApproachOutcome.Pending))
+                        throw new InvalidOperationException("Rival recruitment history missing or unresolved at the endpoint.");
+                    await Press("Collapse chart");
+                    foreach (var scale in new[] { 100, 150 })
+                    {
+                        textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render();
+                        await CaptureSection("Recent rival recruitment", "Rival-recruitment");
+                    }
+                    textScale = 100; Theme.DefaultFontSize = 14; Render(); await Settled();
+                    await Press("Expand chart");
+                    GD.Print("RIVAL SMOKE PASS: retained approaches and resolved outcomes visible at both text scales.");
+                }
                 if (OS.GetCmdlineUserArgs().Contains("--academy-smoke-test"))
                 {
                     if (!academyChecked || view.AcademyGraduates.IsEmpty) throw new InvalidOperationException("The academy choice path was not exercised.");

@@ -1,6 +1,6 @@
 # Retirement and squad replacement: next implementation unit
 
-Status: partially implemented in schema-13 source. The academy, departure archive, prospective free-agent pool, owner-approved approaches and uncontracted retirement are implemented; see [FREE_AGENTS.md](FREE_AGENTS.md). All-club replacement recruitment, contracted-player retirement and the population gates below remain planned. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
+Status: partially implemented in schema-14 source. The academy, departure archive, prospective free-agent pool, owner-approved approaches and uncontracted retirement are implemented; see [FREE_AGENTS.md](FREE_AGENTS.md). Rivals now make [budgeted free-agent replacement offers](RIVAL_RECRUITMENT.md). Contracted-player retirement, general transfer trading and the population gates below remain planned. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
 
 ## Current constraint
 

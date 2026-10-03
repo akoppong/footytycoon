@@ -114,6 +114,9 @@ public sealed record AcademyGraduate(ClubId ClubId, int Week, Player Player);
 public sealed record FreeAgent(Player Player, ClubId PreviousClubId, int AvailableSinceWeek);
 public sealed record PlayerRetirement(PersonId PlayerId, string Name, Role Role, int Age, int Ability, ClubId LastClubId, int Week);
 public sealed record FreeAgentBid(int DecisionId, PersonId PlayerId, long WeeklyWage, int ContractEndWeek, int ExpiryWeek, string ForecastId);
+public enum ApproachOutcome { Pending, Signed, Declined, Unavailable, ChecksFailed }
+public sealed record RivalApproach(int Id, ClubId ClubId, int ApprovedWeek, Player Player, long WeeklyWage,
+    int ContractEndWeek, ApproachOutcome Outcome, int? ResolvedWeek);
 public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long RenewedAnnualWages,
     long AnnualBroadcast, long AnnualSponsor, long AnnualOperations, long Arrears)
 {
@@ -177,8 +180,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 13;
-    public string SimulationVersion { get; set; } = "free-agents-13";
+    public int SchemaVersion { get; set; } = 14;
+    public string SimulationVersion { get; set; } = "rival-market-14";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -196,6 +199,7 @@ public sealed class World
     public List<FreeAgent> FreeAgents { get; set; } = [];
     public List<PlayerRetirement> Retirements { get; set; } = [];
     public List<FreeAgentBid> FreeAgentBids { get; set; } = [];
+    public List<RivalApproach> RivalApproaches { get; set; } = [];
     public Phase Phase { get; set; }
     public CareerStatus Status { get; set; }
     public ClubId OwnedClubId { get; set; }
@@ -327,6 +331,12 @@ public static class WorldCodec
             WorldFactory.Validate(world, priorAcademy: true);
             world.FreeAgents = []; world.Retirements = []; world.FreeAgentBids = [];
             world.SchemaVersion = 13; world.SimulationVersion = "free-agents-13";
+        }
+        if (world.SchemaVersion == 13)
+        {
+            WorldFactory.Validate(world, priorFreeAgents: true);
+            world.RivalApproaches = [];
+            world.SchemaVersion = 14; world.SimulationVersion = "rival-market-14";
         }
         WorldFactory.Validate(world);
         return world;
