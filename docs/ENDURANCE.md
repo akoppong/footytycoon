@@ -1,0 +1,28 @@
+# Long-career diagnostic runner
+
+The separate `FootballTycoon.Endurance` executable compiles the actual core source with a diagnostic 50-season boundary. The desktop and ordinary headless runner still use the three-season core. No production save format or playable career limit changes. Opening contracts remain one to three years in both assemblies, independently of the validation horizon. Tests compare opening bytes and weekly gameplay between the builds; the ordinary reader rejects worlds beyond its supported boundary.
+
+This runner measures the current policy before changing balance. It does not reset seasons, inject cash, invent people, forgive debts, prune history or bypass proposal checks. Only the diagnostic assembly defines `ENDURANCE`. It does not reference the desktop, application or save vault, and does not produce loadable save files.
+
+## Run a bounded sample
+
+```powershell
+./.tools/dotnet/dotnet.exe build src/FootballTycoon.Endurance -c Release
+./.tools/dotnet/dotnet.exe src/FootballTycoon.Endurance/bin/Release/net10.0/FootballTycoon.Endurance.dll 10 2026 artifacts/endurance-2026 PreserveReserve 10
+```
+
+Arguments are requested seasons (1–50), seed, empty output directory, optional opening strategy, and optional time limit in minutes (default 30, maximum 1,440). Supported strategies are PreserveReserve, Hospitality, Recruitment and Training. The runner refuses a nonempty output directory and creates evidence files exclusively. A time limit is checked between weekly operations; an individual weekly or annual operation can finish after the limit. An interrupted process may leave partial JSONL and an empty summary; neither proves completion.
+
+The owner chooses the selected strategy in year one, then preserves reserve. Annual renewal accepts director recommendations and academy intake; if optional intake causes a blocked quote, it tries declining that intake through the ordinary proposal path. Other blocked commands stop the run and retain the error. The owner makes no free-agent approaches, midseason purchases or capital injections. Rival recruitment uses the current autonomous policy. This is one disclosed owner policy, not a varied strategy/difficulty acceptance suite.
+
+## Evidence and interpretation
+
+`metrics.jsonl` starts with configuration, simulation version, runtime, build version, assembly SHA256 and owned club ID. The build version can identify the base source revision; the assembly hash distinguishes locally modified builds. Record the source revision and working-tree state alongside any published pilot results. Samples follow at opening, season close, after renewal and final stop. Counts of graduates, retirements, departures and signings are cumulative. No fictional births are inferred; the known person population is the opening squad plus actual academy graduates.
+
+Each sample separates contracted players, available players and their sum (`Active`). Retired people are excluded from active population. Club rows contain role counts, cash, arrears, annual wages, eligible recurring revenue and a below-cover flag; specific gaps can be derived from the role counts. Money is in minor units (pence), not pounds. Annual review is frozen before retirement and academy choices are committed; the following renewal sample captures those movements. A requested sample ending before season 50 stops at that review without inventing next-season decisions.
+
+Every simulated week executes normal core validation, then checks that every opening player and actual graduate exists exactly once across contracted, available or retired states. No contracted wage term may be overdue. Annual codec round trips must preserve exact bytes. `summary.json` records completion or failure, population extrema, weeks outside 1,100–1,500 active people, club-weeks below cover, elapsed time, longest weekly simulation call, final uncompressed world bytes and gameplay SHA256. Weekly counters sample after each completed week; extrema also include boundary samples. `MaximumWeekMilliseconds` times only `Simulation.AdvanceWeek`, excluding runner accounting, serialization, proposals and output. Elapsed time includes those operations. Timings are diagnostic, not hardware-normalized performance gates.
+
+Exit code zero means the requested horizon completed. It does **not** mean the population target, economy balance or production acceptance passed. Opening squads contain 864 people, below the PRD range; the report counts that honestly instead of inventing a warm-up exemption. `Incomplete` covers the time limit or a stopped simulation; `Failed` records a command, validation or round-trip exception. Both exit 1. Invalid arguments and file-access errors exit 64 with a diagnostic, without an unhandled exception. A gameplay hash identifies the final state but does not substitute for a repeated loaded-versus-uninterrupted replay.
+
+This direct-core probe does not validate weekly durable saves, the recovery library, cloud synchronization, user experience or a clean-machine export. It retains all world history, so growing serialization and validation costs remain visible. The PRD still requires at least 100 varied 50-season worlds, measured population/economy balance and separate persistence/performance validation before extending the playable boundary. Pilot evidence belongs in [delivery progress](DELIVERY_PROGRESS.md).

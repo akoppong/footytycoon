@@ -57,6 +57,8 @@ If using this workspace's local SDK, replace `dotnet` with `./.tools/dotnet/dotn
 
 ## Structure
 
+For development-only long-career measurements, see [the isolated endurance runner](docs/ENDURANCE.md). It can probe up to 50 seasons without extending the playable game; reports distinguish completion from population and economy acceptance.
+
 | Project | Responsibility |
 |---|---|
 | `FootballTycoon.Core` | Pure C# world, typed identities, money, content, proposals, forecasts, scheduler, matches, tables |

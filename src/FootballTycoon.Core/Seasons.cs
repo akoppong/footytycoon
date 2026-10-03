@@ -5,8 +5,13 @@ namespace FootballTycoon.Core;
 public static class Seasons
 {
     public const int Weeks = 52;
-    // A bounded playable milestone, not a claim of the PRD's 50-season production readiness.
+    // Only the separate diagnostic assembly defines ENDURANCE. Shipped careers remain bounded.
+#if ENDURANCE
+    public const int PlayableSeasons = 50;
+#else
     public const int PlayableSeasons = 3;
+#endif
+    public const int OpeningContractYears = 3;
     public static int StartWeek(World world) => (world.Season - 1) * Weeks;
     public static int EndWeek(World world) => world.Season * Weeks;
     public static int WeekInSeason(int careerWeek, int season) => careerWeek - (season - 1) * Weeks;

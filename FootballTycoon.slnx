@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/FootballTycoon.Application/FootballTycoon.Application.csproj" />
     <Project Path="src/FootballTycoon.Core/FootballTycoon.Core.csproj" />
+    <Project Path="src/FootballTycoon.Endurance/FootballTycoon.Endurance.csproj" />
     <Project Path="src/FootballTycoon.Headless/FootballTycoon.Headless.csproj" />
     <Project Path="src/FootballTycoon.Infrastructure/FootballTycoon.Infrastructure.csproj" />
   </Folder>

@@ -130,7 +130,7 @@ public static class WorldFactory
             var age = 17 + RandomStreams.Next(world, stream, 10) + RandomStreams.Next(world, stream, 10);
             drafts.Add(($"{first} {surname}", p < 2 ? Role.Goalkeeper : p < 8 ? Role.Defender : p < 14 ? Role.Midfielder : Role.Forward,
                 75 - division * 8 + RandomStreams.Next(world, $"players/{index}", 20), age,
-                Seasons.Weeks * (1 + RandomStreams.Next(world, stream, Seasons.PlayableSeasons))));
+                Seasons.Weeks * (1 + RandomStreams.Next(world, stream, Seasons.OpeningContractYears))));
         }
         // Stronger players in their prime earn more; the club's total opening wage bill stays exactly as balanced.
         var weakest = drafts.Min(d => d.Ability);
