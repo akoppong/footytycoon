@@ -20,6 +20,8 @@ public static class RivalRecruitment
     internal static void Plan(World world)
     {
         if (world.Week >= Seasons.EndWeek(world) - 1 || world.FreeAgents.Count == 0) return;
+        // The administration deadline tick ends in LostControl, so an offer made now could never resolve.
+        if (world.Status == CareerStatus.Administration && world.AdministrationWeek is { } start && world.Week >= start + 4) return;
         foreach (var club in world.Clubs.Where(c => c.Id != world.OwnedClubId).OrderBy(c => c.Id.Value))
         {
             if (club.Players.Count >= Academy.SquadLimit || club.Cash < world.ReserveTarget
