@@ -21,7 +21,7 @@ public static class Money
 
 public enum CareerStatus { Acquisition, Active, Administration, LostControl, PrototypeComplete, SeasonReview }
 public enum Phase { Decisions, Payments, Negotiation, Matches, Development, Reporting }
-public enum Allocation { Acquire, PreserveReserve, Hospitality, Recruitment, InjectCapital, StartNextSeason, MidseasonRecruitment, MidseasonValue, MidseasonWait, Training }
+public enum Allocation { Acquire, PreserveReserve, Hospitality, Recruitment, InjectCapital, StartNextSeason, MidseasonRecruitment, MidseasonValue, MidseasonWait, Training, FreeAgentRecruitment }
 public enum FacilityKind { Hospitality, Training }
 public enum AdvanceTarget { Week, Month, NextDecision }
 public enum Role { Goalkeeper, Defender, Midfielder, Forward }
@@ -110,6 +110,10 @@ public sealed record PlayerProgress(PersonId PlayerId, string Name, Role Role, i
 public sealed record PlayerDeparture(PersonId PlayerId, string Name, Role Role, int Age, int Ability,
     ClubId ClubId, int Week, string Reason);
 public sealed record AcademyGraduate(ClubId ClubId, int Week, Player Player);
+// Player's wage and contract here describe the expired deal; the pool has no wage obligation.
+public sealed record FreeAgent(Player Player, ClubId PreviousClubId, int AvailableSinceWeek);
+public sealed record PlayerRetirement(PersonId PlayerId, string Name, Role Role, int Age, int Ability, ClubId LastClubId, int Week);
+public sealed record FreeAgentBid(int DecisionId, PersonId PlayerId, long WeeklyWage, int ContractEndWeek, int ExpiryWeek, string ForecastId);
 public sealed record RenewalTerms(int NextSeason, int PlayerContracts, long RenewedAnnualWages,
     long AnnualBroadcast, long AnnualSponsor, long AnnualOperations, long Arrears)
 {
@@ -144,7 +148,11 @@ public sealed record Proposal(string Id, long Revision, OwnerCommand Command, st
 }
 
 public sealed record RecruitmentTerms(Allocation Allocation, Player Player, string Seller, long FeeCeiling,
-    long WeeklyWage, int ContractEndWeek, decimal CurrentForwardAbility);
+    long WeeklyWage, int ContractEndWeek, decimal CurrentForwardAbility)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool IsFreeAgent { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public decimal CurrentRoleAbility { get; init; }
+}
 
 // Mutable aggregate is owned only by the application worker. Screens receive separate immutable records.
 public sealed class Club
@@ -169,8 +177,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 12;
-    public string SimulationVersion { get; set; } = "academy-12";
+    public int SchemaVersion { get; set; } = 13;
+    public string SimulationVersion { get; set; } = "free-agents-13";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -185,6 +193,9 @@ public sealed class World
     public List<SeasonSummary> SeasonSummaries { get; set; } = [];
     public List<PlayerDeparture> Departures { get; set; } = [];
     public List<AcademyGraduate> AcademyGraduates { get; set; } = [];
+    public List<FreeAgent> FreeAgents { get; set; } = [];
+    public List<PlayerRetirement> Retirements { get; set; } = [];
+    public List<FreeAgentBid> FreeAgentBids { get; set; } = [];
     public Phase Phase { get; set; }
     public CareerStatus Status { get; set; }
     public ClubId OwnedClubId { get; set; }
@@ -310,6 +321,12 @@ public static class WorldCodec
             WorldFactory.Validate(world, priorHistory: true);
             world.AcademyGraduates = [];
             world.SchemaVersion = 12; world.SimulationVersion = "academy-12";
+        }
+        if (world.SchemaVersion == 12)
+        {
+            WorldFactory.Validate(world, priorAcademy: true);
+            world.FreeAgents = []; world.Retirements = []; world.FreeAgentBids = [];
+            world.SchemaVersion = 13; world.SimulationVersion = "free-agents-13";
         }
         WorldFactory.Validate(world);
         return world;

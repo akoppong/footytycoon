@@ -18,6 +18,7 @@ public static class Simulation
         Settle(world);
         world.Phase = Phase.Negotiation;
         Negotiate(world);
+        FreeAgents.Resolve(world);
         world.Phase = Phase.Matches;
         foreach (var fixture in world.Fixtures.Where(f => f.Week == world.Week).OrderBy(f => f.Id.Value)) Resolve(world, fixture);
         Cups.AdvanceDraw(world);

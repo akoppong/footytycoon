@@ -494,10 +494,11 @@ public partial class Main
         {
             Fact(card, "Director’s target", $"{recruit.Player.Name} · {recruit.Seller}");
             Fact(card, "Role / age / current ability", $"{recruit.Player.Role} · {recruit.Player.Age} · {recruit.Player.Ability}");
-            Fact(card, "Your two leading forwards · average ability", recruit.CurrentForwardAbility.ToString("0.0"));
+            Fact(card, recruit.IsFreeAgent ? $"Your leading {recruit.Player.Role.ToString().ToLowerInvariant()} players · average ability" : "Your two leading forwards · average ability",
+                (recruit.IsFreeAgent ? recruit.CurrentRoleAbility : recruit.CurrentForwardAbility).ToString("0.0"));
             Fact(card, "Contract if signed next week", $"Wages from {Calendar.FullDay(view.Week + 2)} through {Calendar.FullDay(recruit.ContractEndWeek)} · no automatic tier wage changes");
             Fact(card, "Annual wage commitment", Money.Format(recruit.WeeklyWage * Seasons.Weeks));
-            card.AddChild(Label("An additional forward competes for places; selection stays with the manager. No buyer or resale value is guaranteed.", 14));
+            card.AddChild(Label("A signing competes for places; selection stays with the manager. No buyer or resale value is guaranteed.", 14));
         }
         card.AddChild(Caption("WHAT STAYS UNCERTAIN")); card.AddChild(Label(proposal.Uncertainty));
         if (!compact) card.AddChild(Label(proposal.Forecast.Assumptions, 12));

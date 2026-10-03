@@ -123,7 +123,10 @@ public static class Contracts
         }
         var released = club.Players.Where(p => reviews.Any(r => r.PlayerId == p.Id && r.Chosen == ContractAction.Release)).ToArray();
         foreach (var player in released)
+        {
             world.Departures.Add(new(player.Id, player.Name, player.Role, player.Age, player.Ability, club.Id, world.Week, PlayerHistory.ContractRelease));
+            FreeAgents.Release(world, club, player);
+        }
         club.Players.RemoveAll(p => released.Any(r => r.Id == p.Id));
     }
 }
