@@ -40,7 +40,7 @@ The supplied architecture received an independent subagent review before the imp
 
 ## Complete-game delivery
 
-[DELIVERY_PROGRESS.md](DELIVERY_PROGRESS.md) tracks the full-game goal and current contracted-retirement work. The Windows package `windows-c2d8933c` includes fixed retirement announcements, rival replacement offers, free-agent approaches, uncontracted retirement, academy intake, retained player history, training investment, annual development, contract decisions, the dated calendar, promotion/relegation, the domestic cup and midseason recruitment, using schema 15.
+[DELIVERY_PROGRESS.md](DELIVERY_PROGRESS.md) tracks the full-game goal and current simulation performance work. The Windows package `windows-fc5642cf` includes fixed retirement announcements, rival replacement offers, free-agent approaches, uncontracted retirement, academy intake, retained player history, training investment, annual development, contract decisions, the dated calendar, promotion/relegation, the domestic cup and midseason recruitment, using schema 15.
 
 ## Current season-loop update
 

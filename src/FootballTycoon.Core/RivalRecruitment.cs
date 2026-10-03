@@ -14,7 +14,7 @@ public static class RivalRecruitment
         && Finance.AnnualWages(club) + wage * Seasons.Weeks <= Money.Scale(Finance.EligibleRevenue(world, club.Id), Balance.Load().WageLimit);
 
     // One baseline per club review, with the same finite wage subtraction as Finance.Forecast.
-    private static bool Covers(Forecast baseline, long wage, int starts, int end, long reserve) =>
+    private static bool Covers(CashProjection baseline, long wage, int starts, int end, long reserve) =>
         baseline.Points.All(p => p.DownsideCash - checked(wage * Math.Max(0, Math.Min(p.Week, end) - starts + 1)) >= reserve);
 
     internal static void Plan(World world)
@@ -24,12 +24,12 @@ public static class RivalRecruitment
         {
             if (club.Players.Count >= Academy.SquadLimit || club.Cash < world.ReserveTarget
                 || world.RivalApproaches.Any(a => a.ClubId == club.Id && (a.Outcome == ApproachOutcome.Pending || world.Week < a.ApprovedWeek + 4))) continue;
-            Forecast? baseline = null;
+            CashProjection? baseline = null;
             var target = world.FreeAgents.Select(f => f.Player)
                 .Where(p => Needs(world, club, p, world.Week) && p.Age < FreeAgents.RetirementAge(p.Role))
                 .OrderByDescending(p => FreeAgents.HasShortage(club, p.Role)).ThenByDescending(p => p.Ability).ThenBy(p => p.Age).ThenBy(p => p.Id.Value)
                 .FirstOrDefault(p => WageAllowed(world, club, FreeAgents.Wage(club, p))
-                    && Covers(baseline ??= Finance.Forecast(world, club.Id), FreeAgents.Wage(club, p), world.Week + 2, FreeAgents.ContractEnd(world, p), world.ReserveTarget));
+                    && Covers(baseline ??= Finance.ProjectCash(world, club.Id), FreeAgents.Wage(club, p), world.Week + 2, FreeAgents.ContractEnd(world, p), world.ReserveTarget));
             if (target is null) continue;
             world.RivalApproaches.Add(new(world.RivalApproaches.Count + 1, club.Id, world.Week, target,
                 FreeAgents.Wage(club, target), FreeAgents.ContractEnd(world, target), ApproachOutcome.Pending, null));
@@ -45,7 +45,7 @@ public static class RivalRecruitment
             && club.Players.Count < Academy.SquadLimit && free.Player.Age < FreeAgents.RetirementAge(free.Player.Role)
             && Needs(world, club, free.Player, bid.ApprovedWeek)
             && WageAllowed(world, club, bid.WeeklyWage)
-            && Covers(Finance.Forecast(world, club.Id), bid.WeeklyWage, world.Week + 1, bid.ContractEndWeek, world.ReserveTarget);
+            && Covers(Finance.ProjectCash(world, club.Id), bid.WeeklyWage, world.Week + 1, bid.ContractEndWeek, world.ReserveTarget);
         var outcome = free is null ? ApproachOutcome.Unavailable : !eligible ? ApproachOutcome.ChecksFailed
             : RandomStreams.Next(world, $"rival-free-agent/{bid.Id}", 100) < 70 ? ApproachOutcome.Signed : ApproachOutcome.Declined;
         if (outcome == ApproachOutcome.Signed) FreeAgents.Sign(world, club, free!, bid.WeeklyWage, bid.ContractEndWeek);
