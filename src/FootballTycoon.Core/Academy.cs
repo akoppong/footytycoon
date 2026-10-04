@@ -23,7 +23,16 @@ public static class Academy
         {
             var id = checked(100000 + world.Season * 1000 + club.Id.Value * 10 + i);
             var name = WorldFactory.AcademyName(random, stream);
-            var role = (Role)RandomStreams.Next(random, stream, 4);
+            // Future supply follows role cover (2/5/5/3), not four equally sized populations.
+            // One draw per candidate, before admission checks; no vacancy-dependent reroll.
+            var roleDraw = RandomStreams.Next(random, stream, Contracts.Minimum.Sum(m => m.Minimum));
+            var role = Contracts.Minimum[0].Role;
+            foreach (var minimum in Contracts.Minimum)
+            {
+                role = minimum.Role;
+                if (roleDraw < minimum.Minimum) break;
+                roleDraw -= minimum.Minimum;
+            }
             var ability = Math.Clamp(Contracts.Par(nextDivision) - 25 + RandomStreams.Next(random, stream, 26), 1, 100);
             var wage = Math.Max(10000, Money.Scale(Contracts.StandardWage(nextDivision), .20m) / 1000 * 1000);
             var cost = checked(wage * Seasons.Weeks);

@@ -185,8 +185,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 15;
-    public string SimulationVersion { get; set; } = "retirement-15";
+    public int SchemaVersion { get; set; } = 16;
+    public string SimulationVersion { get; set; } = "academy-balance-16";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -350,6 +350,12 @@ public static class WorldCodec
             world.RetirementNotices = [];
             world.SchemaVersion = 15; world.SimulationVersion = "retirement-15";
             RetirementLifecycle.Announce(world);
+        }
+        if (world.SchemaVersion == 15)
+        {
+            WorldFactory.Validate(world, priorAcademyBalance: true);
+            // Only future uncommitted cohorts change. Preserve every existing person and historical offer.
+            world.SchemaVersion = 16; world.SimulationVersion = "academy-balance-16";
         }
         WorldFactory.Validate(world);
         return world;
