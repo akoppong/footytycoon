@@ -199,7 +199,7 @@ public class FreeAgentTests
         legacy.Remove("FreeAgents"); legacy.Remove("Retirements"); legacy.Remove("FreeAgentBids");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(original, bytes); Assert.Equal(16, migrated.SchemaVersion);
+        Assert.Equal(original, bytes); Assert.Equal(17, migrated.SchemaVersion);
         Assert.Empty(migrated.FreeAgents); Assert.Empty(migrated.Retirements); Assert.Empty(migrated.FreeAgentBids);
         Assert.Equal(world.Departures, migrated.Departures);
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), migrated.Clubs.SelectMany(c => c.Players));
