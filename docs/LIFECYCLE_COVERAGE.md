@@ -1,5 +1,7 @@
 # Academy role supply and coverage evidence
 
+This report records the schema-15/16 comparison. Later [recruitment contention](RECRUITMENT_CONTENTION.md) and [opening population](OPENING_POPULATION.md) reports extend this evidence without replacing the historical observations below.
+
 The long-career diagnostics now distinguish a shortage of people in a role from a club failing to sign available people. They report role populations, actual graduate-cohort survival, club vacancies and retained rival offer outcomes. These observations do not bypass financial checks or turn a person in the available pool into a guaranteed signing. Field definitions are in [ENDURANCE.md](ENDURANCE.md).
 
 ## Observed problem

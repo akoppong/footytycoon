@@ -11,6 +11,7 @@ public class CoverageDiagnosticsTests
     public void CensusSeparatesAvailableSupplyFromCoverAndDoesNotMutateTheWorld()
     {
         var world = Diagnostic.WorldFactory.Create(2026);
+        world.FreeAgents.Clear(); // Isolate one over-age available keeper.
         var club = world.OwnedClub;
         var goalkeeper = club.Players.First(p => p.Role == Diagnostic.Role.Goalkeeper);
         club.Players.Remove(goalkeeper);

@@ -2,6 +2,8 @@
 
 Schema 13 (`free-agents-13`) keeps newly released players in an employable pool. A release preserves the person's identity and departure archive; their old wage and contract remain historical details, with no renewed payment obligation. Loading schemas 1–12 starts the pool empty rather than inventing careers for past departures.
 
+Schema 18 adds 144 available people to new careers as part of the [1,200-person opening world](OPENING_POPULATION.md). Their expired pre-career terms create neither live obligations nor in-career departure records. Existing careers receive no extra people during migration.
+
 ## Owner decision
 
 After choosing the season's capital plan, People can show one named recommendation from the sporting director. In the opening window (season weeks 0–2) and the existing January window, candidates must fill a role shortage or improve on the weakest current player in their role. Outside those windows only shortages qualify. A shortage uses the existing cover minimums: two goalkeepers, five defenders, five midfielders and three forwards. No approach is available in the last week, while another transfer or free-agent negotiation is pending, or with 22 players already contracted.

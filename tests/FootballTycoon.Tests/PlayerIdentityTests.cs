@@ -36,7 +36,7 @@ public class PlayerIdentityTests
     public void AgesSpreadRealisticallyWithinEachSquad()
     {
         var world = WorldFactory.Create(3);
-        Assert.All(world.Clubs.SelectMany(c => c.Players), p => Assert.InRange(p.Age, 17, 35));
+        Assert.All(world.Clubs.SelectMany(c => c.Players), p => Assert.InRange(p.Age, 17, FreeAgents.RetirementAge(p.Role) - 1));
         foreach (var club in world.Clubs)
             Assert.True(club.Players.Select(p => p.Age).Distinct().Count() >= 6, $"{club.Name} ages are too uniform");
         var firstKeeperAges = world.Clubs.Select(c => c.Players[0].Age).Distinct().Count();

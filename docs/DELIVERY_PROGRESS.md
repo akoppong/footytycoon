@@ -4,7 +4,7 @@ Goal: a complete, compelling Football Tycoon game, from consequential ownership 
 
 ## Current evidence and next work
 
-The current packaged executable is artifacts/windows-8f02f0e0/FootballTycoon.exe (schema 17, rival recruitment considering pending competition). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
+The current packaged executable is artifacts/windows-d10beb22/FootballTycoon.exe (schema 18, 1,200-person opening world with existing saves preserved). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
 
 | Required area | Current state / evidence needed to finish |
 |---|---|
@@ -199,3 +199,11 @@ The matched 25-season seed-2026 run reduced club-weeks below cover from 4,087 to
 All 168 Release tests passed in `artifacts/test-results/contention-final.trx` (1 minute 53 seconds). The five new cases cover multiple candidates and scarcity, affordable contested fallback, shortage priority, resolved-history exclusion and schema-16 pending-offer preservation/stale-quote rejection. Existing owner/rival competition, exact wage dates, refusal, loaded replay and failed-save tests also pass. The first focused run caught a test-fixture assumption that the spare role always began with six players; trimming only above five corrected it, and the focused rerun passed all five new cases. Formatting and whitespace checks passed.
 
 The self-contained schema-17 Windows package `windows-8f02f0e0` passed headless and graphical checks with `DOTNET_ROOT` cleared. The graphical run exited 0 with RIVAL, DEVELOPMENT, SEASON, RETIREMENT and general SMOKE PASS markers. Rival history captures at 100% and 150% are readable in `artifacts/contention-package-screenshots`; logs are beside the executable. The only reported engine error is the known development-environment certificate-store diagnostic. Clean-machine acceptance remains open. The portable archive is `artifacts/FootballTycoon-recruitment-contention-windows.zip`.
+
+## Current unit: opening population
+
+Schema 18 now starts new careers with 1,200 people: 48 squads of 22 and 144 available players. Initial ages span the role-sensitive pre-retirement range, warranted notices are fixed before opening recruitment, and each club retains its exact previous aggregate opening wage budget. Existing saves migrate without adding people or changing terms. The diagnostic conservation check includes the initial available pool. See [opening population](OPENING_POPULATION.md) for generation rules, provenance and full comparisons.
+
+The 25-season seed-2026 PreserveReserve sample completed with three weeks outside the 1,100–1,500 target, down from 781; the ten-season seed-2027 sample had zero versus 312. Cover still worsened: 1,536 versus 1,307 club-weeks in the longer run, and 243 versus 184 in the shorter. The owner makes no recruitment approaches in this policy; only the owned club was short at both new endpoints. Aggregate cash also increased. These mixed results do not establish sustainable population or economy balance, and the playable boundary remains three seasons.
+
+All 173 Debug tests passed, followed by the strengthened four-year counter regression. Release build passed without warnings/errors and both format checks passed. The fresh self-contained schema-18 package windows-d10beb22 passed headless and rendered three-season, rival-history, development and controlled-retirement probes with DOTNET_ROOT cleared; graphical exit was zero with RIVAL, DEVELOPMENT, SEASON, RETIREMENT and SMOKE PASS. Logs are beside the executable, captures under artifacts/opening-population-package-screenshots. The known sandbox certificate-store diagnostic remained. The portable archive FootballTycoon-opening-population-windows.zip contains 199 entries including all runtime files and font licenses. Clean-machine and full-release gates remain open.

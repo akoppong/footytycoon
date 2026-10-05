@@ -43,6 +43,8 @@ public static class RandomStreams
 
 public static class WorldFactory
 {
+    public const int OpeningSquadSize = 22;
+    public const int OpeningFreeAgentCount = 144;
     public static World Create(ulong seed)
     {
         var b = Balance.Load();
@@ -84,6 +86,8 @@ public static class WorldFactory
             AddObligation(world, club.Id, 1, 52, club.AnnualBroadcast / 52, CashKind.Broadcast, "Signed broadcast agreement");
             AddObligation(world, club.Id, 1, 52, club.AnnualSponsor / 52, CashKind.Sponsorship, "Signed principal sponsor");
         }
+        AddOpeningFreeAgents(world, usedNames);
+        RetirementLifecycle.Announce(world);
         AddSeasonFixtures(world);
         Validate(world);
         return world;
@@ -112,14 +116,14 @@ public static class WorldFactory
 
     internal static string AcademyName(World random, string stream) => $"{FirstNames[RandomStreams.Next(random, stream, FirstNames.Length)]} {Surnames[RandomStreams.Next(random, stream, Surnames.Length)]}";
 
-    // A separate "identity/{club}" stream keeps the older "players/{club}" ability draws, and therefore match results, unchanged.
+    // Identity and ability draws use separate deterministic streams. New-career generation is versioned.
     private static void AddSquad(World world, Club club, int index, int division, long wageBill, HashSet<string> usedNames)
     {
         var stream = $"identity/{index}";
         var clubFirst = new HashSet<string>(StringComparer.Ordinal);
         var clubSurnames = new HashSet<string>(StringComparer.Ordinal);
         var drafts = new List<(string Name, Role Role, int Ability, int Age, int ContractEnd)>();
-        for (var p = 0; p < 18; p++)
+        for (var p = 0; p < OpeningSquadSize; p++)
         {
             string first, surname;
             do first = FirstNames[RandomStreams.Next(world, stream, FirstNames.Length)]; while (!clubFirst.Add(first));
@@ -127,8 +131,9 @@ public static class WorldFactory
             while (clubSurnames.Contains(surname) || usedNames.Contains($"{first} {surname}"));
             clubSurnames.Add(surname);
             usedNames.Add($"{first} {surname}");
-            var age = 17 + RandomStreams.Next(world, stream, 10) + RandomStreams.Next(world, stream, 10);
-            drafts.Add(($"{first} {surname}", p < 2 ? Role.Goalkeeper : p < 8 ? Role.Defender : p < 14 ? Role.Midfielder : Role.Forward,
+            var role = p < 2 ? Role.Goalkeeper : p < 10 ? Role.Defender : p < 18 ? Role.Midfielder : Role.Forward;
+            var age = 17 + RandomStreams.Next(world, stream, FreeAgents.RetirementAge(role) - 17);
+            drafts.Add(($"{first} {surname}", role,
                 75 - division * 8 + RandomStreams.Next(world, $"players/{index}", 20), age,
                 Seasons.Weeks * (1 + RandomStreams.Next(world, stream, Seasons.OpeningContractYears))));
         }
@@ -139,10 +144,36 @@ public static class WorldFactory
         var totalWeight = weights.Sum();
         var wages = weights.Select(w => wageBill * w / totalWeight / 1000 * 1000).ToArray();
         wages[Array.IndexOf(weights, weights.Max())] += wageBill - wages.Sum();
-        for (var p = 0; p < 18; p++)
+        for (var p = 0; p < OpeningSquadSize; p++)
         {
-            var id = index * 18 + p + 1;
+            var id = index * OpeningSquadSize + p + 1;
             club.Players.Add(new(new(id), drafts[p].Name, drafts[p].Role, drafts[p].Ability, drafts[p].Age, wages[p], new(id), drafts[p].ContractEnd));
+        }
+    }
+
+    private static void AddOpeningFreeAgents(World world, HashSet<string> usedNames)
+    {
+        // Rounded 2/5/5/3 shares: 19 keepers, 48 defenders, 48 midfielders, 29 forwards.
+        // Shuffle independently so role is not coupled to the previous club's division.
+        var roles = Enumerable.Range(0, OpeningFreeAgentCount)
+            .Select(i => i < 19 ? Role.Goalkeeper : i < 67 ? Role.Defender : i < 115 ? Role.Midfielder : Role.Forward).ToArray();
+        for (var i = roles.Length - 1; i > 0; i--)
+        {
+            var other = RandomStreams.Next(world, "opening-free-agents/roles", i + 1);
+            (roles[i], roles[other]) = (roles[other], roles[i]);
+        }
+        for (var i = 0; i < roles.Length; i++)
+        {
+            var stream = $"opening-free-agents/{i}";
+            string name;
+            do name = AcademyName(world, stream); while (!usedNames.Add(name));
+            var previous = world.Clubs[i % world.Clubs.Count];
+            var age = 17 + RandomStreams.Next(world, stream, FreeAgents.RetirementAge(roles[i]) - 17);
+            var ability = Math.Clamp(Contracts.Par(previous.Division) - 15 + RandomStreams.Next(world, stream, 26), 1, 100);
+            var wage = Math.Max(10000, Contracts.StandardWage(previous.Division) * (50 + RandomStreams.Next(world, stream, 76)) / 100 / 1000 * 1000);
+            // An expired pre-career contract is background, not an in-career departure or a live obligation.
+            var player = new Player(new(2000 + i), name, roles[i], ability, age, wage, new(2000 + i), 0);
+            world.FreeAgents.Add(new(player, previous.Id, 0));
         }
     }
 
@@ -171,12 +202,12 @@ public static class WorldFactory
     public static void AddObligation(World world, ClubId club, int start, int end, long weekly, CashKind kind, string description) =>
         world.Obligations.Add(new(new(world.Obligations.Count + 1), club, start, end, weekly, kind, description));
 
-    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false, bool priorTraining = false, bool priorHistory = false, bool priorAcademy = false, bool priorFreeAgents = false, bool priorRivalMarket = false, bool priorAcademyBalance = false, bool priorRecruitmentContention = false)
+    public static void Validate(World world, bool legacy = false, bool priorCareer = false, bool priorPyramid = false, bool priorCompetition = false, bool priorMarket = false, bool priorCalendar = false, bool priorMatchday = false, bool priorContracts = false, bool priorDevelopment = false, bool priorTraining = false, bool priorHistory = false, bool priorAcademy = false, bool priorFreeAgents = false, bool priorRivalMarket = false, bool priorAcademyBalance = false, bool priorRecruitmentContention = false, bool priorOpeningPopulation = false)
     {
 #if ENDURANCE
         using var timing = DiagnosticTimings.Measure("world-validation");
 #endif
-        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : priorTraining ? 10 : priorHistory ? 11 : priorAcademy ? 12 : priorFreeAgents ? 13 : priorRivalMarket ? 14 : priorAcademyBalance ? 15 : priorRecruitmentContention ? 16 : 17) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : priorTraining ? "training-10" : priorHistory ? "people-history-11" : priorAcademy ? "academy-12" : priorFreeAgents ? "free-agents-13" : priorRivalMarket ? "rival-market-14" : priorAcademyBalance ? "retirement-15" : priorRecruitmentContention ? "academy-balance-16" : "recruitment-contention-17") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
+        if (world.SchemaVersion != (legacy ? 1 : priorCareer ? 2 : priorPyramid ? 3 : priorCompetition ? 4 : priorMarket ? 5 : priorCalendar ? 6 : priorMatchday ? 7 : priorContracts ? 8 : priorDevelopment ? 9 : priorTraining ? 10 : priorHistory ? 11 : priorAcademy ? 12 : priorFreeAgents ? 13 : priorRivalMarket ? 14 : priorAcademyBalance ? 15 : priorRecruitmentContention ? 16 : priorOpeningPopulation ? 17 : 18) || world.SimulationVersion != (legacy ? "prototype-1" : priorCareer ? "career-2" : priorPyramid ? "pyramid-3" : priorCompetition ? "competition-4" : priorMarket ? "market-5" : priorCalendar ? "calendar-6" : priorMatchday ? "matchday-7" : priorContracts ? "contracts-8" : priorDevelopment ? "development-9" : priorTraining ? "training-10" : priorHistory ? "people-history-11" : priorAcademy ? "academy-12" : priorFreeAgents ? "free-agents-13" : priorRivalMarket ? "rival-market-14" : priorAcademyBalance ? "retirement-15" : priorRecruitmentContention ? "academy-balance-16" : priorOpeningPopulation ? "recruitment-contention-17" : "opening-population-18") || world.ContentVersion != "prototype-1" || world.RandomVersion != 1)
             throw new InvalidDataException("Unsupported save, simulation, content or random version. The source was not changed.");
         if (world.Clubs.Count != 48 || world.Clubs.Select(c => c.Id).Distinct().Count() != 48
             || world.Clubs.Count(c => c.Id == world.OwnedClubId) != 1 || (legacy ? world.Week is < 0 or > 52 : world.Season is < 1 or > Seasons.PlayableSeasons || world.Week < Seasons.StartWeek(world) || world.Week > Seasons.EndWeek(world)) || world.Revision < 0

@@ -390,8 +390,11 @@ public partial class Main
             }
             if (OS.GetCmdlineUserArgs().Contains("--retirement-smoke-test"))
             {
-                // Explicit controlled age fixture; normal seed careers do not reach the cutoff in three years.
+                // Isolate two retiring keepers from the generated background market and veterans.
                 var fixture = WorldFactory.Create(2026);
+                fixture.FreeAgents.Clear(); fixture.RetirementNotices.Clear(); fixture.Reviews.Clear();
+                foreach (var club in fixture.Clubs)
+                    club.Players = club.Players.Select(p => p with { Age = Math.Min(p.Age, 30) }).ToList();
                 void CommitFixture(Allocation allocation)
                 {
                     var proposal = Proposals.Preview(fixture, new OwnerCommand(allocation) { DeclineAcademy = allocation == Allocation.StartNextSeason }, fixture.Revision);
