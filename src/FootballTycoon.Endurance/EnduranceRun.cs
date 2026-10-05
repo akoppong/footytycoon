@@ -41,7 +41,7 @@ public static class EnduranceRun
         {
             // No world exists, so there is nothing to checkpoint; still leave a failed record rather than an empty summary.
             metrics.WriteLine(JsonSerializer.Serialize(new { Kind = "failure", Season = 0, Week = 0, Error = error.ToString() }));
-            return new("Failed", error.ToString(), options, 0, 0, 0, 0, 0, 0, timer.Elapsed.TotalSeconds, 0, 0, null);
+            return new("Failed", error.ToString(), options, 0, 0, 0, 0, 0, 0, timer.Elapsed.TotalSeconds, 0, 0, null, DiagnosticTimings.Snapshot());
         }
         var openingIds = world.Clubs.SelectMany(c => c.Players).Select(p => p.Id).ToHashSet();
         var minimum = int.MaxValue; var maximum = 0; var outside = 0; var shortWeeks = 0; long maximumWeek = 0;
