@@ -8,6 +8,8 @@ Voluntary release recommendations preserve minimum cover, while announced retire
 
 The free-agent lifecycle, budgeted replacement decisions and retirement are implemented. Population validation is next. It must preserve the ownership role: the sporting director finds candidates and the manager selects the team. The owner reviews material commitments, rather than searching an unrestricted player database.
 
+The isolated runner now [compares no-owner-recruitment with affordable shortage replacement decisions](OWNER_REPLACEMENT_DIAGNOSTICS.md), reporting owner and rival shortage weeks separately. This measures a disclosed simulated owner policy through ordinary approvals; it does not give the production director authority to spend without the player.
+
 ## Free-agent lifecycle
 
 - On an actual contract release, retain the existing immutable departure event and move the named person into a separately modeled available-player pool. An expired contract's wage is historical evidence, not a continuing obligation or an agreed future wage.

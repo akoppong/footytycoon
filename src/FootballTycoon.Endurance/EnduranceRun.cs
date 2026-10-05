@@ -6,12 +6,12 @@ using FootballTycoon.Core;
 
 namespace FootballTycoon.Endurance;
 
-public sealed record RunOptions(int Seasons, ulong Seed, Allocation Strategy, TimeSpan TimeLimit)
+public sealed record RunOptions(int Seasons, ulong Seed, Allocation Strategy, TimeSpan TimeLimit, OwnerRecruitmentMode OwnerRecruitment = OwnerRecruitmentMode.None)
 {
     public void Validate()
     {
-        if (Seasons is < 1 or > 50 || !Core.Seasons.IsCapitalPlan(Strategy) || TimeLimit <= TimeSpan.Zero || TimeLimit > TimeSpan.FromDays(1))
-            throw new ArgumentException("Choose 1..50 seasons, a capital-plan strategy, and a positive time limit up to one day.");
+        if (Seasons is < 1 or > 50 || !Core.Seasons.IsCapitalPlan(Strategy) || TimeLimit <= TimeSpan.Zero || TimeLimit > TimeSpan.FromDays(1) || !Enum.IsDefined(OwnerRecruitment))
+            throw new ArgumentException("Choose 1..50 seasons, a capital-plan strategy, a positive time limit up to one day, and None or CoverShortages owner recruitment.");
     }
 }
 
@@ -23,7 +23,8 @@ public sealed record PopulationSample(string Kind, int Season, int Week, string 
 public sealed record RunResult(string Outcome, string Detail, RunOptions Options, int CompletedSeasons, int Week,
     int MinimumActive, int MaximumActive, int WeeksOutsidePopulationTarget, int ClubWeeksBelowCover,
     double ElapsedSeconds, long MaximumWeekMilliseconds, long CheckpointBytes, string? GameplaySha256,
-    Dictionary<string, DiagnosticTimings.Measurement> Timings);
+    Dictionary<string, DiagnosticTimings.Measurement> Timings, int OwnedWeeksBelowCover, int RivalClubWeeksBelowCover,
+    OwnerRecruitmentCounts OwnerRecruitment);
 
 public static class EnduranceRun
 {
@@ -38,6 +39,8 @@ public static class EnduranceRun
         var openingIds = world.Clubs.SelectMany(c => c.Players).Select(p => p.Id)
             .Concat(world.FreeAgents.Select(f => f.Player.Id)).ToHashSet();
         var minimum = int.MaxValue; var maximum = 0; var outside = 0; var shortWeeks = 0; long maximumWeek = 0;
+        var ownedShortWeeks = 0; var rivalShortWeeks = 0;
+        var approved = 0; var blocked = 0; var noRecommendation = 0;
         var outcome = "Incomplete"; var detail = ""; var completed = 0;
         var assembly = typeof(EnduranceRun).Assembly;
         metrics.WriteLine(JsonSerializer.Serialize(new
@@ -50,7 +53,11 @@ public static class EnduranceRun
             BuildVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion,
             AssemblySha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(assembly.Location))),
             OwnedClubId = world.OwnedClubId.Value,
-            Policy = "Selected opening strategy, then preserve reserve; accept recommended renewals/intake unless blocked, then decline intake; no owner free-agent approaches or injections. No autosave, pruning, rescue or silent calendar advance."
+            OwnerRecruitment = options.OwnerRecruitment.ToString(),
+            Policy = "Selected opening strategy, then preserve reserve; accept recommended renewals/intake unless blocked, then decline intake. "
+                + (options.OwnerRecruitment == OwnerRecruitmentMode.None ? "No owner free-agent approaches. "
+                    : "When below role or total-squad cover, approve the director's free-agent recommendation only if its ordinary proposal has no blocking reasons; no reserve exception or alternative target search. ")
+                + "No owner injections, autosave, pruning, rescue or silent calendar advance."
         }));
         void Observe(bool weekly)
         {
@@ -60,7 +67,9 @@ public static class EnduranceRun
             if (weekly)
             {
                 if (active is < 1100 or > 1500) outside++;
-                shortWeeks += world.Clubs.Count(c => !Contracts.Shortages(c.Players).IsEmpty);
+                var shortClubs = CountShortClubs(world);
+                ownedShortWeeks += shortClubs.Owned; rivalShortWeeks += shortClubs.Rivals;
+                shortWeeks += shortClubs.Owned + shortClubs.Rivals;
             }
         }
         void Write(string kind)
@@ -88,6 +97,14 @@ public static class EnduranceRun
                     Commit(new(Allocation.StartNextSeason));
                     if (world.Status == CareerStatus.Active) Commit(new(Allocation.PreserveReserve));
                     Write("renewal");
+                }
+                var ownerDecision = DiagnosticOwnerRecruitment.TryApprove(world, options.OwnerRecruitment);
+                if (ownerDecision is not null)
+                {
+                    metrics.WriteLine(JsonSerializer.Serialize(new { Kind = "owner-recruitment", Decision = ownerDecision }));
+                    if (ownerDecision.Outcome == "Approved") approved++;
+                    else if (ownerDecision.Outcome == "Blocked") blocked++;
+                    else noRecommendation++;
                 }
                 var before = world.Week; var watch = Stopwatch.StartNew();
                 var advance = Simulation.AdvanceWeek(world);
@@ -117,7 +134,14 @@ public static class EnduranceRun
         }
         var checkpoint = WorldCodec.Encode(world);
         return new(outcome, detail, options, completed, world.Week, minimum, maximum, outside, shortWeeks,
-            timer.Elapsed.TotalSeconds, maximumWeek, checkpoint.LongLength, Convert.ToHexString(SHA256.HashData(checkpoint)), DiagnosticTimings.Snapshot());
+            timer.Elapsed.TotalSeconds, maximumWeek, checkpoint.LongLength, Convert.ToHexString(SHA256.HashData(checkpoint)), DiagnosticTimings.Snapshot(),
+            ownedShortWeeks, rivalShortWeeks, new(approved, blocked, noRecommendation));
+    }
+
+    public static (int Owned, int Rivals) CountShortClubs(World world)
+    {
+        var shortClubs = world.Clubs.Where(c => !Contracts.Shortages(c.Players).IsEmpty).ToArray();
+        return (shortClubs.Count(c => c.Id == world.OwnedClubId), shortClubs.Count(c => c.Id != world.OwnedClubId));
     }
 
     public static void VerifyPeople(World world, IReadOnlySet<PersonId> openingIds)
