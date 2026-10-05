@@ -20,6 +20,8 @@ public static class RivalRecruitment
     internal static void Plan(World world)
     {
         if (world.Week >= Seasons.EndWeek(world) - 1 || world.FreeAgents.Count == 0) return;
+        // The administration deadline tick ends in LostControl, so an offer made now could never resolve.
+        if (world.Status == CareerStatus.Administration && world.AdministrationWeek is { } start && world.Week >= start + 4) return;
         // Directors consider current competition, including offers made earlier in this review.
         // This is a preference, not a reservation: scarce candidates can still receive competing offers.
         var interest = world.RivalApproaches.Where(a => a.Outcome == ApproachOutcome.Pending).Select(a => a.Player.Id)

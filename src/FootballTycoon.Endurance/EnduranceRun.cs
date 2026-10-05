@@ -30,12 +30,21 @@ public static class EnduranceRun
 {
     // Full simulation, ordinary owner commands, no direct cash changes or invented replacement people.
     // Annual output is observational. Every week still executes the core's validation and an identity accounting check.
-    public static RunResult Execute(RunOptions options, TextWriter metrics, TextWriter progress)
+    // elapsed and createWorld are test seams; production callers use the stopwatch and WorldFactory.
+    public static RunResult Execute(RunOptions options, TextWriter metrics, TextWriter progress, Func<TimeSpan>? elapsed = null, Func<ulong, World>? createWorld = null)
     {
         options.Validate();
         DiagnosticTimings.Reset();
         var timer = Stopwatch.StartNew();
-        var world = WorldFactory.Create(options.Seed);
+        bool Expired() => (elapsed?.Invoke() ?? timer.Elapsed) >= options.TimeLimit;
+        World world;
+        try { world = (createWorld ?? WorldFactory.Create)(options.Seed); }
+        catch (InvalidDataException error)
+        {
+            // No world exists, so there is nothing to checkpoint; still leave a failed record rather than an empty summary.
+            metrics.WriteLine(JsonSerializer.Serialize(new { Kind = "failure", Season = 0, Week = 0, Error = error.ToString() }));
+            return new("Failed", error.ToString(), options, 0, 0, 0, 0, 0, 0, timer.Elapsed.TotalSeconds, 0, 0, null, DiagnosticTimings.Snapshot(), 0, 0, new(0, 0, 0));
+        }
         var openingIds = world.Clubs.SelectMany(c => c.Players).Select(p => p.Id)
             .Concat(world.FreeAgents.Select(f => f.Player.Id)).ToHashSet();
         var minimum = int.MaxValue; var maximum = 0; var outside = 0; var shortWeeks = 0; long maximumWeek = 0;
@@ -91,12 +100,13 @@ public static class EnduranceRun
             Commit(new(Allocation.Acquire)); Commit(new(options.Strategy));
             while (world.Week < options.Seasons * Core.Seasons.Weeks)
             {
-                if (timer.Elapsed >= options.TimeLimit) { detail = "Time limit reached at a completed weekly boundary; evidence is partial."; break; }
+                if (Expired()) { detail = "Time limit reached at a completed weekly boundary; evidence is partial."; break; }
                 if (world.Status == CareerStatus.SeasonReview)
                 {
                     Commit(new(Allocation.StartNextSeason));
                     if (world.Status == CareerStatus.Active) Commit(new(Allocation.PreserveReserve));
                     Write("renewal");
+                    if (Expired()) { detail = "Time limit reached after season-review commands; evidence is partial."; break; }
                 }
                 var ownerDecision = DiagnosticOwnerRecruitment.TryApprove(world, options.OwnerRecruitment);
                 if (ownerDecision is not null)
