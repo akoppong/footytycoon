@@ -24,7 +24,10 @@ public sealed record RunResult(string Outcome, string Detail, RunOptions Options
     int MinimumActive, int MaximumActive, int WeeksOutsidePopulationTarget, int ClubWeeksBelowCover,
     double ElapsedSeconds, long MaximumWeekMilliseconds, long CheckpointBytes, string? GameplaySha256,
     Dictionary<string, DiagnosticTimings.Measurement> Timings, int OwnedWeeksBelowCover, int RivalClubWeeksBelowCover,
-    OwnerRecruitmentCounts OwnerRecruitment);
+    OwnerRecruitmentCounts OwnerRecruitment)
+{
+    public RivalVacancyReport RivalVacancies { get; init; } = new(0, 0, 0, [], []);
+}
 
 public static class EnduranceRun
 {
@@ -50,6 +53,7 @@ public static class EnduranceRun
         var minimum = int.MaxValue; var maximum = 0; var outside = 0; var shortWeeks = 0; long maximumWeek = 0;
         var ownedShortWeeks = 0; var rivalShortWeeks = 0;
         var approved = 0; var blocked = 0; var noRecommendation = 0;
+        var vacancies = new RivalVacancyTracker();
         var outcome = "Incomplete"; var detail = ""; var completed = 0;
         var assembly = typeof(EnduranceRun).Assembly;
         metrics.WriteLine(JsonSerializer.Serialize(new
@@ -79,6 +83,8 @@ public static class EnduranceRun
                 var shortClubs = CountShortClubs(world);
                 ownedShortWeeks += shortClubs.Owned; rivalShortWeeks += shortClubs.Rivals;
                 shortWeeks += shortClubs.Owned + shortClubs.Rivals;
+                foreach (var vacancy in vacancies.Observe(world))
+                    metrics.WriteLine(JsonSerializer.Serialize(new { Kind = "rival-vacancy", Vacancy = vacancy }));
             }
         }
         void Write(string kind)
@@ -145,7 +151,8 @@ public static class EnduranceRun
         var checkpoint = WorldCodec.Encode(world);
         return new(outcome, detail, options, completed, world.Week, minimum, maximum, outside, shortWeeks,
             timer.Elapsed.TotalSeconds, maximumWeek, checkpoint.LongLength, Convert.ToHexString(SHA256.HashData(checkpoint)), DiagnosticTimings.Snapshot(),
-            ownedShortWeeks, rivalShortWeeks, new(approved, blocked, noRecommendation));
+            ownedShortWeeks, rivalShortWeeks, new(approved, blocked, noRecommendation))
+        { RivalVacancies = vacancies.Report() };
     }
 
     public static (int Owned, int Rivals) CountShortClubs(World world)
