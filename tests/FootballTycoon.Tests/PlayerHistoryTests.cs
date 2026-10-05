@@ -73,7 +73,7 @@ public sealed class PlayerHistoryTests : IDisposable
         legacy["SchemaVersion"] = 10; legacy["SimulationVersion"] = "training-10"; legacy.Remove("Departures");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var loaded = WorldCodec.Decode(bytes);
-        Assert.Equal(original, bytes); Assert.Equal(15, loaded.SchemaVersion);
+        Assert.Equal(original, bytes); Assert.Equal(17, loaded.SchemaVersion);
         Assert.Equal(expected, loaded.Departures.OrderBy(d => d.PlayerId.Value));
         Assert.All(loaded.Departures, d => Assert.Equal(world.OwnedClubId, d.ClubId));
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), loaded.Clubs.SelectMany(c => c.Players));

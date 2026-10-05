@@ -150,7 +150,7 @@ public class RetirementTests
         node["SchemaVersion"] = 14; node["SimulationVersion"] = "rival-market-14"; node.Remove("RetirementNotices");
         var bytes = Encoding.UTF8.GetBytes(node.ToJsonString()); var copy = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(copy, bytes); Assert.Equal(15, migrated.SchemaVersion); Assert.Single(migrated.RetirementNotices);
+        Assert.Equal(copy, bytes); Assert.Equal(17, migrated.SchemaVersion); Assert.Single(migrated.RetirementNotices);
         Assert.Empty(migrated.Retirements);
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), migrated.Clubs.SelectMany(c => c.Players));
         Assert.Equal(world.Obligations, migrated.Obligations); Assert.Equal(world.Journal, migrated.Journal); Assert.Equal(world.RandomStates, migrated.RandomStates);

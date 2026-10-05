@@ -18,7 +18,8 @@ public sealed record RunOptions(int Seasons, ulong Seed, Allocation Strategy, Ti
 public sealed record ClubSample(int Id, int Division, int Players, int Goalkeepers, int Defenders, int Midfielders, int Forwards,
     long Cash, long Arrears, long AnnualWages, long EligibleRevenue, bool BelowCover);
 public sealed record PopulationSample(string Kind, int Season, int Week, string Status, int Contracted, int Available, int Active,
-    int Graduated, int Retired, int Departures, int RivalSignings, int OwnedSignings, long OwnerReserve, ClubSample[] Clubs);
+    int Graduated, int Retired, int Departures, int RivalSignings, int OwnedSignings, long OwnerReserve, ClubSample[] Clubs,
+    CoverageReport Coverage);
 public sealed record RunResult(string Outcome, string Detail, RunOptions Options, int CompletedSeasons, int Week,
     int MinimumActive, int MaximumActive, int WeeksOutsidePopulationTarget, int ClubWeeksBelowCover,
     double ElapsedSeconds, long MaximumWeekMilliseconds, long CheckpointBytes, string? GameplaySha256,
@@ -150,6 +151,6 @@ public static class EnduranceRun
         return new(kind, world.Season, world.Week, world.Status.ToString(), contracted, world.FreeAgents.Count, contracted + world.FreeAgents.Count,
             world.AcademyGraduates.Count, world.Retirements.Count, world.Departures.Count,
             world.RivalApproaches.Count(a => a.Outcome == ApproachOutcome.Signed),
-            world.Reviews.Count(r => r.Title is "Forward signed" or "Free agent signed"), world.OwnerCash, clubs);
+            world.Reviews.Count(r => r.Title is "Forward signed" or "Free agent signed"), world.OwnerCash, clubs, CoverageDiagnostics.Sample(world));
     }
 }

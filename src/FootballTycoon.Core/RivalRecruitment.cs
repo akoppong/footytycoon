@@ -20,6 +20,10 @@ public static class RivalRecruitment
     internal static void Plan(World world)
     {
         if (world.Week >= Seasons.EndWeek(world) - 1 || world.FreeAgents.Count == 0) return;
+        // Directors consider current competition, including offers made earlier in this review.
+        // This is a preference, not a reservation: scarce candidates can still receive competing offers.
+        var interest = world.RivalApproaches.Where(a => a.Outcome == ApproachOutcome.Pending).Select(a => a.Player.Id)
+            .Concat(world.FreeAgentBids.Select(b => b.PlayerId)).GroupBy(id => id).ToDictionary(g => g.Key, g => g.Count());
         foreach (var club in world.Clubs.Where(c => c.Id != world.OwnedClubId).OrderBy(c => c.Id.Value))
         {
             if (club.Players.Count >= Academy.SquadLimit || club.Cash < world.ReserveTarget
@@ -27,12 +31,14 @@ public static class RivalRecruitment
             CashProjection? baseline = null;
             var target = world.FreeAgents.Select(f => f.Player)
                 .Where(p => Needs(world, club, p, world.Week) && p.Age < FreeAgents.RetirementAge(p.Role))
-                .OrderByDescending(p => FreeAgents.HasShortage(club, p.Role)).ThenByDescending(p => p.Ability).ThenBy(p => p.Age).ThenBy(p => p.Id.Value)
+                .OrderByDescending(p => FreeAgents.HasShortage(club, p.Role)).ThenBy(p => interest.GetValueOrDefault(p.Id))
+                .ThenByDescending(p => p.Ability).ThenBy(p => p.Age).ThenBy(p => p.Id.Value)
                 .FirstOrDefault(p => WageAllowed(world, club, FreeAgents.Wage(club, p))
                     && Covers(baseline ??= Finance.ProjectCash(world, club.Id), FreeAgents.Wage(club, p), world.Week + 2, FreeAgents.ContractEnd(world, p), world.ReserveTarget));
             if (target is null) continue;
             world.RivalApproaches.Add(new(world.RivalApproaches.Count + 1, club.Id, world.Week, target,
                 FreeAgents.Wage(club, target), FreeAgents.ContractEnd(world, target), ApproachOutcome.Pending, null));
+            interest[target.Id] = interest.GetValueOrDefault(target.Id) + 1;
         }
     }
 
