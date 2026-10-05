@@ -59,7 +59,7 @@ public class AcademyBalanceTests
         var bytes = WorldCodec.Encode(world); var copy = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         var expected = JsonNode.Parse(bytes)!;
-        expected["SchemaVersion"] = 17; expected["SimulationVersion"] = "recruitment-contention-17";
+        expected["SchemaVersion"] = 18; expected["SimulationVersion"] = "opening-population-18";
         Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(WorldCodec.Encode(migrated))));
         Assert.Equal(copy, bytes);
         Assert.Equal(WorldCodec.Encode(migrated), WorldCodec.Encode(WorldCodec.Clone(migrated)));

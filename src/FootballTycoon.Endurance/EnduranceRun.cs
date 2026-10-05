@@ -35,7 +35,8 @@ public static class EnduranceRun
         DiagnosticTimings.Reset();
         var timer = Stopwatch.StartNew();
         var world = WorldFactory.Create(options.Seed);
-        var openingIds = world.Clubs.SelectMany(c => c.Players).Select(p => p.Id).ToHashSet();
+        var openingIds = world.Clubs.SelectMany(c => c.Players).Select(p => p.Id)
+            .Concat(world.FreeAgents.Select(f => f.Player.Id)).ToHashSet();
         var minimum = int.MaxValue; var maximum = 0; var outside = 0; var shortWeeks = 0; long maximumWeek = 0;
         var outcome = "Incomplete"; var detail = ""; var completed = 0;
         var assembly = typeof(EnduranceRun).Assembly;

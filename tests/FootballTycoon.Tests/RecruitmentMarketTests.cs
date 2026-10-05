@@ -68,6 +68,7 @@ public class RecruitmentMarketTests
         for (ulong seed = 0; seed < 4; seed++)
         {
             var world = AtWeek(30, seed);
+            var peopleBefore = world.Clubs.SelectMany(c => c.Players).Select(p => p.Id).OrderBy(p => p.Value).ToArray();
             var beforeCash = world.OwnedClub.Cash;
             var proposal = Proposals.Preview(world, new(Allocation.MidseasonValue), world.Revision);
             Assert.Empty(proposal.BlockingReasons);
@@ -82,7 +83,7 @@ public class RecruitmentMarketTests
             Assert.Equal(WorldCodec.Encode(world), WorldCodec.Encode(replay));
             var transfers = world.Journal.Where(j => j.Kind == CashKind.Transfer).ToArray();
             Assert.Equal(0, transfers.Sum(j => j.Amount));
-            Assert.Equal(864, world.Clubs.Sum(c => c.Players.Count));
+            Assert.Equal(peopleBefore, world.Clubs.SelectMany(c => c.Players).Select(p => p.Id).OrderBy(p => p.Value));
             Assert.Empty(world.Negotiations);
             Assert.Single(world.Clubs.SelectMany(c => c.Players), p => p.Id == bid.PlayerId);
             if (transfers.Length == 2)
@@ -118,7 +119,7 @@ public class RecruitmentMarketTests
     [Fact]
     public void SchemaFourMigrationPreservesPendingOpeningMandateAndCash()
     {
-        var world = WorldFactory.Create(8);
+        var world = ControlledWorld.Create(8); // Schema four predates the pool and announced retirements.
         SimulationTests.Commit(world, Allocation.Acquire);
         SimulationTests.Commit(world, Allocation.Recruitment);
         var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();

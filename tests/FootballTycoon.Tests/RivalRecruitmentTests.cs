@@ -118,7 +118,7 @@ public class RivalRecruitmentTests(ITestOutputHelper output)
         node["SchemaVersion"] = 13; node["SimulationVersion"] = "free-agents-13"; node.Remove("RivalApproaches");
         var bytes = Encoding.UTF8.GetBytes(node.ToJsonString()); var copy = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(copy, bytes); Assert.Equal(17, migrated.SchemaVersion);
+        Assert.Equal(copy, bytes); Assert.Equal(18, migrated.SchemaVersion);
         Assert.Equal(world.FreeAgentBids, migrated.FreeAgentBids); Assert.Equal(world.FreeAgents, migrated.FreeAgents);
         Assert.Equal(world.Journal, migrated.Journal); Assert.Equal(world.RandomStates, migrated.RandomStates);
         Assert.Empty(migrated.RivalApproaches);

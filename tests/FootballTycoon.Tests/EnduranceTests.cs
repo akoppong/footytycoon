@@ -36,14 +36,14 @@ public class EnduranceTests
     public void AccountingDetectsMissingAndDuplicatePeopleWithoutFabricatingReplacements()
     {
         var world = Diagnostic.WorldFactory.Create(2026);
-        var opening = world.Clubs.SelectMany(c => c.Players).Select(p => p.Id).ToHashSet();
+        var opening = world.Clubs.SelectMany(c => c.Players).Select(p => p.Id).Concat(world.FreeAgents.Select(f => f.Player.Id)).ToHashSet();
         Probe.EnduranceRun.VerifyPeople(world, opening);
         var player = world.OwnedClub.Players[0]; world.OwnedClub.Players.RemoveAt(0);
         Assert.Throws<InvalidDataException>(() => Probe.EnduranceRun.VerifyPeople(world, opening));
         world.Retirements.Add(new(player.Id, player.Name, player.Role, player.Age, player.Ability, world.OwnedClubId, 0));
         Probe.EnduranceRun.VerifyPeople(world, opening);
         var sample = Probe.EnduranceRun.Sample(world, "controlled");
-        Assert.Equal(863, sample.Active); Assert.Equal(1, sample.Retired); Assert.Equal(0, sample.Graduated);
+        Assert.Equal(1199, sample.Active); Assert.Equal(1, sample.Retired); Assert.Equal(0, sample.Graduated);
         world.OwnedClub.Players.Add(player);
         Assert.Throws<InvalidDataException>(() => Probe.EnduranceRun.VerifyPeople(world, opening));
     }
@@ -62,7 +62,7 @@ public class EnduranceTests
         var metrics = new StringWriter();
         var result = Probe.EnduranceRun.Execute(new(4, 2026, Diagnostic.Allocation.PreserveReserve, TimeSpan.FromTicks(1)), metrics, new StringWriter());
         Assert.Equal("Incomplete", result.Outcome); Assert.Equal(0, result.Week); Assert.Equal(0, result.CompletedSeasons);
-        Assert.Equal(864, result.MinimumActive); Assert.Contains("partial", result.Detail);
+        Assert.Equal(1200, result.MinimumActive); Assert.Contains("partial", result.Detail);
         using var config = System.Text.Json.JsonDocument.Parse(metrics.ToString().Split('\n')[0]);
         Assert.Equal(64, config.RootElement.GetProperty("AssemblySha256").GetString()!.Length);
     }
@@ -74,7 +74,7 @@ public class EnduranceTests
         var result = Probe.EnduranceRun.Execute(new(4, 2026, Diagnostic.Allocation.PreserveReserve, TimeSpan.FromMinutes(10)), metrics, new StringWriter());
         Assert.Equal("Completed", result.Outcome); Assert.Equal(4, result.CompletedSeasons); Assert.Equal(208, result.Week);
         Assert.True(result.CheckpointBytes > 0); Assert.Equal(64, result.GameplaySha256!.Length);
-        Assert.True(result.WeeksOutsidePopulationTarget > 0); // Opening864 must not be reported as meeting1100–1500.
+        Assert.Equal(0, result.WeeksOutsidePopulationTarget); // This four-year seed remains in range; longer probes still count every breach.
         Assert.Contains("\"Kind\":\"renewal\",\"Season\":4", metrics.ToString());
         Assert.Contains("\"Kind\":\"season-close\",\"Season\":4", metrics.ToString());
     }

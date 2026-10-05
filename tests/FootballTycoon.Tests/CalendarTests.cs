@@ -98,7 +98,7 @@ public class CalendarTests
     [Fact]
     public void SchemaFiveSaveKeepsItsSeasonLayoutAndDatesTheNextSeason()
     {
-        var world = WorldFactory.Create(2026);
+        var world = ControlledWorld.Create(); // Schema five predates the pool and announced retirements.
         world.CalendarStartSeason = 2;
         world.Fixtures.Clear();
         world.Season = 1;
@@ -109,7 +109,7 @@ public class CalendarTests
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(17, migrated.SchemaVersion);
+        Assert.Equal(18, migrated.SchemaVersion);
         Assert.Equal(2, migrated.CalendarStartSeason);
         Assert.Equal(3, migrated.Fixtures.Where(f => f.Competition == Competition.League).Min(f => f.Week));
         Assert.Equal((24, 27), RecruitmentMarket.Window(migrated));

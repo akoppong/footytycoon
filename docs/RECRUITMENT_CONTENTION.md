@@ -1,5 +1,7 @@
 # Rival recruitment contention
 
+This report records the schema-16/17 comparison. Schema 18 subsequently changes [new-career opening population](OPENING_POPULATION.md); the baseline observations below remain historical evidence.
+
 The schema-16 coverage report showed rivals repeatedly making unsuccessful approaches while alternatives remained in the pool. All directors ranked the same eligible people by shortage, ability, age and ID. With a stable club-ID resolution order and four-week cooldown, several clubs could spend each opportunity chasing a person who signed earlier in the resolution pass.
 
 Schema 17 adds pending-approach count immediately after shortage priority in candidate ranking. Each director still chooses only an eligible, affordable candidate. Adding an offer increments that person's interest count for subsequent directors in the same weekly pass. Unaffordable alternatives are skipped; an urgent role vacancy still outranks an optional window upgrade. A scarce candidate may receive multiple offers. The ranking creates neither an exclusive reservation nor a contract.
