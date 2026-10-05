@@ -81,6 +81,25 @@ public class RetirementTests
     }
 
     [Fact]
+    public void LossOfControlAtTheAnnualBoundaryDoesNotArchiveUnagedRetirees()
+    {
+        var world = Opening();
+        var keeper = Veteran(world, world.OwnedClub, world.OwnedClub.Players.First(p => p.Role == Role.Goalkeeper), 41, 52);
+        while (world.Week < 51) Simulation.AdvanceWeek(world);
+        Assert.True(RetirementLifecycle.Announced(world, keeper.Id));
+        Finance.Post(world, WorldFactory.Account(world.OwnedClubId), -world.OwnedClub.Cash, CashKind.Operations, "stress");
+        var obligation = world.Obligations.First(o => o.ClubId == world.OwnedClubId && o.Kind == CashKind.Wages);
+        world.Arrears.Add(new(obligation.Id, world.OwnedClubId, 48, 900000000));
+        world.Status = CareerStatus.Administration; world.AdministrationWeek = 48;
+        var result = Simulation.AdvanceWeek(world);
+        Assert.Equal(52, world.Week); Assert.Equal(CareerStatus.LostControl, world.Status);
+        Assert.Equal("LostControl", result.StopReason);
+        Assert.Empty(world.Retirements);
+        Assert.Contains(world.OwnedClub.Players, p => p.Id == keeper.Id);
+        WorldFactory.Validate(world);
+    }
+
+    [Fact]
     public void ALongLiveContractIsNotCutWhenTheAgeThresholdIsReached()
     {
         var world = Opening(); var player = Veteran(world, world.OwnedClub, world.OwnedClub.Players.First(p => p.Role == Role.Forward), 39, 156);

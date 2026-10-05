@@ -119,6 +119,11 @@ public class OwnerReplacementDiagnosticsTests
         Assert.Equal("Completed", result.Outcome); Assert.Equal(6, result.CompletedSeasons);
         Assert.True(result.OwnerRecruitment.Approved > 0);
         Assert.Equal(result.ClubWeeksBelowCover, result.OwnedWeeksBelowCover + result.RivalClubWeeksBelowCover);
+        var vacancies = result.RivalVacancies;
+        Assert.Equal(result.RivalClubWeeksBelowCover, vacancies.ObservedClubWeeks);
+        Assert.Equal(vacancies.ObservedClubWeeks, vacancies.RoleGapClubWeeks + vacancies.TotalOnlyClubWeeks);
+        Assert.Equal(vacancies.ObservedClubWeeks, vacancies.GateClubWeeks.Values.Sum());
+        Assert.Equal(vacancies.ObservedClubWeeks, vacancies.Episodes.Sum(e => e.Weeks));
         var events = metrics.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Select(line => System.Text.Json.Nodes.JsonNode.Parse(line)!).ToArray();
         Assert.Equal("CoverShortages", events[0]["OwnerRecruitment"]!.GetValue<string>());
@@ -127,6 +132,11 @@ public class OwnerReplacementDiagnosticsTests
         Assert.Equal(result.OwnerRecruitment.Blocked, decisions.Count(d => d["Outcome"]!.GetValue<string>() == "Blocked"));
         Assert.Equal(result.OwnerRecruitment.NoRecommendation, decisions.Count(d => d["Outcome"]!.GetValue<string>() == "NoRecommendation"));
         Assert.True(events.Last()["OwnedSignings"]!.GetValue<int>() > 0);
+        var observations = events.Where(e => e["Kind"]!.GetValue<string>() == "rival-vacancy").Select(e => e["Vacancy"]!).ToArray();
+        Assert.Equal(vacancies.ObservedClubWeeks, observations.Length);
+        Assert.Equal(observations.Length, observations.Select(e => (e["ClubId"]!.GetValue<int>(), e["Week"]!.GetValue<int>())).Distinct().Count());
+        Assert.All(observations, e => Assert.NotEqual(events[0]["OwnedClubId"]!.GetValue<int>(), e["ClubId"]!.GetValue<int>()));
+        Assert.All(vacancies.GateClubWeeks, gate => Assert.Equal(gate.Value, observations.Count(e => e["Gate"]!.GetValue<string>() == gate.Key)));
     }
 
     [Fact]

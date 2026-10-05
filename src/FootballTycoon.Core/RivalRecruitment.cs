@@ -4,22 +4,24 @@ namespace FootballTycoon.Core;
 public static class RivalRecruitment
 {
     private static int Target(Role role) => role switch { Role.Goalkeeper => 2, Role.Defender or Role.Midfielder => 6, _ => 4 };
-    private static bool Needs(World world, Club club, Player player, int approvalWeek) =>
+    internal static bool Needs(World world, Club club, Player player, int approvalWeek) =>
         FreeAgents.HasShortage(club, player.Role) || FreeAgents.WindowOpen(world, approvalWeek)
         && club.Players.Count < 18 && club.Players.Count(p => p.Role == player.Role) < Target(player.Role)
         && player.Ability > club.Players.Where(p => p.Role == player.Role).Min(p => p.Ability);
 
-    private static bool WageAllowed(World world, Club club, long wage) =>
+    internal static bool WageAllowed(World world, Club club, long wage) =>
         club.Cash >= world.ReserveTarget && !world.Arrears.Any(a => a.ClubId == club.Id)
         && Finance.AnnualWages(club) + wage * Seasons.Weeks <= Money.Scale(Finance.EligibleRevenue(world, club.Id), Balance.Load().WageLimit);
 
     // One baseline per club review, with the same finite wage subtraction as Finance.Forecast.
-    private static bool Covers(CashProjection baseline, long wage, int starts, int end, long reserve) =>
+    internal static bool Covers(CashProjection baseline, long wage, int starts, int end, long reserve) =>
         baseline.Points.All(p => p.DownsideCash - checked(wage * Math.Max(0, Math.Min(p.Week, end) - starts + 1)) >= reserve);
 
     internal static void Plan(World world)
     {
         if (world.Week >= Seasons.EndWeek(world) - 1 || world.FreeAgents.Count == 0) return;
+        // The administration deadline tick ends in LostControl, so an offer made now could never resolve.
+        if (world.Status == CareerStatus.Administration && world.AdministrationWeek is { } start && world.Week >= start + 4) return;
         // Directors consider current competition, including offers made earlier in this review.
         // This is a preference, not a reservation: scarce candidates can still receive competing offers.
         var interest = world.RivalApproaches.Where(a => a.Outcome == ApproachOutcome.Pending).Select(a => a.Player.Id)
