@@ -35,17 +35,17 @@ public static class FreeAgents
     internal static void Release(World world, Club club, Player player)
     {
         var free = new FreeAgent(player with { TrainingExposure = 0 }, club.Id, world.Week);
-        if (player.Age >= RetirementAge(player.Role)) Retire(world, free);
+        if (player.Age >= RetirementAge(player.Role)) RecordRetirement(world, free);
         else world.FreeAgents.Add(free);
     }
 
     internal static void CloseSeason(World world)
     {
         foreach (var free in world.FreeAgents.Where(f => f.Player.Age >= RetirementAge(f.Player.Role)).ToArray())
-        { Retire(world, free); world.FreeAgents.Remove(free); }
+        { RecordRetirement(world, free); world.FreeAgents.Remove(free); }
     }
 
-    private static void Retire(World world, FreeAgent free)
+    internal static void RecordRetirement(World world, FreeAgent free)
     {
         var p = free.Player;
         world.Retirements.Add(new(p.Id, p.Name, p.Role, p.Age, p.Ability, free.PreviousClubId, world.Week));
@@ -77,7 +77,7 @@ public static class FreeAgents
             var free = world.FreeAgents.SingleOrDefault(f => f.Player.Id == bid.PlayerId);
             var history = world.History.Single(h => h.OriginalForecast.Id == bid.ForecastId);
             var club = world.OwnedClub;
-            var forecast = Finance.Forecast(world, club.Id, extraWeekly: bid.WeeklyWage, extraStarts: world.Week + 1, extraEnds: bid.ContractEndWeek);
+            var forecast = Finance.ProjectCash(world, club.Id, extraWeekly: bid.WeeklyWage, extraStarts: world.Week + 1, extraEnds: bid.ContractEndWeek);
             var minimum = history.Command.ReserveException ? 0 : world.ReserveTarget;
             var eligible = free is not null && world.Week <= bid.ExpiryWeek && world.Status == CareerStatus.Active
                 && club.Players.Count < Academy.SquadLimit && free.Player.Age < RetirementAge(free.Player.Role)

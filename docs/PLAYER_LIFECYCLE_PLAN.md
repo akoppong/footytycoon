@@ -1,12 +1,12 @@
-# Retirement and squad replacement: next implementation unit
+# Player lifecycle and longer-career validation
 
-Status: partially implemented in schema-14 source. The academy, departure archive, prospective free-agent pool, owner-approved approaches and uncontracted retirement are implemented; see [FREE_AGENTS.md](FREE_AGENTS.md). Rivals now make [budgeted free-agent replacement offers](RIVAL_RECRUITMENT.md). Contracted-player retirement, general transfer trading and the population gates below remain planned. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
+Status: lifecycle implemented in schema-15 source; longer-career validation remains open. The academy, departure archive, prospective free-agent pool, owner-approved approaches and uncontracted retirement are implemented; see [FREE_AGENTS.md](FREE_AGENTS.md). Rivals now make [budgeted free-agent replacement offers](RIVAL_RECRUITMENT.md). [Contracted-player retirement](CONTRACT_RETIREMENT.md) now preserves signed terms and allows unavoidable shortages. General transfer trading and the population gates below remain planned. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
 
 ## Current constraint
 
-Contract recommendations keep at least 16 players and role cover by renewing an aging player when no replacement exists. That prevents a short-term shortage but can keep people playing indefinitely. Random academy roles and zero-to-two annual graduates do not guarantee cover. Enabling retirement on its own would therefore expose shortages without giving the sporting director a way to address them.
+Voluntary release recommendations preserve minimum cover, while announced retirement remains fixed even when a club is short. Random academy roles and zero-to-two annual graduates do not guarantee cover. Budgeted free-agent approaches offer a replacement route, but availability and affordability can leave vacancies. The next work must measure whether these policies sustain a credible population and economy.
 
-The next sequence is a free-agent lifecycle, budgeted replacement decisions, then retirement and population validation. It must preserve the ownership role: the sporting director finds candidates and the manager selects the team. The owner reviews material commitments, rather than searching an unrestricted player database.
+The free-agent lifecycle, budgeted replacement decisions and retirement are implemented. Population validation is next. It must preserve the ownership role: the sporting director finds candidates and the manager selects the team. The owner reviews material commitments, rather than searching an unrestricted player database.
 
 ## Free-agent lifecycle
 
@@ -36,6 +36,8 @@ Distinguish unavoidable retirement from a voluntary release. The existing contra
 Retirement must retain the person's name, club history, academy origin and final age/ability without retaining a playable squad member or live wage obligation. The final season's match and development evidence remains available after retirement.
 
 ## Transaction and validation gates
+
+The [isolated endurance runner](ENDURANCE.md) now provides per-club population and finance evidence beyond three seasons using the actual core. The playable limit is unchanged. A completed diagnostic sample does not satisfy the 100-world acceptance gate below.
 
 Quote generation stays pure. Confirmation, expiry, entry to or exit from the available pool, signed obligations and historical events must be applied atomically to the private transaction candidate before durable publication. Duplicate receipts, failed saves and reloads must never duplicate a signing or retirement.
 

@@ -4,14 +4,14 @@ Goal: a complete, compelling Football Tycoon game, from consequential ownership 
 
 ## Current evidence and next work
 
-The current packaged executable is artifacts/windows-6cf335a0/FootballTycoon.exe (schema 14, rival replacement recruitment). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
+The current packaged executable is artifacts/windows-fc5642cf/FootballTycoon.exe (schema 15, simulation performance and the updated capital-plan screen). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
 
 | Required area | Current state / evidence needed to finish |
 |---|---|
 | Ownership and finance | Acquisition, forecasts, journal and finite injections exist. Complete scenario selection, loan/refinance policies, distributions, covenants and accountable exit reconciliation. |
 | Competition | League, yearly rollover, tier movement and domestic cup are implemented. Complete career records, meaningful run-in presentation and long-career endurance. |
 | Delegated football | Opening search, midseason shortlists and constrained rival free-agent replacement offers exist. Complete general transfer trading and broader rival strategy, contract negotiation, protected-player sale decisions and wage transition/embargo policy. |
-| People and attachment | Named squads, availability, annual aging/development reports, baseline academy intake, free-agent approaches, uncontracted retirement and fixed leaders exist in source. Complete staff hiring/mandates/succession, fatigue and rotation, staff development effects, contracted-player retirement, academy investment/pipeline progression and broader historical callbacks. |
+| People and attachment | Named squads, availability, annual aging/development reports, baseline academy intake, free-agent approaches, uncontracted and contracted retirement, and fixed leaders exist in source. Complete staff hiring/mandates/succession, fatigue and rotation, staff development effects, academy investment/pipeline progression and broader historical callbacks. |
 | Club development | Hospitality and training investment exist in source. Complete stadium and academy investment, cancellation/delays, condition, demand, prices, sponsor choices and supporter consequences. |
 | Living world | Stable rivals, finances and constrained free-agent recruitment exist. Complete broader rival trading/investment, credible distress/rescue and balance across 50 seasons. |
 | Content and experience | Design-system shell and durable decision flow exist. Complete six acquisitions, difficulties, twelve event families/48 templates, linked arcs, ambition, onboarding and skippable major moments. |
@@ -128,3 +128,54 @@ The existing three-season boundary remains. Contracted-player retirement and ann
 All 126 Release tests passed in `artifacts/test-results/rival-final.trx`, including the added owner-versus-rival competition case and reversed club-storage ordering. The full suite took 8 minutes 20 seconds while graphical validation was running on the same machine. Independent review found no outstanding correctness or documentation issues after the forecast optimization and fixture correction.
 
 The packaged graphical career also completed all three seasons with FREE AGENT, RIVAL, DEVELOPMENT, SEASON and general SMOKE PASS markers, with DOTNET_ROOT cleared. Logs are in `artifacts/windows-6cf335a0/career-smoke.log` and `career-smoke-errors.log`; only the known sandbox certificate-store diagnostic appeared. Captures are in `artifacts/rival-package-screenshots`. The portable ZIP contains 199 entries: the executable, game pack, 194 runtime files and three font licenses.
+
+## Current unit: announced retirement at contract expiry
+
+All clubs now record fixed retirement announcements during a veteran's final contract year, using the fictional outfield-40/goalkeeper-42 policy. Signed wages continue through the original expiry. Annual renewal shows retirements as fixed departures, preserves voluntary-release guards after those departures, and discloses shortages without inventing a replacement. People shows upcoming dates and current cover gaps. Retired players retain their names, final attributes, departure record and final season's development evidence. Schema 15 adds currently warranted notices to older saves without changing employment, payments or random states. See [CONTRACT_RETIREMENT.md](CONTRACT_RETIREMENT.md).
+
+All 133 Release tests passed in `artifacts/test-results/retirement-full.trx` (6 minutes 7 seconds). Coverage includes both goalkeepers retiring with intake declined, short-handed match advance, exact final wages, long contracts continuing beyond the cutoff, final-season history, midseason arrears, transfer rechecks, pure migration and duplicate receipts. Review strengthened the retirement save-failure test to interrupt the post-mutation checkpoint rather than the earlier recovery write; that corrected regression passed separately in `retirement-persistence-final.trx`. The seven-case focused run is `retirement-focused-final.trx`. Core and desktop format verification passed; the desktop build had zero warnings and errors.
+
+The source graphical probe passed RETIREMENT SMOKE PASS and SMOKE PASS in `artifacts/retirement-smoke-final.log`; announcement and fixed-renewal screens at 150% were visually inspected and independently reviewed. The explicitly controlled fixture changes ages and contract expiries to exercise retirements within the three-season boundary; it is not a population or balance sample. Review corrected the probe's academy flag on non-renewal commands, the final development assertion for archived retirees, and wording that had implied every contract could be reversed. All code, test and documentation findings were resolved before packaging.
+
+The fresh self-contained package `windows-c2d8933c` passed export and headless executable smoke with DOTNET_ROOT cleared. The portable archive is `artifacts/FootballTycoon-retirement-windows.zip`; extract before launch and keep its runtime, game pack and font licenses together. The packaged graphical run also passed DEVELOPMENT, SEASON, RETIREMENT and general SMOKE PASS, with DOTNET_ROOT cleared. Logs are in `artifacts/windows-c2d8933c/career-smoke.log` and `career-smoke-errors.log`; only the known sandbox certificate-store diagnostic appeared. Captures are in `artifacts/retirement-package-screenshots`, with retirement instructions, final terms and departure records visually inspected. The ZIP contains 199 entries: the executable, game pack, 194 runtime files and three font licenses. Clean-machine acceptance and the 100-world/50-season lifecycle and economy gates remain open. The playable boundary remains three seasons.
+
+## Current unit: isolated lifecycle endurance diagnostics
+
+The new `FootballTycoon.Endurance` project compiles the actual core with a diagnostic 50-season limit. Shipped core, desktop and ordinary headless careers remain at three seasons. Opening terms are independently fixed at one to three years, preserving generated squads and wages. The runner uses ordinary owner proposals and weekly simulation, validates population identity accounting, round-trips annual worlds and reports per-club role counts, cash, wages and arrears. It retains full history and does not fabricate replacements, inject money or reset stopped careers. See [ENDURANCE.md](ENDURANCE.md) for commands, owner policy and metric definitions.
+
+The initial five diagnostic tests passed in `artifacts/test-results/endurance-focused.trx`, including an actual four-season run. Subsequent checks strengthen the gameplay parity comparison to a full season, reject invalid options, and verify recorded binary provenance. Independent review found no code defects; its metric wording clarification is incorporated. Final regression and pilot evidence follow below.
+
+The first measured pilot completed 10 seasons/520 weeks with seed 2026 and PreserveReserve, using the disclosed owner policy. It started from base commit `70e2208` plus the uncommitted diagnostic implementation, before the final binary-metadata and output-directory guard additions. Its exact executable and provenance are preserved under `artifacts/endurance-pilot-2026/runner` and `PROVENANCE.txt`; the metrics and summary are beside them. This is one world, not the PRD's 100 varied fifty-season runs.
+
+| Pilot measure | Observed result |
+|---|---:|
+| Active players, opening → final | 864 → 1,147 |
+| Final contracted / available players | 825 / 322 |
+| Actual graduates / retained retirees | 418 / 135 |
+| Active-player minimum / maximum | 864 / 1,176 |
+| Simulated weeks outside 1,100–1,500 | 312 of 520 |
+| Club-weeks below minimum cover | 225 |
+| Clubs below cover / with arrears at final review | 0 / 0 |
+| Aggregate club cash, opening → final | £72.8m → £695.75m |
+| Elapsed / longest weekly simulation call | 479.05 seconds / 9,270 ms |
+| Final uncompressed world JSON | 80,372,993 bytes |
+
+Every annual codec round trip preserved bytes; population accounting found no missing or duplicate people. Final state SHA256: `0525BE1D73FC85B45E9FD7F8089AFA1514EDA116194E28A1C1B72D4B023827F8`. The final observation is the frozen season-ten review, before season-eleven retirement/intake decisions. The early pilot overlapped focused tests on this development machine, so elapsed measurements are not a controlled performance baseline. Cash accumulation, the large available pool, temporary cover gaps and growing history warrant profiling and balance work before a larger suite; none is hidden by resetting the world. The playable boundary remains three seasons.
+
+The final runner also completed a two-season CLI sample with seed 2027 (`artifacts/endurance-cli-final`), ending at 913 active players. Its configuration records build and binary provenance. CLI verification caught and fixed an unhandled-exception path on a nonempty output directory; it now exits 64 cleanly and the existing metrics SHA256 remains unchanged. A deliberately tiny time limit returned exit 1 and an `Incomplete` summary at week zero (`artifacts/endurance-cli-timeout-final`), confirming that partial evidence is not reported as success. No further simulation changes were made after the ten-season pilot.
+
+All 143 Release tests passed in `artifacts/test-results/endurance-final.trx` (5 minutes 20 seconds). This includes full-season byte parity between diagnostic and production cores, unchanged opening terms, normal-reader rejection beyond three seasons, an actual four-season diagnostic run, conservation failures, option bounds, provenance and partial-run reporting. Core-solution formatting and diff whitespace checks passed. The final CLI error wrapper was rebuilt with zero warnings/errors and verified directly after the suite began; it changes no simulation or measurement behavior. Independent review covers the runner, tests, isolation, documentation and pilot evidence.
+
+## Current unit: measured performance and capital-plan integration
+
+Merged the latest main (`1172b23`), including the redesigned four-option capital-plan screen. Training, retirement announcements and annual renewals remain available. A new annual-plan smoke capture exposed overlapping chart labels; a dedicated legend now separates baseline, downside, reserve and the keep-reserve comparison. Captures cover the opening and season-two decisions at 100% and 150% text scales.
+
+Diagnostic-only timing scopes identified repeated validation scans and unnecessary full-world forecast fingerprints. Temporary validation indexes and a single journal reconciliation pass preserve the existing checks. Internal affordability checks now request the cash path directly; owner quotes retain their full-world identity. No history is pruned and simulation rules, saved bytes and schema 15 remain unchanged. See [PERFORMANCE.md](PERFORMANCE.md) for the measurements and limitations.
+
+The four-season comparison improved from 60.77 to 11.05 seconds with identical final bytes and gameplay hash. The ten-season repeat improved from 479.05 to 78.65 seconds, again with identical final bytes/hash and all 21 nonconfiguration observations unchanged. A five-minute attempt at 50 seasons correctly reported `Incomplete` after 24 seasons, exposing population and role-cover gaps; it is not a completed lifecycle gate. The shipped career remains three seasons.
+
+All 157 Release tests passed in `artifacts/test-results/performance-verified.trx` (1 minute 25 seconds), including 14 new validation/projection cases. The first run caught array-reference equality assertions in the new tests; corrected value comparisons passed in the focused run and final full suite. Core/desktop formatting and whitespace checks passed. The desktop build completed without warnings or errors.
+
+The final self-contained package `windows-fc5642cf` passed headless execution and the Windows/OpenGL three-season career and retirement probes with `DOTNET_ROOT` cleared. The graphical run exited 0 with DEVELOPMENT, SEASON, RETIREMENT and general SMOKE PASS markers. Logs are beside the executable; screenshots are in `artifacts/performance-package-screenshots`. The known sandbox certificate-store diagnostic remains; clean-machine acceptance is still open. The portable archive is `artifacts/FootballTycoon-performance-windows.zip`.
+
+Review identified that the 150% captures showed the plan list with the chart below the fold. The source smoke now additionally scrolls to the expanded plan. Its successful rerun (`artifacts/performance-chart-smoke.log`) captures the unchanged chart at 100%, 125% and 150% under `artifacts/performance-chart-screenshots`. This final capture-only smoke addition is in source; the packaged gameplay and chart are the same, while its probe retains the earlier capture set. The archive contains 199 entries: executable, pack, 194 runtime files and three font licenses.

@@ -28,19 +28,19 @@ public static class RecruitmentMarket
         if (allocation == Allocation.FreeAgentRecruitment) return FreeAgents.Recommend(world);
         var b = Balance.Load();
         var sellers = world.Clubs.Where(c => c.Id != world.OwnedClubId && c.Division == world.OwnedClub.Division
-            && c.Players.Count(p => p.Role == Role.Forward) > 2).OrderBy(c => c.Id.Value);
+            && c.Players.Count(p => p.Role == Role.Forward) > 2 && c.Players.Any(p => p.Role == Role.Forward && !RetirementLifecycle.Announced(world, p.Id))).OrderBy(c => c.Id.Value);
         (Club Seller, Player Player)? target;
         if (allocation == Allocation.Recruitment)
         {
             var seller = sellers.FirstOrDefault();
-            target = seller is null ? null : (seller, seller.Players.Where(p => p.Role == Role.Forward)
+            target = seller is null ? null : (seller, seller.Players.Where(p => p.Role == Role.Forward && !RetirementLifecycle.Announced(world, p.Id))
                 .OrderByDescending(p => p.Ability).ThenBy(p => p.Id.Value).First());
         }
         else
         {
             // Rivals retain their two strongest forwards. The director presents a bounded shortlist.
             var pool = sellers.SelectMany(c => c.Players.Where(p => p.Role == Role.Forward)
-                .OrderByDescending(p => p.Ability).ThenBy(p => p.Id.Value).Skip(2).Select(p => (Seller: c, Player: p)))
+                .OrderByDescending(p => p.Ability).ThenBy(p => p.Id.Value).Skip(2).Where(p => !RetirementLifecycle.Announced(world, p.Id)).Select(p => (Seller: c, Player: p)))
                 .OrderByDescending(x => x.Player.Ability).ThenBy(x => x.Player.Id.Value).ToArray();
             if (pool.Length == 0) return null;
             var first = pool[0];

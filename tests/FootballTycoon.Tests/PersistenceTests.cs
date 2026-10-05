@@ -67,6 +67,37 @@ public sealed class PersistenceTests : IDisposable
     }
 
     [Fact]
+    public async Task FailedRetirementRolloverKeepsPlayersAndRetryPublishesOneArchive()
+    {
+        var world = RetirementTests.Opening();
+        var player = RetirementTests.Veteran(world, world.OwnedClub, world.OwnedClub.Players[0], 41, 52);
+        while (world.Week < 52) Simulation.AdvanceWeek(world);
+        var vault = new LocalSaveVault(directory);
+        var saved = vault.Write(WorldCodec.Encode(world), Career, Branch, null, "retirement-review");
+        var fail = false;
+        var writes = 0;
+        var fault = new LocalSaveVault(directory, stage => { if (fail && stage == "before-rename" && ++writes == 2) throw new IOException("Retirement write failed"); });
+        await using var session = new GameSession(fault);
+        await session.LoadAsync(saved.SnapshotId);
+        var before = await session.ExportCheckpointAsync();
+        var view = await session.QueryAsync();
+        var proposal = await session.PreviewAsync(new(Allocation.StartNextSeason) { DeclineAcademy = true }, view.Revision);
+        fail = true;
+        await Assert.ThrowsAsync<IOException>(() => session.CommitAsync("retire", view.Revision, proposal));
+        Assert.Equal(before, await session.ExportCheckpointAsync());
+        Assert.Contains((await session.QueryAsync()).Squad, p => p.Id == player.Id);
+        fail = false;
+        await session.CommitAsync("retire", view.Revision, proposal);
+        await session.CommitAsync("retire", view.Revision, proposal);
+        var checkpoint = await session.SaveAsync();
+        await session.LoadAsync(checkpoint.SnapshotId);
+        var retired = await session.QueryAsync();
+        Assert.Single(retired.RetiredFormerPlayers, p => p.PlayerId == player.Id);
+        Assert.DoesNotContain(retired.Squad, p => p.Id == player.Id);
+        Assert.Equal(before, vault.Read(saved.SnapshotId).WorldBytes);
+    }
+
+    [Fact]
     public async Task SeasonLineFixturesComeFromTheSavedWorldAndSurviveReload()
     {
         await using var session = new GameSession(new LocalSaveVault(directory));

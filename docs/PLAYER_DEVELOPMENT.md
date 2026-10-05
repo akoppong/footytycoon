@@ -21,7 +21,7 @@ Reports list players on the owned club at the season close. A player sold or rel
 
 Schema 9 (`development-9`) adds immutable development rows to season summaries. Schemas 1–8 migrate in memory. Players retain their saved age and ability during migration; completed seasons keep empty development reports. An unfinished season receives its first update at its next close. Closing an already recorded season is idempotent. Original save files are never overwritten by migration.
 
-This is an annual development foundation within the three-season milestone. Individual potential, staff effects, contracted-player retirement, player morale and a balanced long career remain unimplemented. Newer source adds [baseline academy intake](ACADEMY.md) and [free-agent aging and retirement](FREE_AGENTS.md); aging and intake alone do not establish a sustainable 50-season population.
+This is an annual development foundation within the three-season milestone. Individual potential, staff effects, player morale and a balanced long career remain unimplemented. [Contracted-player retirement](CONTRACT_RETIREMENT.md) now preserves the final development report and signed wage term. Newer source adds [baseline academy intake](ACADEMY.md) and [free-agent aging and retirement](FREE_AGENTS.md); aging and intake alone do not establish a sustainable 50-season population.
 
 ## Validation
 
