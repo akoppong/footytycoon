@@ -36,7 +36,6 @@ public static class RivalVacancyDiagnostics
         var eligible = available.Where(p => RivalRecruitment.Needs(world, club, p, world.Week)).ToArray();
         if (eligible.Length == 0)
         {
-            if (roles.Length == 0 && !FreeAgents.WindowOpen(world, world.Week)) return Result("OutsideWindowTotalGap", 0, 0);
             if (roles.Length > 0 && !available.Any(p => roles.Contains(p.Role))) return Result("NoNeededRoleSupply", 0, 0);
             return Result("NoSuitableCandidate", 0, 0);
         }

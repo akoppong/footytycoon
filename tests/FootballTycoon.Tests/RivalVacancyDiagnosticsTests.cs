@@ -86,7 +86,7 @@ public class RivalVacancyDiagnosticsTests
     }
 
     [Fact]
-    public void TotalOnlyGapHonorsWindowAndImprovementRequirement()
+    public void TotalOnlyGapPermitsWeakerDepthOutsideWindowButHonorsRoleTargets()
     {
         var (world, club) = Snapshot();
         club.Players.Add(world.FreeAgents.First(f => f.Player.Role == Diagnostic.Role.Goalkeeper).Player);
@@ -94,9 +94,13 @@ public class RivalVacancyDiagnosticsTests
         world.FreeAgents = world.FreeAgents.Where(f => f.Player.Role == Diagnostic.Role.Defender)
             .Select(f => f with { Player = f.Player with { Ability = 1 } }).ToList();
         world.Week = 2;
-        Assert.Equal("NoSuitableCandidate", Row(world).Gate);
+        Assert.Equal("EligibleNow", Row(world).Gate);
         world.Week = 3;
-        Assert.Equal("OutsideWindowTotalGap", Row(world).Gate); Assert.Empty(Row(world).MissingRoles); Assert.Equal(1, Row(world).SquadVacancies);
+        Assert.Equal("EligibleNow", Row(world).Gate); Assert.Empty(Row(world).MissingRoles); Assert.Equal(1, Row(world).SquadVacancies);
+        var defenders = world.FreeAgents.ToList();
+        world.FreeAgents = world.FreeAgents.Select(f => f with { Player = f.Player with { Role = Diagnostic.Role.Goalkeeper } }).ToList();
+        Assert.Equal("NoSuitableCandidate", Row(world).Gate);
+        world.FreeAgents = defenders;
         world.Week = 2;
         world.FreeAgents = world.FreeAgents.Select(f => f with { Player = f.Player with { Ability = 100 } }).ToList();
         Assert.Equal("EligibleNow", Row(world).Gate);

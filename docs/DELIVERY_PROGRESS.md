@@ -4,7 +4,7 @@ Goal: a complete, compelling Football Tycoon game, from consequential ownership 
 
 ## Current evidence and next work
 
-The current packaged executable is artifacts/windows-ed57c0e4/FootballTycoon.exe (schema 18, 1,200-person opening world with existing saves preserved). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
+The current packaged executable is artifacts/windows-70951d7d/FootballTycoon.exe (schema 19, rival minimum-squad depth recruitment with existing people and terms preserved). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
 
 | Required area | Current state / evidence needed to finish |
 |---|---|
@@ -223,3 +223,11 @@ The runner now observes short rivals after every completed week, recording one p
 Matched CoverShortages samples completed 25 seasons / seed 2026 and ten seasons / seed 2027 with byte-identical prior gameplay hashes. They contain 230 and 63 episodes; none remain open at either endpoint. The longer run has 837 role-gap and 385 total-only observations. Its longest episode lasts 104 weeks, mostly as a total-only gap with outside-window restrictions. All role-gap observations in both samples fall under pending/cooldown priority. This narrows the next experiment to total-squad emergency eligibility and negotiation timing; it does not prove supply or affordability behind skipped gates. Population and economy acceptance remain unresolved.
 
 Upstream reviewed fixes are integrated for offers on the terminal administration deadline, retirement when lost-control annual processing did not age players, endurance initialization failures and post-renewal deadlines. The integration and diagnostics received separate independent review. All 196 Release tests and formatting checks passed. The fresh self-contained schema-18 package windows-ed57c0e4 passed headless and graphical three-season/rival/development/retirement probes with DOTNET_ROOT cleared and empty graphical stderr. Rival history at 150% was inspected; captures are in artifacts/rival-vacancy-career-screenshots. The portable archive FootballTycoon-rival-vacancy-windows.zip contains the executable, pack, 194 runtime files and three font licenses. Clean-machine and human-playtest gates remain open; the playable boundary is still three seasons.
+
+## Current unit: rival minimum-squad recruitment
+
+Schema 19 lets rivals below sixteen recruit depth outside windows without requiring an ability upgrade, bounded by their existing 2/6/6/4 working role targets. Missing roles retain priority. Finance, refusal, competition, cooldown and finite wage dates remain enforced at planning and resolution. Owner decisions remain explicit under the existing recommendation rules. Migration validates schema 18 and changes only version markers; retained offers and contracts are not rewritten. See [minimum-squad recruitment](RIVAL_MINIMUM_SQUAD.md).
+
+The matched 25-season / seed-2026 CoverShortages sample reduces rival shortage time 1,222→972 club-weeks (20.46%) and the longest episode 104→29 weeks. Total-only gaps fall 385→37, but role-gap observations increase 837→935. The ten-season / seed-2027 sample retains 191 rival shortage weeks. Population misses remain three and zero respectively; high accumulated club cash remains unresolved. These are two bounded policy samples, not a population/economy acceptance pass.
+
+All 208 Release tests, both format checks and the warnings-as-errors build passed. Independent review cleared source and tests after correcting an invalid test fixture. The schema-19 package windows-70951d7d passed headless and rendered three-season/rival/development/retirement checks with DOTNET_ROOT cleared and empty graphical stderr. Rival history at 150% was inspected in artifacts/minimum-squad-package-screenshots. FootballTycoon-minimum-squad-windows.zip contains 199 entries including runtime files and three font licenses. The three-season playable boundary and remaining clean-machine, durable-save and human-playtest gates are unchanged.
