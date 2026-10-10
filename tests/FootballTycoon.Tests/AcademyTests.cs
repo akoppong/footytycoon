@@ -162,7 +162,7 @@ public class AcademyTests
         legacy["SchemaVersion"] = 11; legacy["SimulationVersion"] = "people-history-11"; legacy.Remove("AcademyGraduates");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var loaded = WorldCodec.Decode(bytes);
-        Assert.Equal(original, bytes); Assert.Equal(18, loaded.SchemaVersion); Assert.Empty(loaded.AcademyGraduates);
+        Assert.Equal(original, bytes); Assert.Equal(19, loaded.SchemaVersion); Assert.Empty(loaded.AcademyGraduates);
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), loaded.Clubs.SelectMany(c => c.Players));
         Assert.Equal(world.Journal, loaded.Journal); Assert.Equal(world.RandomStates, loaded.RandomStates);
         Assert.Equal(WorldCodec.Encode(loaded), WorldCodec.Encode(WorldCodec.Clone(loaded)));

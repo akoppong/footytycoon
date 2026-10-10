@@ -185,8 +185,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 18;
-    public string SimulationVersion { get; set; } = "opening-population-18";
+    public int SchemaVersion { get; set; } = 19;
+    public string SimulationVersion { get; set; } = "rival-minimum-squad-19";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -368,6 +368,12 @@ public static class WorldCodec
             WorldFactory.Validate(world, priorOpeningPopulation: true);
             // Existing careers keep their opening people and terms; never backfill the new starting population.
             world.SchemaVersion = 18; world.SimulationVersion = "opening-population-18";
+        }
+        if (world.SchemaVersion == 18)
+        {
+            WorldFactory.Validate(world, priorMinimumSquad: true);
+            // Future need checks include total squad cover; preserve saved people, offers and signed terms.
+            world.SchemaVersion = 19; world.SimulationVersion = "rival-minimum-squad-19";
         }
         WorldFactory.Validate(world);
         return world;

@@ -5,9 +5,11 @@ public static class RivalRecruitment
 {
     private static int Target(Role role) => role switch { Role.Goalkeeper => 2, Role.Defender or Role.Midfielder => 6, _ => 4 };
     internal static bool Needs(World world, Club club, Player player, int approvalWeek) =>
-        FreeAgents.HasShortage(club, player.Role) || FreeAgents.WindowOpen(world, approvalWeek)
-        && club.Players.Count < 18 && club.Players.Count(p => p.Role == player.Role) < Target(player.Role)
-        && player.Ability > club.Players.Where(p => p.Role == player.Role).Min(p => p.Ability);
+        FreeAgents.HasShortage(club, player.Role)
+        || club.Players.Count(p => p.Role == player.Role) < Target(player.Role)
+        && (club.Players.Count < Contracts.MinimumSquad
+            || FreeAgents.WindowOpen(world, approvalWeek) && club.Players.Count < 18
+            && player.Ability > club.Players.Where(p => p.Role == player.Role).Min(p => p.Ability));
 
     internal static bool WageAllowed(World world, Club club, long wage) =>
         club.Cash >= world.ReserveTarget && !world.Arrears.Any(a => a.ClubId == club.Id)
