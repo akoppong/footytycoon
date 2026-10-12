@@ -4,7 +4,7 @@ Goal: a complete, compelling Football Tycoon game, from consequential ownership 
 
 ## Current evidence and next work
 
-The current packaged executable is artifacts/windows-70951d7d/FootballTycoon.exe (schema 19, rival minimum-squad depth recruitment with existing people and terms preserved). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
+The current packaged executable is artifacts/windows-9af7f414/FootballTycoon.exe (schema 20, rival and explicitly approved owner minimum-squad depth recruitment with existing people and terms preserved). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
 
 | Required area | Current state / evidence needed to finish |
 |---|---|
@@ -231,3 +231,11 @@ Schema 19 lets rivals below sixteen recruit depth outside windows without requir
 The matched 25-season / seed-2026 CoverShortages sample reduces rival shortage time 1,222→972 club-weeks (20.46%) and the longest episode 104→29 weeks. Total-only gaps fall 385→37, but role-gap observations increase 837→935. The ten-season / seed-2027 sample retains 191 rival shortage weeks. Population misses remain three and zero respectively; high accumulated club cash remains unresolved. These are two bounded policy samples, not a population/economy acceptance pass.
 
 All 208 Release tests, both format checks and the warnings-as-errors build passed. Independent review cleared source and tests after correcting an invalid test fixture. The schema-19 package windows-70951d7d passed headless and rendered three-season/rival/development/retirement checks with DOTNET_ROOT cleared and empty graphical stderr. Rival history at 150% was inspected in artifacts/minimum-squad-package-screenshots. FootballTycoon-minimum-squad-windows.zip contains 199 entries including runtime files and three font licenses. The three-season playable boundary and remaining clean-machine, durable-save and human-playtest gates are unchanged.
+
+## Current unit: owner minimum-squad recommendations
+
+Schema 20 extends emergency depth recommendations to the owner when fewer than sixteen players remain, even if each role minimum is met. The candidate must fit the emergency working mix, missing roles retain priority, and weaker depth is disclosed. Every approach still needs explicit approval and ordinary financial checks. Outside-window cover is rechecked at resolution; ordinary in-window upgrades retain their existing eligibility. The shared predicate preserves rival behavior. Migration validates schema 19 and changes only version markers, preserving pending mandates. See [owner minimum-squad recruitment](OWNER_MINIMUM_SQUAD.md).
+
+All 219 Release tests passed, including eleven new owner regressions. The warnings-as-errors build passed with zero warnings/errors; solution and desktop formatting checks passed after a whitespace-only smoke formatting correction. Independent source/test review found no actionable issues. The schema-20 package windows-9af7f414 passed headless and graphical owner-depth, three-season, rival, development and retirement checks with DOTNET_ROOT cleared, graphical exit zero and empty stderr. The owner flow exercised the actual approval UI, no payment at approval, pending-save reload and exact signed terms. Recommendation, proposal and contract captures were inspected at 150%, and outcome at 100%, under artifacts/owner-depth-package-screenshots. The package preceded only whitespace formatting in the smoke helper and test-comment cleanup; gameplay and smoke semantics match the final source.
+
+FootballTycoon-owner-minimum-squad-windows.zip contains 199 entries: the executable, pack, 194 runtime files and three font licenses. This is a development-PC validation, not a clean-machine or human-playtest pass. No new long-run balance measurement is claimed. Population, economy and longer-career acceptance remain open; the playable boundary is still three seasons.

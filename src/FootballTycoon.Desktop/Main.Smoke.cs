@@ -388,6 +388,70 @@ public partial class Main
                 }
                 GD.Print("SEASON SMOKE PASS: renewal UI, contract recommendations with an override and accept-all, annual plans, three season reports and final endpoint.");
             }
+            if (OS.GetCmdlineUserArgs().Contains("--owner-depth-smoke-test"))
+            {
+                // A separate controlled career: fifteen players, every role minimum met, outside a window.
+                var fixture = WorldFactory.Create(2026);
+                fixture.FreeAgents.Clear(); fixture.RetirementNotices.Clear(); fixture.Reviews.Clear();
+                foreach (var club in fixture.Clubs)
+                    club.Players = club.Players.Select(p => p with { Age = Math.Min(p.Age, 30) }).ToList();
+                foreach (var allocation in new[] { Allocation.Acquire, Allocation.PreserveReserve })
+                    Proposals.Commit(fixture, allocation.ToString(), fixture.Revision, Proposals.Preview(fixture, new(allocation), fixture.Revision));
+                while (fixture.Week < 3) Simulation.AdvanceWeek(fixture);
+                var owned = fixture.OwnedClub;
+                var retained = owned.Players.GroupBy(p => p.Role).SelectMany(g => g.Take(Contracts.Minimum.Single(m => m.Role == g.Key).Minimum)).ToList();
+                var removed = owned.Players.Except(retained).ToArray(); owned.Players = retained;
+                foreach (var player in removed)
+                {
+                    fixture.Obligations = fixture.Obligations.Select(o => o.Description == $"Player contract {player.ContractId.Value}" ? o with { EndWeek = fixture.Week } : o).ToList();
+                    fixture.FreeAgents.Add(new(player with
+                    {
+                        ContractEndWeek = fixture.Week,
+                        TrainingExposure = 0,
+                        Age = 25,
+                        Ability = 1,
+                        WeeklyWage = player == removed[0] ? 10000 : 1000000000
+                    }, owned.Id, fixture.Week));
+                }
+                Finance.Post(fixture, WorldFactory.Account(owned.Id), 1000000000 - owned.Cash, CashKind.Rescue, "Controlled depth probe funding");
+                while (RandomStreams.Next(WorldCodec.Clone(fixture), $"free-agent-negotiation/{fixture.History.Count + 1}", 100) >= 70) fixture.Seed++;
+                WorldFactory.Validate(fixture);
+                var vault = new FootballTycoon.Infrastructure.LocalSaveVault(saveDirectory);
+                var checkpoint = vault.Write(WorldCodec.Encode(fixture), Guid.NewGuid().ToString("N"), Guid.NewGuid().ToString("N"), null, "owner-depth-probe");
+                await session.LoadAsync(checkpoint.SnapshotId); view = await session.QueryAsync();
+                selected = null; confirming = false; chartExpanded = false; Navigate("People"); await Settled();
+                if (view.Squad.Length != 15 || view.FreeAgentRecommendation is not { Player.Ability: 1 })
+                    throw new InvalidOperationException("Missing outside-window emergency depth recommendation.");
+                foreach (var scale in new[] { 100, 150 })
+                {
+                    textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render(); await Settled();
+                    await CaptureSection("Director's free-agent recommendation", "Owner-depth-recommendation");
+                }
+                await Press("Review free-agent approach");
+                if (selected is not { Recruitment.IsFreeAgent: true } || !selected.BlockingReasons.IsEmpty
+                    || !selected.Uncertainty.Contains("depth without improving", StringComparison.Ordinal))
+                    throw new InvalidOperationException("Depth terms or weaker-starter disclosure are missing.");
+                var terms = selected.Recruitment;
+                foreach (var scale in new[] { 100, 150 })
+                {
+                    textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render(); await Capture("Owner-depth-proposal");
+                    await CaptureSection("DIRECTOR’S TARGET", "Owner-depth-contract");
+                }
+                textScale = 100; Theme.DefaultFontSize = 14; Render(); await Settled();
+                var cash = view.ClubCash;
+                await Press("Review final terms"); await Capture("Owner-depth-final-terms"); await Press("Confirm and commit");
+                if (view.ClubCash != cash || !view.FreeAgentApproachPending || view.Squad.Length != 15)
+                    throw new InvalidOperationException("Depth approval spent cash or signed before negotiation.");
+                Save(); await Settled(); ShowSaves(); await Settled(); await Press("Load this checkpoint");
+                if (!view.FreeAgentApproachPending) throw new InvalidOperationException("Saved depth mandate was lost.");
+                await session.AdvanceAsync(AdvanceTarget.Week); view = await session.QueryAsync();
+                var signed = view.Squad.SingleOrDefault(p => p.Id == terms.Player.Id);
+                if (view.Squad.Length != 16 || view.FreeAgentApproachPending || signed is null
+                    || signed.WeeklyWage != terms.WeeklyWage || signed.ContractEndWeek != terms.ContractEndWeek)
+                    throw new InvalidOperationException("Depth signing did not preserve the approved terms.");
+                Navigate("History"); await Capture("Owner-depth-outcome");
+                GD.Print("OWNER DEPTH SMOKE PASS: outside-window weaker depth, two text scales, explicit approval, no approval payment, pending-save reload and exact signed terms.");
+            }
             if (OS.GetCmdlineUserArgs().Contains("--retirement-smoke-test"))
             {
                 // Isolate two retiring keepers from the generated background market and veterans.

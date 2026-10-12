@@ -185,8 +185,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 19;
-    public string SimulationVersion { get; set; } = "rival-minimum-squad-19";
+    public int SchemaVersion { get; set; } = 20;
+    public string SimulationVersion { get; set; } = "owner-minimum-squad-20";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -374,6 +374,12 @@ public static class WorldCodec
             WorldFactory.Validate(world, priorMinimumSquad: true);
             // Future need checks include total squad cover; preserve saved people, offers and signed terms.
             world.SchemaVersion = 19; world.SimulationVersion = "rival-minimum-squad-19";
+        }
+        if (world.SchemaVersion == 19)
+        {
+            WorldFactory.Validate(world, priorOwnerCover: true);
+            // Expanded owner recommendations do not authorize spending or rewrite retained mandates.
+            world.SchemaVersion = 20; world.SimulationVersion = "owner-minimum-squad-20";
         }
         WorldFactory.Validate(world);
         return world;

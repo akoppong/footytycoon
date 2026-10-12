@@ -85,19 +85,20 @@ public class OwnerReplacementDiagnosticsTests
     }
 
     [Fact]
-    public void TotalSquadGapsDoNotBypassTheOrdinaryOutsideWindowRoleRule()
+    public void TotalSquadGapsUseTheOrdinaryOutsideWindowDepthRecommendation()
     {
         var world = Opening(false);
-        // Isolate a 15-person read-only snapshot with every role minimum met.
+        // Isolate a 15-person snapshot with every role minimum met.
         world.OwnedClub.Players = world.OwnedClub.Players.GroupBy(p => p.Role)
             .SelectMany(g => g.Take(Diagnostic.Contracts.Minimum.Single(m => m.Role == g.Key).Minimum)).ToList();
         world.Week = 3;
         Assert.Equal(15, world.OwnedClub.Players.Count);
         Assert.All(Enum.GetValues<Diagnostic.Role>(), r => Assert.False(Diagnostic.FreeAgents.HasShortage(world.OwnedClub, r)));
-        var before = Diagnostic.WorldCodec.Encode(world);
         var decision = Probe.DiagnosticOwnerRecruitment.TryApprove(world, Probe.OwnerRecruitmentMode.CoverShortages)!;
-        Assert.Equal("NoRecommendation", decision.Outcome);
-        Assert.Equal(before, Diagnostic.WorldCodec.Encode(world));
+        Assert.Equal("Approved", decision.Outcome);
+        Assert.False(world.History.Last().Command.ReserveException);
+        Assert.Single(world.FreeAgentBids);
+        Assert.Equal(15, world.OwnedClub.Players.Count);
     }
 
     [Fact]

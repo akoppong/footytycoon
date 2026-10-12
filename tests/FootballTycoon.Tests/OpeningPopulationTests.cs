@@ -71,7 +71,7 @@ public class OpeningPopulationTests
         var bytes = WorldCodec.Encode(world); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         var expected = JsonNode.Parse(bytes)!;
-        expected["SchemaVersion"] = 19; expected["SimulationVersion"] = "rival-minimum-squad-19";
+        expected["SchemaVersion"] = 20; expected["SimulationVersion"] = "owner-minimum-squad-20";
         Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(WorldCodec.Encode(migrated))));
         Assert.Equal(source, bytes); Assert.Empty(migrated.FreeAgents);
         Assert.Equal(864, migrated.Clubs.Sum(c => c.Players.Count));
