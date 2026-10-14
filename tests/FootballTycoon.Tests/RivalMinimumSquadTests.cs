@@ -110,7 +110,7 @@ public class RivalMinimumSquadTests
         var quote = Proposals.Preview(world, new(Allocation.InjectCapital) { Amount = 100 }, world.Revision);
         var bytes = WorldCodec.Encode(world); var original = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 20; expected["SimulationVersion"] = "owner-minimum-squad-20";
+        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 21; expected["SimulationVersion"] = "renewal-wage-basis-21";
         Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(WorldCodec.Encode(migrated)))); Assert.Equal(original, bytes);
         var before = WorldCodec.Encode(migrated);
         Assert.Throws<InvalidOperationException>(() => Proposals.Commit(migrated, "stale", migrated.Revision, quote));

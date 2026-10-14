@@ -1,5 +1,7 @@
 # Economy cashflow diagnostics
 
+This report preserves schema-20 measurements. Schema 21 subsequently changes [prospective renewal wage offers](RENEWAL_WAGE_BASIS.md); its matched comparison is documented separately.
+
 The schema-19 rival recruitment sample accumulated £2.213 billion across clubs after 25 seasons. A large cash balance alone cannot show whether broadcast receipts, matchday income, wage changes or missing investment policies drive the accumulation. The isolated endurance runner now records reconciled club cash movements before any economy tuning.
 
 ## Scope and interpretation
@@ -64,6 +66,6 @@ The 21 ten-season and 51 longer-run population samples each reconcile cumulative
 
 ## Validation
 
-Seven targeted regressions cover opening cash, sampling purity/determinism, gross transfer cancellation, signed category movements, owner/seller exclusion, separate arrears and future commitments, exact window boundaries, week-zero spending, and rejection of inconsistent cash or invalid journal entries. All 226 Release tests passed; the final warnings-as-errors build and solution formatting check passed. An earlier build overlapped active tests and encountered locked output files; rerunning after the tests completed passed with zero warnings/errors. Production code and the Windows executable are unchanged; the current reviewed playable package remains `windows-9af7f414`.
+Seven targeted regressions cover opening cash, sampling purity/determinism, gross transfer cancellation, signed category movements, owner/seller exclusion, separate arrears and future commitments, exact window boundaries, week-zero spending, and rejection of inconsistent cash or invalid journal entries. All 226 Release tests passed; the final warnings-as-errors build and solution formatting check passed. An earlier build overlapped active tests and encountered locked output files; rerunning after the tests completed passed with zero warnings/errors. This diagnostic-only unit left production code and the Windows executable unchanged; its reviewed playable package was `windows-9af7f414`.
 
 Population and economy tuning, the hundred varied fifty-season runs, durable-save endurance, clean-machine execution and human playtesting remain open. A completed run or reconciled cash bridge is not an acceptance pass.

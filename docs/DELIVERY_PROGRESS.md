@@ -4,7 +4,7 @@ Goal: a complete, compelling Football Tycoon game, from consequential ownership 
 
 ## Current evidence and next work
 
-The current packaged executable is artifacts/windows-9af7f414/FootballTycoon.exe (schema 20, rival and explicitly approved owner minimum-squad depth recruitment with existing people and terms preserved). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
+The current packaged executable is artifacts/windows-cc30d158/FootballTycoon.exe (schema 21, prospective renewal wage reassessment with existing signed terms preserved). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
 
 | Required area | Current state / evidence needed to finish |
 |---|---|
@@ -247,3 +247,11 @@ The isolated runner now reconciles original and current club cash against cumula
 Ten seasons / seed 2027 preserve all 215 prior events, all non-timing summary fields and the exact final gameplay hash/bytes relative to the preceding schema-20 runner. Cash grows £72.8m to £777.23m. A separate 25-season / seed-2026 sample ends at £2.213bn, with annual wages falling £82.74m to £31.53m and £111.21m cash growth in its final year. Neither run has club injections or rescue receipts. These disclosed policies have limited investment/trading behavior; cash accumulation is not a profitability or economy acceptance result. The longer sample still has three out-of-range population weeks.
 
 All 226 Release tests passed, including seven new cash-accounting regressions; solution formatting and the final warnings-as-errors build passed. Both runs completed weekly identity and annual exact-codec checks; all 72 population samples reconcile per-club and aggregate cumulative/window cash. Production core, schema 20 and Windows package windows-9af7f414 remain unchanged, so no new desktop export is required. Next, investigate wage-payment decline by squad composition and contract path while retaining exact signed commitments. Full-game, clean-machine and human-playtest gates remain open.
+
+## Current unit: prospective renewal wage basis
+
+A read-only cohort trace reproduces the schema-20 baseline and finds 82 academy players aged at least 25 who meet their division ability standard but earn less than half its wage reference. Schema 21 extends the existing halfway-to-division-reference pricing basis to every renewal offer, followed by the unchanged standing/age adjustments. Signed wages are never rewritten early; affordability holds, explicit owner confirmation and exact quoted obligations remain. Migration validates schema 20 then changes only version markers. See [renewal wage basis](RENEWAL_WAGE_BASIS.md).
+
+The matched 25-season / seed-2026 sample raises final-year wage payments £31.53m to £56.68m and reduces accumulated club cash by £191.75m, to £2.021bn. The ten-season / seed-2027 sample instead increases cash by £3.92m. The rule moves high pay down as well as low pay up; it is not a blanket economy improvement claim. Non-wage cumulative cash categories agree exactly within each pair, and recorded population/shortage counters remain unchanged. Three out-of-target population weeks persist in the longer run, and economy acceptance remains open.
+
+All 235 Release tests, both format checks and the warnings-as-errors build passed. Source, tests and the cohort method received independent review with no actionable findings. The schema-21 package windows-cc30d158 passed headless and rendered three-season, owner-depth, rival, development and retirement checks with DOTNET_ROOT cleared, graphical exit zero and empty stderr. Season-two contract rows at 150% and season-three final terms at 100% were inspected under artifacts/renewal-basis-package-screenshots. FootballTycoon-renewal-basis-windows.zip includes 199 entries with all runtime files and font licenses. This remains development-PC validation; clean-machine, durable-save endurance and human-playtest gates remain open.

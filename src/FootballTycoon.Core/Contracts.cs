@@ -21,7 +21,7 @@ public static class Contracts
     }
     // Midpoint of generated ability in a division (75 - 8d plus 0 to 19); the director judges players against next season's division.
     public static int Par(int division) => 84 - 8 * division;
-    // Opening squad wage in a division; the reference for renewals after promotion or relegation.
+    // Division wage reference for every new renewal offer; existing signed wages are unchanged.
     public static long StandardWage(int division) => Money.Scale(170000, Pyramid.Factor(division));
 
     private static bool Candidate(Player p, int par) => p.Age >= 31 && p.Ability < par + 5 || p.Ability < par - 5;
@@ -61,8 +61,8 @@ public static class Contracts
     private static ImmutableArray<ContractReview> Recommend(World world, Club club, int next, bool holdRaises)
     {
         var par = Par(next);
-        // After promotion or relegation, new deals start halfway between the current wage and the next division's standard wage.
-        long Basis(Player p) => next == club.Division ? p.WeeklyWage : (p.WeeklyWage + StandardWage(next)) / 2;
+        // Reassess new terms even without a tier move, so academy wages do not remain their lifelong pay basis.
+        long Basis(Player p) => checked(p.WeeklyWage + StandardWage(next)) / 2;
         var expiring = club.Players.Where(p => p.ContractEndWeek <= world.Week).ToArray();
         var retiring = expiring.Where(p => RetirementLifecycle.Due(world, p.Id)).Select(p => p.Id).ToHashSet();
         var counts = Minimum.ToDictionary(m => m.Role, m => club.Players.Count(p => p.Role == m.Role && !retiring.Contains(p.Id)));
