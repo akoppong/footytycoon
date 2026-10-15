@@ -244,7 +244,7 @@ public partial class Main
         box.AddChild(Caption(selected is null ? $"{Calendar.SeasonName(view.Season)} · {Calendar.Day(view.Week).ToUpperInvariant()}" : "NOT YET COMMITTED"));
         if (selected is { } railProposal)
         {
-            var action = Button(confirming ? "Confirm and commit" : "Review final terms", () => { if (confirming) CommitSelected(); else { confirming = true; Render(); } });
+            var action = Button(confirming ? CommitLabel : "Review final terms", () => { if (confirming) CommitSelected(); else { confirming = true; Render(); } });
             Primary(action); box.AddChild(action);
             if (!railProposal.BlockingReasons.IsEmpty) Unavailable(action, string.Join("\n", railProposal.BlockingReasons));
             box.AddChild(Button(confirming ? "Keep editing" : "Back to comparison", () => { if (confirming) confirming = false; else selected = null; Render(); }));
@@ -260,7 +260,7 @@ public partial class Main
         {
             Fact(box, proposal.Command.Allocation == Allocation.Acquire ? "Personal payment to seller" : proposal.Command.Allocation == Allocation.InjectCapital ? "Personal transfer to club" : "Upfront / fee ceiling",
                 Money.Format(proposal.Command.Allocation == Allocation.Acquire ? proposal.TotalCommitment : proposal.Command.Allocation == Allocation.InjectCapital ? proposal.Command.Amount : proposal.UpfrontCash));
-            if (proposal.Command.Allocation != Allocation.Acquire && proposal.Renewal is null) Fact(box, "Continuing cost", Money.Format(proposal.WeeklyCost) + "/week");
+            if (proposal.Command.Allocation is not (Allocation.Acquire or Allocation.Counteroffer) && proposal.Renewal is null) Fact(box, "Continuing cost", Money.Format(proposal.WeeklyCost) + "/week");
             foreach (var reason in proposal.BlockingReasons) box.AddChild(Label("BLOCKED · " + reason, 12));
         }
         else
@@ -334,21 +334,48 @@ public partial class Main
         if (view.Reviews.LastOrDefault() is { } review) ReviewCard(review);
         if (view.Results.LastOrDefault() is { } latest) MatchCard(latest);
     }
+    private long? counterofferDraft;
+    private string CommitLabel => selected?.Command.Allocation == Allocation.Counteroffer ? "Send counteroffer" : "Confirm and commit";
+
     private void Acquisition()
     {
         var card = Card(); card.AddChild(Caption("NEW CAREER · ACQUISITION"));
         card.AddChild(Label("A club worth building.", 38)); card.AddChild(Label("Stonebridge Football Club", 28));
         card.AddChild(Label("An established local club with a competitive squad and limited hospitality. Supporters value continuity. Decide what deserves capital while Mara Ellis keeps the bills covered."));
         var metrics = new GridContainer { Columns = 2 }; card.AddChild(metrics);
-        Metric(metrics, "ASKING PRICE · PERSONAL CASH", Money.Format(Balance.Load().PurchasePrice), emphasis: true);
+        Metric(metrics, "ASKING PRICE · PERSONAL CASH", Money.Format(view.AcquisitionAskingPrice), emphasis: true);
         Metric(metrics, "CLUB CASH AT TAKEOVER", Money.Format(view.ClubCash), emphasis: true);
-        Metric(metrics, "YOUR RESERVE AFTER PURCHASE", Money.Format(view.PersonalReserve - Balance.Load().PurchasePrice));
+        Metric(metrics, "YOUR RESERVE AFTER PURCHASE", Money.Format(view.PersonalReserve - view.AcquisitionPrice));
         Metric(metrics, "ANNUAL SQUAD WAGES", Money.Format(view.AnnualWages));
         card.AddChild(Caption("OBLIGATIONS YOU INHERIT"));
         foreach (var obligation in view.Obligations.GroupBy(o => o.Kind))
             Fact(card, obligation.Key.ToString(), Money.Format(obligation.Sum(o => o.WeeklyAmount)) + "/week · signed net");
         card.AddChild(Label("The purchase pays the seller. The club receives no new cash. No opening debt; ownership authority covers capital and priorities, while staff run football operations.", 13));
+        if (view.AcquisitionOffer is { } offer)
+        {
+            card.AddChild(Caption("SELLER RESPONSE"));
+            card.AddChild(Label(FootballTycoon.Core.Acquisition.Response(offer), 16));
+            Fact(card, "Purchase price available", Money.Format(view.AcquisitionPrice));
+        }
         var buy = Button("Review acquisition terms →", () => Preview(Allocation.Acquire)); Primary(buy); card.AddChild(buy);
+        if (view.AcquisitionOffer is null)
+        {
+            var negotiation = Card(); negotiation.AddChild(Label("Make one lower offer", 24));
+            negotiation.AddChild(Label("Name an equity price from your personal money. The seller may reject it; the asking price will remain available. Sending an offer does not buy the club.", 14));
+            negotiation.AddChild(Caption("YOUR OFFER · POUNDS"));
+            var amount = new SpinBox
+            {
+                MinValue = 1,
+                MaxValue = Math.Min(view.PersonalReserve / 100, view.AcquisitionAskingPrice / 100 - 1),
+                Step = 1,
+                Value = (counterofferDraft ?? view.AcquisitionAskingPrice * 90 / 100) / 100,
+                Prefix = "£",
+                CustomMinimumSize = new Vector2(220, 44)
+            };
+            amount.ValueChanged += value => counterofferDraft = checked((long)value * 100);
+            negotiation.AddChild(amount);
+            negotiation.AddChild(Button("Review counteroffer →", () => { amount.Apply(); Preview(Allocation.Counteroffer, checked((long)amount.Value * 100)); }));
+        }
     }
     private void RecruitmentHistory(VBoxContainer card, DecisionRecord decision)
     {
@@ -444,6 +471,13 @@ public partial class Main
             Fact(card, "Personal reserve after purchase", Money.Format(view.PersonalReserve - proposal.TotalCommitment));
             Fact(card, "Club cash after purchase", Money.Format(view.ClubCash));
         }
+        else if (proposal.Command.Allocation == Allocation.Counteroffer)
+        {
+            Fact(card, "Offered equity price · subject to acceptance", Money.Format(proposal.Command.Amount));
+            Fact(card, "Personal payment now", Money.Format(0));
+            Fact(card, "Club cash · unchanged", Money.Format(view.ClubCash));
+            card.AddChild(Label("This uses your one counteroffer. Review the response, then confirm a separate purchase if you want to proceed.", 16));
+        }
         else if (proposal.Command.Allocation == Allocation.InjectCapital)
         {
             Fact(card, "Transfer from personal money to club", Money.Format(proposal.Command.Amount));
@@ -493,7 +527,7 @@ public partial class Main
         if (!proposal.Command.ReserveException && proposal.BlockingReasons.Any(r => r.Contains("reserve exception", StringComparison.OrdinalIgnoreCase)))
             card.AddChild(Button("Review explicit reserve exception", () => { confirming = false; Preview(proposal.Command.Allocation, proposal.Command.Amount, true); }));
         if (proposal.Command.ReserveException) card.AddChild(Label("EXPLICIT EXCEPTION · You are accepting forecast cash below the advised reserve target.", 14));
-        var confirm = Button(confirming ? "Confirm and commit" : "Review final terms →", () => { if (confirming) CommitSelected(); else { confirming = true; Render(); } });
+        var confirm = Button(confirming ? CommitLabel : "Review final terms →", () => { if (confirming) CommitSelected(); else { confirming = true; Render(); } });
         Primary(confirm); card.AddChild(confirm); if (!proposal.BlockingReasons.IsEmpty) Unavailable(confirm, string.Join("\n", proposal.BlockingReasons));
         card.AddChild(Button(confirming ? "Keep editing" : "Back to comparison", () => { if (confirming) confirming = false; else selected = null; Render(); }));
     }

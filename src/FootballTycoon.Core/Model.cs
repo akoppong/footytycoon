@@ -21,7 +21,7 @@ public static class Money
 
 public enum CareerStatus { Acquisition, Active, Administration, LostControl, PrototypeComplete, SeasonReview }
 public enum Phase { Decisions, Payments, Negotiation, Matches, Development, Reporting }
-public enum Allocation { Acquire, PreserveReserve, Hospitality, Recruitment, InjectCapital, StartNextSeason, MidseasonRecruitment, MidseasonValue, MidseasonWait, Training, FreeAgentRecruitment }
+public enum Allocation { Acquire, PreserveReserve, Hospitality, Recruitment, InjectCapital, StartNextSeason, MidseasonRecruitment, MidseasonValue, MidseasonWait, Training, FreeAgentRecruitment, Counteroffer }
 public enum FacilityKind { Hospitality, Training }
 public enum AdvanceTarget { Week, Month, NextDecision }
 public enum Role { Goalkeeper, Defender, Midfielder, Forward }
@@ -185,8 +185,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 21;
-    public string SimulationVersion { get; set; } = "renewal-wage-basis-21";
+    public int SchemaVersion { get; set; } = 22;
+    public string SimulationVersion { get; set; } = "acquisition-counteroffer-22";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -212,6 +212,8 @@ public sealed class World
     public long OwnerCash { get; set; }
     public long OpeningOwnerCash { get; set; }
     public long OwnerInvested { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public AcquisitionCounteroffer? AcquisitionOffer { get; set; }
     public long ReserveTarget { get; set; }
     public int? AdministrationWeek { get; set; }
     public bool AllocationChosen { get; set; }
@@ -386,6 +388,12 @@ public static class WorldCodec
             WorldFactory.Validate(world, priorRenewalWages: true);
             // Only future renewal offers change; all signed terms, history and approved mandates remain intact.
             world.SchemaVersion = 21; world.SimulationVersion = "renewal-wage-basis-21";
+        }
+        if (world.SchemaVersion == 21)
+        {
+            WorldFactory.Validate(world, priorAcquisition: true);
+            // No past bargaining is invented and completed purchases retain their original price.
+            world.SchemaVersion = 22; world.SimulationVersion = "acquisition-counteroffer-22";
         }
         WorldFactory.Validate(world);
         return world;

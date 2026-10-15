@@ -221,7 +221,7 @@ public sealed class MatchRealismTests : IDisposable
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(21, migrated.SchemaVersion); Assert.Equal("renewal-wage-basis-21", migrated.SimulationVersion);
+        Assert.Equal(22, migrated.SchemaVersion); Assert.Equal("acquisition-counteroffer-22", migrated.SimulationVersion);
         Assert.Equal(world.Results.Select(r => (r.FixtureId, r.HomeGoals, r.AwayGoals)), migrated.Results.Select(r => (r.FixtureId, r.HomeGoals, r.AwayGoals)));
         Assert.All(migrated.Results, r =>
         {

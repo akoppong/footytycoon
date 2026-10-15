@@ -4,11 +4,11 @@ Goal: a complete, compelling Football Tycoon game, from consequential ownership 
 
 ## Current evidence and next work
 
-The current packaged executable is artifacts/windows-cc30d158/FootballTycoon.exe (schema 21, prospective renewal wage reassessment with existing signed terms preserved). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
+The current packaged executable is artifacts/windows-6bff0971/FootballTycoon.exe (schema 22, one acquisition counteroffer with a saved response and separate purchase confirmation). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
 
 | Required area | Current state / evidence needed to finish |
 |---|---|
-| Ownership and finance | Acquisition, forecasts, journal and finite injections exist. Complete scenario selection, loan/refinance policies, distributions, covenants and accountable exit reconciliation. |
+| Ownership and finance | Acquisition with one counteroffer, forecasts, journal and finite injections exist. Complete scenario selection, loan/refinance policies, distributions, covenants and accountable exit reconciliation. |
 | Competition | League, yearly rollover, tier movement and domestic cup are implemented. Complete career records, meaningful run-in presentation and long-career endurance. |
 | Delegated football | Opening search, midseason shortlists and constrained rival free-agent replacement offers exist. Complete general transfer trading and broader rival strategy, contract negotiation, protected-player sale decisions and wage transition/embargo policy. |
 | People and attachment | Named squads, availability, annual aging/development reports, baseline academy intake, free-agent approaches, uncontracted and contracted retirement, and fixed leaders exist in source. Complete staff hiring/mandates/succession, fatigue and rotation, staff development effects, academy investment/pipeline progression and broader historical callbacks. |
@@ -255,3 +255,15 @@ A read-only cohort trace reproduces the schema-20 baseline and finds 82 academy 
 The matched 25-season / seed-2026 sample raises final-year wage payments £31.53m to £56.68m and reduces accumulated club cash by £191.75m, to £2.021bn. The ten-season / seed-2027 sample instead increases cash by £3.92m. The rule moves high pay down as well as low pay up; it is not a blanket economy improvement claim. Non-wage cumulative cash categories agree exactly within each pair, and recorded population/shortage counters remain unchanged. Three out-of-target population weeks persist in the longer run, and economy acceptance remains open.
 
 All 235 Release tests, both format checks and the warnings-as-errors build passed. Source, tests and the cohort method received independent review with no actionable findings. The schema-21 package windows-cc30d158 passed headless and rendered three-season, owner-depth, rival, development and retirement checks with DOTNET_ROOT cleared, graphical exit zero and empty stderr. Season-two contract rows at 150% and season-three final terms at 100% were inspected under artifacts/renewal-basis-package-screenshots. FootballTycoon-renewal-basis-windows.zip includes 199 entries with all runtime files and font licenses. This remains development-PC validation; clean-machine, durable-save endurance and human-playtest gates remain open.
+
+## One acquisition counteroffer
+
+The opening opportunity now supports one lower equity offer and a saved seller response, followed by a separate confirmed purchase. Rejection keeps the asking price available. Submission moves no money and transfers no control; purchase posts the exact agreed price from owner to seller without funding the club. Schema 22 validates and migrates schema 21 without rewriting completed purchases or inventing negotiation history. See [acquisition negotiation](ACQUISITION.md).
+
+All 250 Release tests pass, including 15 acquisition cases. The warnings-as-errors build and both format checks pass. Initial sandbox formatting failed because the build host could not access its pipe; the completed checks ran outside that restriction. Independent review found and resolved a smoke probe calling the wrong keyboard handler. The corrected probe calls the actual handler with focused price entry and waits for asynchronous work; it also reproduces text-change signals before checking the exact quoted amount. A typed-price capture shows the opening brief rather than the field; the subsequent offer-terms screenshots and exact amount assertion provide that evidence.
+
+Package `windows-6bff0971` passed headless execution and the rendered acquisition, three-season, development, rival recruitment, owner-depth and retirement flows with `DOTNET_ROOT` cleared. The graphical process exited zero with empty stderr. Entry, offer, seller-response and purchase screens were inspected at 150%, and the probe captures both 100% and 150% layouts under `artifacts/acquisition-verified-screenshots`. The amount field uses readable colors and focused text entry does not trigger a rebound continue shortcut. `FootballTycoon-acquisition-windows.zip` contains 199 entries, including the runtime and font licenses (79,055,685 bytes).
+
+Evidence logs: `artifacts/acquisition-tests-final.log`, `acquisition-build-final.log`, `acquisition-format-final.log`, `acquisition-desktop-format-final.log`, `acquisition-export-verified.log`, and `acquisition-graphical-verified.log`. This is development-PC validation of the existing opportunity; six authored scenarios, difficulty settings, debt, broader ownership systems, clean-machine acceptance and human playtests remain open.
+
+Final independent review covered the code, tests, desktop probe, documentation, package contents and validation evidence; no actionable concerns remain within this unit.

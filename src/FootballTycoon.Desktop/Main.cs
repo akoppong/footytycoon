@@ -326,7 +326,7 @@ public partial class Main : Control
         }
         if (key.CtrlPressed && key.Keycode == Key.S) { Save(); GetViewport().SetInputAsHandled(); }
         else if (key.Keycode == Key.Escape) { if (confirming) confirming = false; else selected = null; auxiliary = ""; Render(); GetViewport().SetInputAsHandled(); }
-        else if (key.Keycode == advanceKey && auxiliary == "" && view is not null && !key.CtrlPressed && !key.AltPressed && GetViewport().GuiGetFocusOwner() is not Godot.Button)
+        else if (key.Keycode == advanceKey && auxiliary == "" && view is not null && !key.CtrlPressed && !key.AltPressed && GetViewport().GuiGetFocusOwner() is not (Godot.Button or LineEdit or TextEdit))
         { ContinueCareer(); GetViewport().SetInputAsHandled(); }
     }
     public override void _Notification(int what)

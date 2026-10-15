@@ -91,7 +91,7 @@ public class RenewalWageBasisTests
         world.SchemaVersion = 20; world.SimulationVersion = "owner-minimum-squad-20";
         var quote = Proposals.Preview(world, new(Allocation.InjectCapital) { Amount = 100 }, world.Revision);
         var bytes = WorldCodec.Encode(world); var original = bytes.ToArray(); var migrated = WorldCodec.Decode(bytes);
-        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 21; expected["SimulationVersion"] = "renewal-wage-basis-21";
+        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 22; expected["SimulationVersion"] = "acquisition-counteroffer-22";
         Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(WorldCodec.Encode(migrated)))); Assert.Equal(original, bytes);
         Assert.Single(migrated.FreeAgentBids);
         Assert.Throws<InvalidOperationException>(() => Proposals.Commit(migrated, "stale", migrated.Revision, quote));

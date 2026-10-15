@@ -1,6 +1,6 @@
 # Player lifecycle and longer-career validation
 
-Status: lifecycle implemented in schema-21 source; longer-career validation remains open. The academy, departure archive, prospective free-agent pool, owner-approved approaches and uncontracted retirement are implemented; see [FREE_AGENTS.md](FREE_AGENTS.md). Rivals now make [budgeted free-agent replacement offers](RIVAL_RECRUITMENT.md). [Contracted-player retirement](CONTRACT_RETIREMENT.md) now preserves signed terms and allows unavoidable shortages. General transfer trading and the population gates below remain planned. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
+Status: lifecycle implemented; current source uses schema 22; longer-career validation remains open. The academy, departure archive, prospective free-agent pool, owner-approved approaches and uncontracted retirement are implemented; see [FREE_AGENTS.md](FREE_AGENTS.md). Rivals now make [budgeted free-agent replacement offers](RIVAL_RECRUITMENT.md). [Contracted-player retirement](CONTRACT_RETIREMENT.md) now preserves signed terms and allows unavoidable shortages. General transfer trading and the population gates below remain planned. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
 
 ## Current constraint
 

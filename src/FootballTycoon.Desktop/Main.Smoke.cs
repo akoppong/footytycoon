@@ -56,6 +56,65 @@ public partial class Main
                     list.ScrollVertical = 0;
                 }
             }
+            if (OS.GetCmdlineUserArgs().Contains("--acquisition-smoke-test"))
+            {
+                var opening = await session.SaveAsync("Before acquisition probe");
+                foreach (var percent in new[] { 99, 84 })
+                {
+                    await session.LoadAsync(opening.SnapshotId); view = await session.QueryAsync();
+                    var cash = view.ClubCash; var personal = view.PersonalReserve;
+                    var offered = view.AcquisitionAskingPrice * percent / 100;
+                    counterofferDraft = null;
+                    foreach (var scale in new[] { 100, 150 })
+                    {
+                        textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render();
+                        await CaptureSection("Make one lower offer", $"Counteroffer-{percent}-input");
+                    }
+                    // Enter text without submitting it: Review must apply the displayed amount.
+                    var input = Descendants(content).OfType<SpinBox>().Single().GetLineEdit();
+                    input.GrabFocus(); await Settled();
+                    input.Text = (offered / 100).ToString();
+                    input.EmitSignal(LineEdit.SignalName.TextChanged, input.Text);
+                    if (GetViewport().GuiGetFocusOwner() != input) throw new InvalidOperationException("Price entry did not receive keyboard focus.");
+                    var previousKey = advanceKey; advanceKey = Key.Key2;
+                    _Input(new InputEventKey { Keycode = Key.Key2, Pressed = true });
+                    await Settled();
+                    advanceKey = previousKey;
+                    if (selected is not null) throw new InvalidOperationException("Advance shortcut interrupted price entry.");
+                    await Capture($"Counteroffer-{percent}-typed-price");
+                    await Press("Review counteroffer →"); await Press("Review final terms");
+                    if (selected!.Command.Amount != offered) throw new InvalidOperationException("Review did not apply the entered offer.");
+                    await Capture($"Counteroffer-{percent}-terms");
+                    if (view.AcquisitionOffer is not null || view.PersonalReserve != personal)
+                        throw new InvalidOperationException("Preview consumed the offer or personal money.");
+                    await Press("Send counteroffer");
+                    var response = view.AcquisitionOffer;
+                    if (response is null || response.Accepted != (percent == 99) || response.Amount != offered
+                        || view.Status != CareerStatus.Acquisition || view.PersonalReserve != personal || view.ClubCash != cash)
+                        throw new InvalidOperationException("Seller response changed cash/control or lost the offered terms.");
+                    foreach (var scale in new[] { 100, 150 })
+                    {
+                        textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render();
+                        await CaptureSection("SELLER RESPONSE", $"Counteroffer-{percent}-response");
+                    }
+                    var saved = await session.SaveAsync("Saved seller response");
+                    await session.LoadAsync(saved.SnapshotId); view = await session.QueryAsync(); Render();
+                    if (view.AcquisitionOffer != response || controls.Any(b => GodotObject.IsInstanceValid(b)
+                        && b.IsInsideTree() && !b.IsQueuedForDeletion() && b.Text == "Review counteroffer →"))
+                        throw new InvalidOperationException("Reload reset the acquisition attempt.");
+                    await Press("Review acquisition terms →"); await Press("Review final terms");
+                    await Capture($"Counteroffer-{percent}-purchase");
+                    var price = percent == 99 ? offered : view.AcquisitionAskingPrice;
+                    if (selected!.TotalCommitment != price) throw new InvalidOperationException("Wrong final purchase price.");
+                    await Press("Confirm and commit");
+                    if (view.Status != CareerStatus.Active || view.PersonalReserve != personal - price
+                        || view.OwnerInvested != price || view.ClubCash != cash)
+                        throw new InvalidOperationException("Purchase payment did not match its confirmed terms.");
+                }
+                await session.LoadAsync(opening.SnapshotId); view = await session.QueryAsync();
+                counterofferDraft = null; selected = null; confirming = false;
+                GD.Print("ACQUISITION SMOKE PASS · accepted/rejected responses, no payment on offer, saved response and separate confirmed purchase");
+            }
             foreach (var scale in new[] { 100, 125, 150 })
             {
                 textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render(); await Capture("Acquisition");
