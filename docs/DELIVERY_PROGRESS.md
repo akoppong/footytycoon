@@ -267,3 +267,9 @@ Package `windows-6bff0971` passed headless execution and the rendered acquisitio
 Evidence logs: `artifacts/acquisition-tests-final.log`, `acquisition-build-final.log`, `acquisition-format-final.log`, `acquisition-desktop-format-final.log`, `acquisition-export-verified.log`, and `acquisition-graphical-verified.log`. This is development-PC validation of the existing opportunity; six authored scenarios, difficulty settings, debt, broader ownership systems, clean-machine acceptance and human playtests remain open.
 
 Final independent review covered the code, tests, desktop probe, documentation, package contents and validation evidence; no actionable concerns remain within this unit.
+
+## Completed fifty-season pilot
+
+The preserved schema-21 runner completed seed 2028 for 50 seasons, using Training in the first year, then PreserveReserve, with ordinary affordable shortage-replacement approvals. Weekly identity and 50 annual exact codec checks completed. The [pilot report](FIFTY_SEASON_PILOT.md) records provenance, policy, full limitations and the raw evidence paths.
+
+The active population ranges 1,077–1,225, with two out-of-target season-close weeks. The owner is short for 12 weeks; rivals accumulate 1,609 shortage club-weeks, and the longest rival episode is 25 weeks. Final aggregate club cash is £4,098,804,292 and the uncompressed in-memory checkpoint is 416,739,256 bytes. Every cumulative and trailing-window cash bridge reconciles across 101 samples and 4,949 club-plus-aggregate reports. This sample fails the population gate and leaves economy and capacity work open. It is not evidence of 50-season durable saves, controlled performance, broad balance or schema-22 endurance; the full-game goal remains unfinished.
