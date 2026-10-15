@@ -96,6 +96,7 @@ public class EnduranceTests
             createWorld: _ => throw new InvalidDataException("bad opening world"));
         Assert.Equal("Failed", result.Outcome); Assert.Contains("bad opening world", result.Detail);
         Assert.Equal(0, result.Week); Assert.Null(result.GameplaySha256);
+        Assert.Null(result.CheckpointCapacity);
         Assert.Contains("\"Kind\":\"failure\"", metrics.ToString());
     }
 
@@ -117,6 +118,9 @@ public class EnduranceTests
         var result = Probe.EnduranceRun.Execute(new(4, 2026, Diagnostic.Allocation.PreserveReserve, TimeSpan.FromMinutes(10)), metrics, new StringWriter());
         Assert.Equal("Completed", result.Outcome); Assert.Equal(4, result.CompletedSeasons); Assert.Equal(208, result.Week);
         Assert.True(result.CheckpointBytes > 0); Assert.Equal(64, result.GameplaySha256!.Length);
+        Assert.NotNull(result.CheckpointCapacity);
+        Assert.Equal(result.CheckpointBytes, result.CheckpointCapacity.TotalBytes);
+        Assert.Equal(result.CheckpointBytes, result.CheckpointCapacity.EnvelopeBytes + result.CheckpointCapacity.Sections.Sum(s => s.ValueBytes));
         Assert.Equal(0, result.WeeksOutsidePopulationTarget); // This four-year seed remains in range; longer probes still count every breach.
         Assert.Equal(result.ClubWeeksBelowCover, result.OwnedWeeksBelowCover + result.RivalClubWeeksBelowCover);
         Assert.Equal(new Probe.OwnerRecruitmentCounts(0, 0, 0), result.OwnerRecruitment);
