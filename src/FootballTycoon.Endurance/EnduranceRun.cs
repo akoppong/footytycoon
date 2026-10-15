@@ -30,6 +30,7 @@ public sealed record RunResult(string Outcome, string Detail, RunOptions Options
     OwnerRecruitmentCounts OwnerRecruitment)
 {
     public RivalVacancyReport RivalVacancies { get; init; } = new(0, 0, 0, [], []);
+    public CheckpointCapacityReport? CheckpointCapacity { get; init; }
 }
 
 public static class EnduranceRun
@@ -155,7 +156,7 @@ public static class EnduranceRun
         return new(outcome, detail, options, completed, world.Week, minimum, maximum, outside, shortWeeks,
             timer.Elapsed.TotalSeconds, maximumWeek, checkpoint.LongLength, Convert.ToHexString(SHA256.HashData(checkpoint)), DiagnosticTimings.Snapshot(),
             ownedShortWeeks, rivalShortWeeks, new(approved, blocked, noRecommendation))
-        { RivalVacancies = vacancies.Report() };
+        { RivalVacancies = vacancies.Report(), CheckpointCapacity = CheckpointDiagnostics.Measure(checkpoint) };
     }
 
     public static (int Owned, int Rivals) CountShortClubs(World world)
