@@ -1,5 +1,7 @@
 # Long-career diagnostic runner
 
+The completed [50-season renewal-policy pilot](FIFTY_SEASON_PILOT.md) records the preserved schema-21 runner, owner policy, population/coverage results, reconciled cashflows and capacity limits. It is one sample with failed population targets, not an acceptance pass or an extension of playable careers.
+
 The separate `FootballTycoon.Endurance` executable compiles the actual core source with a diagnostic 50-season boundary. The desktop and ordinary headless runner still use the three-season core. No production save format or playable career limit changes. Opening contracts remain one to three years in both assemblies, independently of the validation horizon. Tests compare opening bytes and weekly gameplay between the builds; the ordinary reader rejects worlds beyond its supported boundary.
 
 This runner measures the current policy before changing balance. It does not reset seasons, inject cash, invent people, forgive debts, prune history or bypass proposal checks. Only the diagnostic assembly defines `ENDURANCE`. It does not reference the desktop, application or save vault, and does not produce loadable save files.

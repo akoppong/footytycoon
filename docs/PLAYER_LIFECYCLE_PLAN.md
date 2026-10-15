@@ -41,6 +41,8 @@ Retirement must retain the person's name, club history, academy origin and final
 
 The [isolated endurance runner](ENDURANCE.md) now provides per-club population and finance evidence beyond three seasons using the actual core. The playable limit is unchanged. A completed diagnostic sample does not satisfy the 100-world acceptance gate below.
 
+One [50-season schema-21 pilot](FIFTY_SEASON_PILOT.md) now completes weekly identity checks and annual exact codec round trips. It still has two season-close population breaches, 12 owner shortage weeks and 1,609 rival shortage club-weeks, so the population/coverage work remains open. The final uncompressed checkpoint is about 417 MB; durable-save capacity is not validated by that in-memory round trip.
+
 [Weekly rival vacancy evidence](RIVAL_VACANCY_DIAGNOSTICS.md) now separates short pending negotiations from persistent shortage episodes. The matched longer run includes a 104-week episode, mostly a total-only gap, despite full cover at the final census. The [minimum-squad recruitment change](RIVAL_MINIMUM_SQUAD.md) now addresses total-squad emergency eligibility while preserving real supply, affordability and fallible agreement. The [owner extension](OWNER_MINIMUM_SQUAD.md) makes emergency depth recommendations available with explicit approval. Continue measuring broader population/economy outcomes; do not infer causal financial denials from priority-gated end-of-week snapshots.
 
 Quote generation stays pure. Confirmation, expiry, entry to or exit from the available pool, signed obligations and historical events must be applied atomically to the private transaction candidate before durable publication. Duplicate receipts, failed saves and reloads must never duplicate a signing or retirement.
