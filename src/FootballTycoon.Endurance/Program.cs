@@ -11,14 +11,15 @@ catch (Exception error) when (error is ArgumentException or FormatException or O
 }
 static int Run(string[] args)
 {
-    if (args.Length is < 3 or > 5)
+    if (args.Length is < 3 or > 6)
     {
-        Console.Error.WriteLine("Usage: FootballTycoon.Endurance <seasons 1..50> <seed> <new-output-directory> [PreserveReserve|Hospitality|Recruitment|Training] [max-minutes, default 30]");
+        Console.Error.WriteLine("Usage: FootballTycoon.Endurance <seasons 1..50> <seed> <new-output-directory> [PreserveReserve|Hospitality|Recruitment|Training] [max-minutes, default 30] [None|CoverShortages, default None]");
         return 64;
     }
     var options = new RunOptions(int.Parse(args[0], CultureInfo.InvariantCulture), ulong.Parse(args[1], CultureInfo.InvariantCulture),
         args.Length > 3 ? Enum.Parse<Allocation>(args[3], true) : Allocation.PreserveReserve,
-        TimeSpan.FromMinutes(args.Length > 4 ? double.Parse(args[4], CultureInfo.InvariantCulture) : 30));
+        TimeSpan.FromMinutes(args.Length > 4 ? double.Parse(args[4], CultureInfo.InvariantCulture) : 30),
+        args.Length > 5 ? Enum.Parse<OwnerRecruitmentMode>(args[5], true) : OwnerRecruitmentMode.None);
     options.Validate();
     var directory = Path.GetFullPath(args[2]);
     if (Directory.Exists(directory) && Directory.EnumerateFileSystemEntries(directory).Any())

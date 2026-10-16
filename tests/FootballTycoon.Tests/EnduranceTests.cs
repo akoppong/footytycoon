@@ -75,6 +75,8 @@ public class EnduranceTests
         Assert.Equal("Completed", result.Outcome); Assert.Equal(4, result.CompletedSeasons); Assert.Equal(208, result.Week);
         Assert.True(result.CheckpointBytes > 0); Assert.Equal(64, result.GameplaySha256!.Length);
         Assert.Equal(0, result.WeeksOutsidePopulationTarget); // This four-year seed remains in range; longer probes still count every breach.
+        Assert.Equal(result.ClubWeeksBelowCover, result.OwnedWeeksBelowCover + result.RivalClubWeeksBelowCover);
+        Assert.Equal(new Probe.OwnerRecruitmentCounts(0, 0, 0), result.OwnerRecruitment);
         Assert.Contains("\"Kind\":\"renewal\",\"Season\":4", metrics.ToString());
         Assert.Contains("\"Kind\":\"season-close\",\"Season\":4", metrics.ToString());
     }
