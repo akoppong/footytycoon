@@ -1,5 +1,7 @@
 # Rival vacancy diagnostics
 
+This report preserves the schema-18 baseline. Schema 19 subsequently changes [rival minimum-squad eligibility](RIVAL_MINIMUM_SQUAD.md); the measurements and gate counts below remain historical evidence.
+
 The [owner replacement comparison](OWNER_REPLACEMENT_DIAGNOSTICS.md) found substantial rival shortage time even when every rival had cover at the endpoint. The runner now records each short rival after every completed week and tracks consecutive shortage episodes. This adds evidence for choosing the next recruitment change without altering decisions to improve the census.
 
 ## Scope and interpretation

@@ -1,6 +1,6 @@
 # Player lifecycle and longer-career validation
 
-Status: lifecycle implemented in schema-18 source; longer-career validation remains open. The academy, departure archive, prospective free-agent pool, owner-approved approaches and uncontracted retirement are implemented; see [FREE_AGENTS.md](FREE_AGENTS.md). Rivals now make [budgeted free-agent replacement offers](RIVAL_RECRUITMENT.md). [Contracted-player retirement](CONTRACT_RETIREMENT.md) now preserves signed terms and allows unavoidable shortages. General transfer trading and the population gates below remain planned. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
+Status: lifecycle implemented in schema-19 source; longer-career validation remains open. The academy, departure archive, prospective free-agent pool, owner-approved approaches and uncontracted retirement are implemented; see [FREE_AGENTS.md](FREE_AGENTS.md). Rivals now make [budgeted free-agent replacement offers](RIVAL_RECRUITMENT.md). [Contracted-player retirement](CONTRACT_RETIREMENT.md) now preserves signed terms and allows unavoidable shortages. General transfer trading and the population gates below remain planned. The three-season boundary stays in place until the lifecycle and longer-run validation are implemented.
 
 ## Current constraint
 
@@ -41,7 +41,7 @@ Retirement must retain the person's name, club history, academy origin and final
 
 The [isolated endurance runner](ENDURANCE.md) now provides per-club population and finance evidence beyond three seasons using the actual core. The playable limit is unchanged. A completed diagnostic sample does not satisfy the 100-world acceptance gate below.
 
-[Weekly rival vacancy evidence](RIVAL_VACANCY_DIAGNOSTICS.md) now separates short pending negotiations from persistent shortage episodes. The matched longer run includes a 104-week episode, mostly a total-only gap, despite full cover at the final census. Next test the total-squad emergency and improvement requirements while preserving real supply, affordability and fallible agreement; do not infer causal financial denials from priority-gated end-of-week snapshots.
+[Weekly rival vacancy evidence](RIVAL_VACANCY_DIAGNOSTICS.md) now separates short pending negotiations from persistent shortage episodes. The matched longer run includes a 104-week episode, mostly a total-only gap, despite full cover at the final census. The [minimum-squad recruitment change](RIVAL_MINIMUM_SQUAD.md) now addresses total-squad emergency eligibility while preserving real supply, affordability and fallible agreement. Continue measuring broader population/economy outcomes; do not infer causal financial denials from priority-gated end-of-week snapshots.
 
 Quote generation stays pure. Confirmation, expiry, entry to or exit from the available pool, signed obligations and historical events must be applied atomically to the private transaction candidate before durable publication. Duplicate receipts, failed saves and reloads must never duplicate a signing or retirement.
 
