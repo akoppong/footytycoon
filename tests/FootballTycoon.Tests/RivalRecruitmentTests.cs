@@ -51,6 +51,19 @@ public class RivalRecruitmentTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void NoOfferIsCreatedOnTheTerminalAdministrationTick()
+    {
+        var (world, _) = Market();
+        var obligation = world.Obligations.First(o => o.ClubId == world.OwnedClubId);
+        world.Arrears.Add(new(obligation.Id, world.OwnedClubId, world.Week, 900000000));
+        world.Status = CareerStatus.Administration;
+        world.AdministrationWeek = world.Week - 3;
+        Simulation.AdvanceWeek(world);
+        Assert.Equal(CareerStatus.LostControl, world.Status);
+        Assert.Empty(world.RivalApproaches);
+    }
+
+    [Fact]
     public void OwnerAndRivalsCompeteForTheSamePersonWithoutDuplicateContracts()
     {
         var (world, _) = Market();

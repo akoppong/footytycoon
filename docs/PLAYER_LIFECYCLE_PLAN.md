@@ -41,6 +41,8 @@ Retirement must retain the person's name, club history, academy origin and final
 
 The [isolated endurance runner](ENDURANCE.md) now provides per-club population and finance evidence beyond three seasons using the actual core. The playable limit is unchanged. A completed diagnostic sample does not satisfy the 100-world acceptance gate below.
 
+[Weekly rival vacancy evidence](RIVAL_VACANCY_DIAGNOSTICS.md) now separates short pending negotiations from persistent shortage episodes. The matched longer run includes a 104-week episode, mostly a total-only gap, despite full cover at the final census. Next test the total-squad emergency and improvement requirements while preserving real supply, affordability and fallible agreement; do not infer causal financial denials from priority-gated end-of-week snapshots.
+
 Quote generation stays pure. Confirmation, expiry, entry to or exit from the available pool, signed obligations and historical events must be applied atomically to the private transaction candidate before durable publication. Duplicate receipts, failed saves and reloads must never duplicate a signing or retirement.
 
 Required cases include a retiring goalkeeper with no affordable cover; an owned club declining an academy cohort; rival clubs competing for one candidate; a released graduate joining a rival; contracts spanning a tier change; a poor club already over the wage limit; a failure during persistence; and old-save migration without fabricated people. Check exact first and last wage dates, disjoint current identities, retained historical names and loaded-versus-uninterrupted replay.

@@ -66,7 +66,8 @@ public static class Simulation
                 : "The three-season milestone is complete. All season reports and original decisions remain available.", null));
         }
         world.Phase = Phase.Decisions;
-        if (world.Status != CareerStatus.SeasonReview) RetirementLifecycle.CompleteDue(world);
+        // Loss of control is terminal and can skip Seasons.Close, so ages have not advanced; completing retirement would archive an under-age player.
+        if (world.Status is not (CareerStatus.SeasonReview or CareerStatus.LostControl)) RetirementLifecycle.CompleteDue(world);
         world.Revision++;
         WorldFactory.Validate(world);
         return new(world.Week, world.Status == CareerStatus.Active ? (world.Week % 4 == 0 ? "Monthly review" : "Week completed") : world.Status.ToString(), world.Revision);

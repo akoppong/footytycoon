@@ -40,7 +40,7 @@ The supplied architecture received an independent subagent review before the imp
 
 ## Complete-game delivery
 
-[DELIVERY_PROGRESS.md](DELIVERY_PROGRESS.md) tracks the full-game goal and current lifecycle diagnostics. The Windows package `windows-d10beb22` includes a [1,200-person opening world](OPENING_POPULATION.md), weighted academy role intake, fixed retirement announcements, rival replacement offers, free-agent approaches, uncontracted retirement, retained player history, training investment, annual development, contract decisions, the dated calendar, promotion/relegation, the domestic cup and midseason recruitment, using schema 18.
+[DELIVERY_PROGRESS.md](DELIVERY_PROGRESS.md) tracks the full-game goal and current lifecycle diagnostics. The Windows package `windows-ed57c0e4` includes a [1,200-person opening world](OPENING_POPULATION.md), weighted academy role intake, fixed retirement announcements, rival replacement offers, free-agent approaches, uncontracted retirement, retained player history, training investment, annual development, contract decisions, the dated calendar, promotion/relegation, the domestic cup and midseason recruitment, using schema 18.
 
 ## Current season-loop update
 
