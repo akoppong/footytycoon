@@ -61,6 +61,8 @@ For development-only long-career measurements, see [the isolated endurance runne
 
 The runner supports a default no-owner-recruitment policy and an opt-in policy that approves affordable director recommendations while below squad cover. [Owner replacement diagnostics](docs/OWNER_REPLACEMENT_DIAGNOSTICS.md) compare them and separate owner/rival shortage weeks. This does not automate owner spending in the playable game.
 
+[Economy cashflow diagnostics](docs/ECONOMY_CASHFLOW.md) reconcile each club's accumulated cash against actual receipts and payments, with separate rolling-year and cumulative reports. They measure the remaining economy balance gap without changing gameplay.
+
 [Rival vacancy diagnostics](docs/RIVAL_VACANCY_DIAGNOSTICS.md) now track weekly recruitment constraints and shortage episodes. Matched gameplay is unchanged; a 104-week episode shows why an all-covered final census alone is insufficient.
 
 [Minimum-squad recruitment](docs/RIVAL_MINIMUM_SQUAD.md) addresses that total-cover gap: rivals below sixteen may seek affordable depth outside windows without requiring an ability upgrade. Working role targets and ordinary financial checks still apply.
