@@ -144,8 +144,8 @@ public sealed class AcquisitionTests
         var bytes = WorldCodec.Encode(world); var original = bytes.ToArray();
         var stale = Proposals.Preview(world, new(bought ? Allocation.PreserveReserve : Allocation.Acquire), world.Revision);
         var migrated = WorldCodec.Decode(bytes);
-        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 22; expected["SimulationVersion"] = "acquisition-counteroffer-22";
-        Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(WorldCodec.Encode(migrated)))); Assert.Equal(original, bytes);
+        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 23; expected["SimulationVersion"] = "compact-journal-23";
+        Assert.True(JsonNode.DeepEquals(expected, System.Text.Json.JsonSerializer.SerializeToNode(migrated))); Assert.Equal(original, bytes);
         Assert.Null(migrated.AcquisitionOffer); Assert.Equal(Balance.Load().PurchasePrice, Acquisition.Price(migrated));
         Assert.Throws<InvalidOperationException>(() => Proposals.Commit(migrated, "stale", migrated.Revision, stale));
         var quote = Proposals.Preview(migrated, new(Allocation.Counteroffer, 252000000), migrated.Revision);

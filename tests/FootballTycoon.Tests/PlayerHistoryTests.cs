@@ -69,11 +69,11 @@ public sealed class PlayerHistoryTests : IDisposable
     {
         var (world, proposal) = Review(); Proposals.Commit(world, "renew", world.Revision, proposal);
         var expected = world.Departures.Where(d => d.ClubId == world.OwnedClubId).OrderBy(d => d.PlayerId.Value).ToArray();
-        var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var legacy = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         legacy["SchemaVersion"] = 10; legacy["SimulationVersion"] = "training-10"; legacy.Remove("Departures");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var loaded = WorldCodec.Decode(bytes);
-        Assert.Equal(original, bytes); Assert.Equal(22, loaded.SchemaVersion);
+        Assert.Equal(original, bytes); Assert.Equal(23, loaded.SchemaVersion);
         Assert.Equal(expected, loaded.Departures.OrderBy(d => d.PlayerId.Value));
         Assert.All(loaded.Departures, d => Assert.Equal(world.OwnedClubId, d.ClubId));
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), loaded.Clubs.SelectMany(c => c.Players));

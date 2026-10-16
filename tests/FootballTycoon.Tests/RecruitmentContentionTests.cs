@@ -98,8 +98,8 @@ public class RecruitmentContentionTests
         var bytes = WorldCodec.Encode(world); var copy = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         var expected = JsonNode.Parse(bytes)!;
-        expected["SchemaVersion"] = 22; expected["SimulationVersion"] = "acquisition-counteroffer-22";
-        Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(WorldCodec.Encode(migrated))));
+        expected["SchemaVersion"] = 23; expected["SimulationVersion"] = "compact-journal-23";
+        Assert.True(JsonNode.DeepEquals(expected, System.Text.Json.JsonSerializer.SerializeToNode(migrated)));
         Assert.Equal(copy, bytes);
         var before = WorldCodec.Encode(migrated);
         Assert.Throws<InvalidOperationException>(() => Proposals.Commit(migrated, "stale", migrated.Revision, oldQuote));

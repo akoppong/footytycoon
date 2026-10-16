@@ -104,13 +104,13 @@ public class PlayerDevelopmentTests
     {
         var world = WorldFactory.Create(9);
         if (complete) { world.Week = 52; Seasons.Close(world); world.Status = CareerStatus.SeasonReview; }
-        var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var legacy = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         legacy["SchemaVersion"] = 8; legacy["SimulationVersion"] = "contracts-8";
         foreach (var summary in legacy["SeasonSummaries"]!.AsArray()) summary!.AsObject().Remove("Development");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var loaded = WorldCodec.Decode(bytes);
         Assert.Equal(original, bytes);
-        Assert.Equal(22, loaded.SchemaVersion);
+        Assert.Equal(23, loaded.SchemaVersion);
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), loaded.Clubs.SelectMany(c => c.Players));
         Assert.All(loaded.SeasonSummaries, s => Assert.Empty(s.Development));
         Assert.DoesNotContain(loaded.RandomStates.Keys.Except(world.RandomStates.Keys), key => key.StartsWith("development/"));
