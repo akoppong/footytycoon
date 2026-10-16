@@ -110,13 +110,13 @@ public static class Proposals
         var title = ""; var executive = "CEO · Mara Ellis"; var uncertainty = "";
         if (revision != world.Revision) reasons.Add("The world changed. Refresh the proposal.");
         if (!Enum.IsDefined(command.Allocation)) reasons.Add("Unknown allocation.");
-        if (command.Amount != 0 && command.Allocation != Allocation.InjectCapital) reasons.Add("This quote does not accept a custom amount.");
+        if (command.Amount != 0 && command.Allocation is not (Allocation.InjectCapital or Allocation.Counteroffer)) reasons.Add("This quote does not accept a custom amount.");
         if (!command.ContractOverrides.IsEmpty && command.Allocation != Allocation.StartNextSeason) reasons.Add("This quote does not accept contract choices.");
         if (command.DeclineAcademy && command.Allocation != Allocation.StartNextSeason) reasons.Add("Academy choices belong to the annual renewal review.");
         if (world.Status is CareerStatus.LostControl or CareerStatus.PrototypeComplete) reasons.Add("This career checkpoint is complete.");
-        if (world.Status == CareerStatus.Acquisition && command.Allocation != Allocation.Acquire) reasons.Add("Acquire the club first.");
+        if (world.Status == CareerStatus.Acquisition && command.Allocation is not (Allocation.Acquire or Allocation.Counteroffer)) reasons.Add("Acquire the club first.");
         if (world.Status == CareerStatus.SeasonReview && command.Allocation is not (Allocation.StartNextSeason or Allocation.InjectCapital)) reasons.Add("Review and renew the next season before choosing its capital plan.");
-        if (world.Status != CareerStatus.Acquisition && command.Allocation == Allocation.Acquire) reasons.Add("Only one acquisition is allowed.");
+        if (world.Status != CareerStatus.Acquisition && command.Allocation is (Allocation.Acquire or Allocation.Counteroffer)) reasons.Add("Acquisition decisions are only available before taking control.");
         if (world.Status == CareerStatus.Administration && command.Allocation != Allocation.InjectCapital) reasons.Add("Administration restricts new spending. Fund outstanding payroll first.");
         if (Seasons.IsCapitalPlan(command.Allocation) && world.AllocationChosen)
             reasons.Add("This season's capital plan is already committed.");
@@ -130,9 +130,16 @@ public static class Proposals
         switch (command.Allocation)
         {
             case Allocation.Acquire:
-                title = $"Acquire {club.Name}"; total = b.PurchasePrice;
+                title = $"Acquire {club.Name}"; total = Acquisition.Price(world);
                 if (world.OwnerCash < total) reasons.Add("Insufficient personal funds.");
-                uncertainty = "Purchase pays the seller. Club cash is unchanged. This prototype has one acquisition at the asking price and no opening debt.";
+                uncertainty = "Purchase pays the seller at the displayed equity price. Club cash is unchanged. No opening debt. Any subsequent club funding is a separate, explicit owner injection.";
+                break;
+            case Allocation.Counteroffer:
+                title = $"Offer {Money.Format(command.Amount)} to the seller"; review = world.Week;
+                if (world.AcquisitionOffer is not null) reasons.Add("Your one counteroffer has already received a response.");
+                if (command.Amount <= 0 || command.Amount >= b.PurchasePrice) reasons.Add("Offer a positive amount below the asking price.");
+                if (command.Amount > world.OwnerCash) reasons.Add("The offer exceeds your personal funds.");
+                uncertainty = "Send your one lower offer and receive the seller's response immediately. Acceptance is uncertain. No cash moves and no ownership transfers: an accepted price still needs a separate purchase confirmation. If rejected, you can still buy at the original asking price. The response is saved; reopening it does not create another attempt.";
                 break;
             case Allocation.PreserveReserve:
                 title = "Protect the cash reserve";
@@ -248,11 +255,14 @@ public static class Proposals
         switch (proposal.Command.Allocation)
         {
             case Allocation.Acquire:
-                Finance.Post(world, "owner", -b.PurchasePrice, CashKind.Purchase, reference);
-                Finance.Post(world, "seller", b.PurchasePrice, CashKind.Purchase, reference);
-                world.OwnerInvested = b.PurchasePrice;
+                Finance.Post(world, "owner", -proposal.TotalCommitment, CashKind.Purchase, reference);
+                Finance.Post(world, "seller", proposal.TotalCommitment, CashKind.Purchase, reference);
+                world.OwnerInvested = proposal.TotalCommitment;
                 world.Status = CareerStatus.Active;
                 world.Decisions.Add(new(new(1), 0, true, "Choose the opening capital plan"));
+                break;
+            case Allocation.Counteroffer:
+                Acquisition.Submit(world, proposal.Command.Amount);
                 break;
             case Allocation.StartNextSeason:
                 Seasons.StartNext(world, proposal.Command.ContractOverrides, proposal.Command.DeclineAcademy);
@@ -290,9 +300,10 @@ public static class Proposals
             world.AllocationChosen = true;
             world.Decisions = world.Decisions.Select(d => !d.Resolved && d.Required ? d with { Resolved = true } : d).ToList();
         }
-        world.History.Add(new(world.Week, proposal.Command, proposal.Executive, proposal.Title, proposal.Forecast) { Recruitment = proposal.Recruitment, Renewal = proposal.Renewal });
+        var outcome = proposal.Command.Allocation == Allocation.Counteroffer ? Acquisition.Response(world.AcquisitionOffer!) : proposal.Title;
+        world.History.Add(new(world.Week, proposal.Command, proposal.Executive, outcome, proposal.Forecast) { Recruitment = proposal.Recruitment, Renewal = proposal.Renewal });
         world.Revision++;
-        var receipt = new CommitReceipt(commandId, proposal.Id, world.Revision, proposal.Title);
+        var receipt = new CommitReceipt(commandId, proposal.Id, world.Revision, outcome);
         world.Commands.Add(commandId, receipt);
         WorldFactory.Validate(world);
         return receipt;
