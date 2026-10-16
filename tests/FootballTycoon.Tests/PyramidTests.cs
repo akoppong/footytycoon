@@ -91,7 +91,7 @@ public class PyramidTests
     public void SchemaTwoMigrationBackfillsFixedDivisionHistoryWithoutChangingCash()
     {
         var world = WorldFactory.Create(6);
-        var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var legacy = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         legacy["SchemaVersion"] = 2; legacy["SimulationVersion"] = "career-2";
         legacy.Remove("CupStartSeason");
         var fixtureArray = legacy["Fixtures"]!.AsArray();
@@ -101,7 +101,7 @@ public class PyramidTests
         foreach (var fixture in legacy["Fixtures"]!.AsArray()) fixture!.AsObject().Remove("Division");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(source, bytes); Assert.Equal(22, migrated.SchemaVersion);
+        Assert.Equal(source, bytes); Assert.Equal(23, migrated.SchemaVersion);
         Assert.All(migrated.Fixtures.Where(f => f.Competition == Competition.League), f => Assert.Equal(migrated.Clubs.Single(c => c.Id == f.Home).Division, f.Division));
         Assert.Equal(16, migrated.Fixtures.Count(f => f.Competition == Competition.Cup && f.CupRound == 1));
         Assert.All(migrated.Clubs, c => Assert.Equal(c.Division, c.OpeningDivision));

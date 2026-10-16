@@ -167,7 +167,7 @@ public class TrainingTests
     {
         var world = SeasonTests.EndFirstSeason();
         world.Projects.Add(new(new(1), world.OwnedClubId, 0, 28, 65000000, 26000000, "legacy"));
-        var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var legacy = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         legacy["SchemaVersion"] = 9; legacy["SimulationVersion"] = "development-9";
         foreach (var club in legacy["Clubs"]!.AsArray())
         {
@@ -179,7 +179,7 @@ public class TrainingTests
             foreach (var row in summary!["Development"]!.AsArray()) row!.AsObject().Remove("TrainingBonus");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var restored = WorldCodec.Decode(bytes);
-        Assert.Equal(original, bytes); Assert.Equal(22, restored.SchemaVersion);
+        Assert.Equal(original, bytes); Assert.Equal(23, restored.SchemaVersion);
         Assert.All(restored.Clubs, c => Assert.Equal(0, c.TrainingLevel));
         Assert.All(restored.Clubs.SelectMany(c => c.Players), p => Assert.Equal(0, p.TrainingExposure));
         Assert.Equal(FacilityKind.Hospitality, restored.Projects.Single().Kind);
@@ -191,7 +191,7 @@ public class TrainingTests
     {
         var world = Acquired(); SimulationTests.Commit(world, Allocation.Hospitality);
         while (world.Week < 10) Simulation.AdvanceWeek(world);
-        var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var legacy = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         legacy["SchemaVersion"] = 9; legacy["SimulationVersion"] = "development-9";
         foreach (var club in legacy["Clubs"]!.AsArray())
         {

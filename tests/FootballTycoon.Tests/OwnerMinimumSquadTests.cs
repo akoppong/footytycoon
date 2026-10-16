@@ -110,8 +110,8 @@ public class OwnerMinimumSquadTests
         world.SchemaVersion = 19; world.SimulationVersion = "rival-minimum-squad-19";
         var quote = Proposals.Preview(world, new(Allocation.InjectCapital) { Amount = 100 }, world.Revision);
         var bytes = WorldCodec.Encode(world); var original = bytes.ToArray(); var loaded = WorldCodec.Decode(bytes);
-        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 22; expected["SimulationVersion"] = "acquisition-counteroffer-22";
-        Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(WorldCodec.Encode(loaded)))); Assert.Equal(original, bytes);
+        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 23; expected["SimulationVersion"] = "compact-journal-23";
+        Assert.True(JsonNode.DeepEquals(expected, System.Text.Json.JsonSerializer.SerializeToNode(loaded))); Assert.Equal(original, bytes);
         Assert.Null(FreeAgents.Recommend(loaded)); Assert.Single(loaded.FreeAgentBids);
         Assert.Throws<InvalidOperationException>(() => Proposals.Commit(loaded, "old-quote", loaded.Revision, quote));
         var replay = WorldCodec.Clone(loaded); Simulation.AdvanceWeek(loaded); Simulation.AdvanceWeek(replay);

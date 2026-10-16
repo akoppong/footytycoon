@@ -194,12 +194,12 @@ public class FreeAgentTests
     [Fact]
     public void MigrationDoesNotReactivateOldDepartureRecords()
     {
-        var world = Available(); var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var world = Available(); var legacy = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         legacy["SchemaVersion"] = 12; legacy["SimulationVersion"] = "academy-12";
         legacy.Remove("FreeAgents"); legacy.Remove("Retirements"); legacy.Remove("FreeAgentBids");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(original, bytes); Assert.Equal(22, migrated.SchemaVersion);
+        Assert.Equal(original, bytes); Assert.Equal(23, migrated.SchemaVersion);
         Assert.Empty(migrated.FreeAgents); Assert.Empty(migrated.Retirements); Assert.Empty(migrated.FreeAgentBids);
         Assert.Equal(world.Departures, migrated.Departures);
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), migrated.Clubs.SelectMany(c => c.Players));
