@@ -8,7 +8,7 @@ Schema 19 (`rival-minimum-squad-19`) lets a rival below sixteen seek available d
 
 The existing financial rules, retirement-age filter, candidate contention preference, stable resolution order, four-week cooldown and fallible acceptance remain. Planning and next-week resolution use the same need predicate, so a changed squad can close an offer without a signing. Agreement preserves the person and starts the quoted finite wage obligation the following week. No transfer fee, rescue money, extra graduate, waiver or replacement person is created. A depth signing may be weaker than every existing player in that role.
 
-The owner still makes explicit recruitment decisions through the existing recommendation path. This unit changes only rival eligibility; it neither automates human spending nor widens the owner's outside-window recommendation rule. The playable boundary remains three seasons.
+In this schema-19 unit, the owner still makes explicit recruitment decisions through the existing recommendation path. This unit changes only rival eligibility; it neither automates human spending nor widens the owner's outside-window recommendation rule. Schema 20 subsequently adds [owner emergency depth recommendations](OWNER_MINIMUM_SQUAD.md). The measurements below remain schema-19 evidence. The playable boundary remains three seasons.
 
 Migration validates schema 18 before changing only its schema and simulation markers. Existing people, finances, contract terms, offers, history and random states are preserved. Future planning and resolution use the new need rule, including for retained pending offers; targets and terms are never rerolled. Old previews must be refreshed because their world fingerprint changes. Source save bytes remain unchanged.
 

@@ -6,10 +6,13 @@ public static class FreeAgents
     internal static long Wage(Club club, Player player) => Math.Max(10000, (Math.Max(player.WeeklyWage, Contracts.StandardWage(club.Division) / 2) + 500) / 1000 * 1000);
     internal static int ContractEnd(World world, Player player) => Seasons.EndWeek(world) + (player.Age <= 24 ? 2 : player.Age <= 29 ? 1 : 0) * Seasons.Weeks;
     public static bool HasShortage(Club club, Role role) => club.Players.Count(p => p.Role == role) < Contracts.Minimum.Single(m => m.Role == role).Minimum;
+    internal static int WorkingTarget(Role role) => role switch { Role.Goalkeeper => 2, Role.Defender or Role.Midfielder => 6, _ => 4 };
+    internal static bool NeedsCover(Club club, Role role) => HasShortage(club, role)
+        || club.Players.Count < Contracts.MinimumSquad && club.Players.Count(p => p.Role == role) < WorkingTarget(role);
     public static bool WindowOpen(World world, int week) => week >= Seasons.StartWeek(world)
         && (week <= Seasons.StartWeek(world) + 2 || RecruitmentMarket.Window(world) is var (opens, closes)
             && week >= Seasons.StartWeek(world) + opens && week <= Seasons.StartWeek(world) + closes);
-    public static bool EligibleRole(World world, Role role, int approvalWeek) => WindowOpen(world, approvalWeek) || HasShortage(world.OwnedClub, role);
+    public static bool EligibleRole(World world, Role role, int approvalWeek) => WindowOpen(world, approvalWeek) || NeedsCover(world.OwnedClub, role);
     public static bool CanReview(World world) => world.Status == CareerStatus.Active && world.AllocationChosen
         && world.Week < Seasons.EndWeek(world) - 1 && world.Negotiations.Count == 0 && world.FreeAgentBids.Count == 0 && world.OwnedClub.Players.Count < Academy.SquadLimit;
 
@@ -20,7 +23,7 @@ public static class FreeAgents
         var limit = Money.Scale(Finance.EligibleRevenue(world, club.Id), Balance.Load().WageLimit);
         var target = world.FreeAgents.Select(f => f.Player)
             .Where(p => p.Age < RetirementAge(p.Role) && EligibleRole(world, p.Role, world.Week)
-                && (HasShortage(club, p.Role) || p.Ability > club.Players.Where(s => s.Role == p.Role).Min(s => s.Ability))
+                && (NeedsCover(club, p.Role) || p.Ability > club.Players.Where(s => s.Role == p.Role).Min(s => s.Ability))
                 && Finance.AnnualWages(club) + Wage(club, p) * Seasons.Weeks <= limit
                 && !world.History.Any(h => h.Command.Allocation == Allocation.FreeAgentRecruitment
                     && h.Recruitment?.Player.Id == p.Id && world.Week < h.Week + 4))

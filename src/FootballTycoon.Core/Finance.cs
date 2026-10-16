@@ -175,11 +175,11 @@ public static class Proposals
             case Allocation.FreeAgentRecruitment:
                 title = "Approach the recommended free agent"; executive = "Sporting director · Jonas Reed";
                 recruitment = FreeAgents.Recommend(world);
-                if (recruitment is null) reasons.Add("No eligible free agent is recommended within the current window, squad and wage limits. Outside a window, only genuine role shortages qualify.");
+                if (recruitment is null) reasons.Add("No eligible free agent is recommended within the current window, squad and wage limits. Outside a window, missing roles or a squad below sixteen can qualify; depth candidates must fit the working role mix.");
                 weekly = recruitment?.WeeklyWage ?? 0;
                 total = checked(weekly * ((recruitment?.ContractEndWeek ?? world.Week + 1) - world.Week - 1));
                 review = world.Week + 1;
-                uncertainty = "No transfer fee or payment on approval. The player may decline next week; squad space, reserve and wages are checked again. If signed, wages start the following week on the displayed contract. Deals end at an annual renewal review: the current season for ages 30+, the second season for ages 25–29, and the third for younger players. The first season is partial. A failed approach creates no new obligation. The director waits four weeks before approaching the same player again. Selection and future development remain uncertain.";
+                uncertainty = "No transfer fee or payment on approval. The player may decline next week; squad space, reserve and wages are checked again. If signed, wages start the following week on the displayed contract. Deals end at an annual renewal review: the current season for ages 30+, the second season for ages 25–29, and the third for younger players. The first season is partial. A failed approach creates no new obligation. The director waits four weeks before approaching the same player again. A cover recommendation may add depth without improving your starters. Selection and future development remain uncertain.";
                 break;
             case Allocation.MidseasonWait:
                 title = "Keep the squad for the run-in";

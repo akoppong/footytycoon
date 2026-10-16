@@ -7,30 +7,10 @@ namespace FootballTycoon.Tests;
 
 public class RivalMinimumSquadTests
 {
-    private static (World World, Club Club, Player Candidate) Market(int squad = 15, int week = 2)
-    {
-        var world = ControlledWorld.Create();
-        SimulationTests.Commit(world, Allocation.Acquire); SimulationTests.Commit(world, Allocation.PreserveReserve);
-        while (world.Week < week) Simulation.AdvanceWeek(world);
-        var club = world.Clubs.First(c => c.Id != world.OwnedClubId);
-        var minimum = club.Players.GroupBy(p => p.Role).SelectMany(g => g.Take(Contracts.Minimum.Single(m => m.Role == g.Key).Minimum)).ToList();
-        var retained = minimum.Concat(club.Players.Except(minimum).Take(squad - minimum.Count)).ToList();
-        var removed = club.Players.Except(retained).ToArray(); club.Players = retained;
-        // Controlled expiries preserve people and every payment already made, with no future wages after release.
-        foreach (var player in removed)
-        {
-            world.Obligations = world.Obligations.Select(o => o.Description == $"Player contract {player.ContractId.Value}" ? o with { EndWeek = world.Week } : o).ToList();
-            world.FreeAgents.Add(new(player with { ContractEndWeek = world.Week, TrainingExposure = 0, Age = 25, Ability = 1, WeeklyWage = player == removed[0] ? 10000 : 1000000000 }, club.Id, world.Week));
-        }
-        Finance.Post(world, WorldFactory.Account(club.Id), 1000000000 - club.Cash, CashKind.Rescue, "Controlled test funding");
-        WorldFactory.Validate(world);
-        return (world, club, world.FreeAgents[0].Player);
-    }
-
     [Fact]
     public void BelowSixteenCanSignWeakerDepthOutsideWindowWithExactWagesAndReplay()
     {
-        var (world, club, candidate) = Market();
+        var (world, club, candidate) = MinimumSquadFixture.Create();
         Assert.Equal(15, club.Players.Count); Assert.All(Contracts.Minimum, m => Assert.False(FreeAgents.HasShortage(club, m.Role)));
         var obligations = world.Obligations.Count;
         Simulation.AdvanceWeek(world);
@@ -56,7 +36,7 @@ public class RivalMinimumSquadTests
     [InlineData(17)]
     public void CoveredSquadsDoNotGainOutsideWindowUpgrades(int squad)
     {
-        var (world, _, _) = Market(squad);
+        var (world, _, _) = MinimumSquadFixture.Create(squad);
         world.FreeAgents = world.FreeAgents.Select(f => f with { Player = f.Player with { Ability = 100 } }).ToList();
         Simulation.AdvanceWeek(world);
         Assert.Empty(world.RivalApproaches);
@@ -65,7 +45,7 @@ public class RivalMinimumSquadTests
     [Fact]
     public void TotalGapDoesNotRecruitBeyondWorkingRoleTarget()
     {
-        var (world, _, _) = Market();
+        var (world, _, _) = MinimumSquadFixture.Create();
         world.FreeAgents = world.FreeAgents.Select(f => f with { Player = f.Player with { Role = Role.Goalkeeper, Age = 25, Ability = 100 } }).ToList();
         Simulation.AdvanceWeek(world);
         Assert.Empty(world.RivalApproaches);
@@ -76,7 +56,7 @@ public class RivalMinimumSquadTests
     [InlineData(true)]
     public void CoveredSquadsStillRequireAnImprovementInsideTheWindow(bool stronger)
     {
-        var (world, _, candidate) = Market(16, 1);
+        var (world, _, candidate) = MinimumSquadFixture.Create(16, 1);
         if (stronger) world.FreeAgents[0] = world.FreeAgents[0] with { Player = candidate with { Ability = 100 } };
         Simulation.AdvanceWeek(world);
         Assert.True(FreeAgents.WindowOpen(world, world.Week));
@@ -91,7 +71,7 @@ public class RivalMinimumSquadTests
     [InlineData("arrears")]
     public void EmergencyDepthStillRequiresOrdinaryFinances(string gate)
     {
-        var (world, club, _) = Market();
+        var (world, club, _) = MinimumSquadFixture.Create();
         if (gate == "cash") Finance.Post(world, WorldFactory.Account(club.Id), -club.Cash, CashKind.Operations, "Controlled cash constraint");
         if (gate == "wages") club.Players = club.Players.Select(p => p with { WeeklyWage = 1000000000 }).ToList();
         if (gate == "forecast") WorldFactory.AddObligation(world, club.Id, 10, 10, -club.Cash * 2, CashKind.Operations, "Future liability");
@@ -103,7 +83,7 @@ public class RivalMinimumSquadTests
     [Fact]
     public void TotalNeedIsRecheckedAndARefusalRetainsTheFourWeekCooldown()
     {
-        var (world, club, _) = Market(); Simulation.AdvanceWeek(world);
+        var (world, club, _) = MinimumSquadFixture.Create(); Simulation.AdvanceWeek(world);
         var bid = Assert.Single(world.RivalApproaches);
         var filled = WorldCodec.Clone(world); var other = filled.FreeAgents.Last();
         filled.FreeAgents.Remove(other);
@@ -130,7 +110,7 @@ public class RivalMinimumSquadTests
         var quote = Proposals.Preview(world, new(Allocation.InjectCapital) { Amount = 100 }, world.Revision);
         var bytes = WorldCodec.Encode(world); var original = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 19; expected["SimulationVersion"] = "rival-minimum-squad-19";
+        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 20; expected["SimulationVersion"] = "owner-minimum-squad-20";
         Assert.True(JsonNode.DeepEquals(expected, JsonNode.Parse(WorldCodec.Encode(migrated)))); Assert.Equal(original, bytes);
         var before = WorldCodec.Encode(migrated);
         Assert.Throws<InvalidOperationException>(() => Proposals.Commit(migrated, "stale", migrated.Revision, quote));

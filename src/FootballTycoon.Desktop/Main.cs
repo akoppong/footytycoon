@@ -197,7 +197,7 @@ public partial class Main : Control
         }
         else market.AddChild(Label(view.FreeAgentApproachPending
             ? "Your approved approach is pending. The director will report the player's response next week; no new contract or payment exists yet."
-            : "No eligible recommendation now. The director looks for affordable cover or improvements in the opening and January windows; outside them, only role shortages qualify. No action is required.", 14));
+            : "No eligible recommendation now. The director looks for affordable cover or improvements in the opening and January windows; outside them, missing roles or a squad below sixteen can qualify. Depth signings may be weaker than current players. No action is required.", 14));
         var rivals = Card(); rivals.AddChild(Label("Recent rival recruitment", 24));
         rivals.AddChild(Label("Rival directors seek affordable replacements after departures. Offers can fail; no club is guaranteed cover. Latest eight approaches shown.", 14));
         if (view.RivalApproaches.IsEmpty) rivals.AddChild(Label("No rival approaches recorded yet.", 14));
