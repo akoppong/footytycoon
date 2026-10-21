@@ -1,0 +1,3429 @@
+{
+  "Outcome": "Completed",
+  "Detail": "Requested horizon completed. This is not a population, economy, save-durability or release acceptance pass.",
+  "Options": {
+    "Seasons": 50,
+    "Seed": 2028,
+    "Strategy": 9,
+    "TimeLimit": "01:00:00",
+    "OwnerRecruitment": 1
+  },
+  "CompletedSeasons": 50,
+  "Week": 2600,
+  "MinimumActive": 1077,
+  "MaximumActive": 1225,
+  "WeeksOutsidePopulationTarget": 2,
+  "ClubWeeksBelowCover": 1621,
+  "ElapsedSeconds": 1933.1596038,
+  "MaximumWeekMilliseconds": 3881,
+  "CheckpointBytes": 416739256,
+  "GameplaySha256": "ACB95C74B72A9A1C6F8930E93B9BB15D79FE5CCA827D3CAA0D37DD7FF74F46AB",
+  "Timings": {
+    "world-validation": {
+      "Calls": 2871,
+      "Milliseconds": 227370.21939999977
+    },
+    "eligible-revenue": {
+      "Calls": 16677,
+      "Milliseconds": 405073.94730000006
+    },
+    "cash-projection": {
+      "Calls": 4877,
+      "Milliseconds": 83670.5863
+    },
+    "forecast-identity": {
+      "Calls": 244,
+      "Milliseconds": 187978.02100000004
+    },
+    "forecast-total": {
+      "Calls": 244,
+      "Milliseconds": 191312.50850000005
+    }
+  },
+  "OwnedWeeksBelowCover": 12,
+  "RivalClubWeeksBelowCover": 1609,
+  "OwnerRecruitment": {
+    "Approved": 22,
+    "Blocked": 0,
+    "NoRecommendation": 0
+  },
+  "RivalVacancies": {
+    "ObservedClubWeeks": 1609,
+    "RoleGapClubWeeks": 1581,
+    "TotalOnlyClubWeeks": 28,
+    "GateClubWeeks": {
+      "CareerBoundary": 9,
+      "Cooldown": 846,
+      "PendingOffer": 754
+    },
+    "Episodes": [
+      {
+        "ClubId": 1,
+        "StartWeek": 157,
+        "LastWeek": 157,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 1,
+        "StartWeek": 365,
+        "LastWeek": 369,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 1,
+        "StartWeek": 469,
+        "LastWeek": 473,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 1,
+        "StartWeek": 937,
+        "LastWeek": 941,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 1,
+        "StartWeek": 1197,
+        "LastWeek": 1197,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 1,
+        "StartWeek": 1717,
+        "LastWeek": 1717,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 1,
+        "StartWeek": 1769,
+        "LastWeek": 1777,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 1,
+        "StartWeek": 2081,
+        "LastWeek": 2081,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 1,
+        "StartWeek": 2133,
+        "LastWeek": 2149,
+        "Weeks": 17,
+        "Open": false
+      },
+      {
+        "ClubId": 1,
+        "StartWeek": 2497,
+        "LastWeek": 2497,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 573,
+        "LastWeek": 581,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 625,
+        "LastWeek": 625,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 729,
+        "LastWeek": 733,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 937,
+        "LastWeek": 941,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 989,
+        "LastWeek": 989,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 1405,
+        "LastWeek": 1409,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 1873,
+        "LastWeek": 1873,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 1925,
+        "LastWeek": 1933,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 2133,
+        "LastWeek": 2137,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 2,
+        "StartWeek": 2600,
+        "LastWeek": 2600,
+        "Weeks": 1,
+        "Open": true
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 105,
+        "LastWeek": 105,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 261,
+        "LastWeek": 261,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 573,
+        "LastWeek": 573,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 729,
+        "LastWeek": 733,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 833,
+        "LastWeek": 837,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 1041,
+        "LastWeek": 1045,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 1145,
+        "LastWeek": 1153,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 1197,
+        "LastWeek": 1205,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 1665,
+        "LastWeek": 1665,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 3,
+        "StartWeek": 2497,
+        "LastWeek": 2497,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 209,
+        "LastWeek": 209,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 885,
+        "LastWeek": 885,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 989,
+        "LastWeek": 993,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 1197,
+        "LastWeek": 1197,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 1405,
+        "LastWeek": 1413,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 1717,
+        "LastWeek": 1717,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 1821,
+        "LastWeek": 1821,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 2133,
+        "LastWeek": 2137,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 2445,
+        "LastWeek": 2445,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 4,
+        "StartWeek": 2497,
+        "LastWeek": 2497,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 5,
+        "StartWeek": 209,
+        "LastWeek": 209,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 5,
+        "StartWeek": 573,
+        "LastWeek": 577,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 5,
+        "StartWeek": 677,
+        "LastWeek": 689,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 5,
+        "StartWeek": 885,
+        "LastWeek": 885,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 5,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 5,
+        "StartWeek": 1613,
+        "LastWeek": 1613,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 5,
+        "StartWeek": 2289,
+        "LastWeek": 2293,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 5,
+        "StartWeek": 2341,
+        "LastWeek": 2345,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 5,
+        "StartWeek": 2393,
+        "LastWeek": 2393,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 157,
+        "LastWeek": 161,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 417,
+        "LastWeek": 437,
+        "Weeks": 21,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 1197,
+        "LastWeek": 1209,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 1405,
+        "LastWeek": 1405,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 1977,
+        "LastWeek": 1977,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 2081,
+        "LastWeek": 2081,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 2341,
+        "LastWeek": 2353,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 6,
+        "StartWeek": 2549,
+        "LastWeek": 2553,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 53,
+        "LastWeek": 53,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 625,
+        "LastWeek": 625,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 781,
+        "LastWeek": 781,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 937,
+        "LastWeek": 941,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 989,
+        "LastWeek": 993,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 1041,
+        "LastWeek": 1045,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 1145,
+        "LastWeek": 1149,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 1197,
+        "LastWeek": 1197,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 1457,
+        "LastWeek": 1461,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 1509,
+        "LastWeek": 1509,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 2185,
+        "LastWeek": 2185,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 2341,
+        "LastWeek": 2345,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 2445,
+        "LastWeek": 2445,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 7,
+        "StartWeek": 2600,
+        "LastWeek": 2600,
+        "Weeks": 1,
+        "Open": true
+      },
+      {
+        "ClubId": 8,
+        "StartWeek": 937,
+        "LastWeek": 937,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 8,
+        "StartWeek": 989,
+        "LastWeek": 989,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 8,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 8,
+        "StartWeek": 2185,
+        "LastWeek": 2189,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 8,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 261,
+        "LastWeek": 261,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 625,
+        "LastWeek": 625,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 781,
+        "LastWeek": 781,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 937,
+        "LastWeek": 937,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 1405,
+        "LastWeek": 1409,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 1665,
+        "LastWeek": 1665,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 2029,
+        "LastWeek": 2029,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 2081,
+        "LastWeek": 2081,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 9,
+        "StartWeek": 2237,
+        "LastWeek": 2237,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 10,
+        "StartWeek": 157,
+        "LastWeek": 157,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 10,
+        "StartWeek": 833,
+        "LastWeek": 833,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 10,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 10,
+        "StartWeek": 1145,
+        "LastWeek": 1145,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 10,
+        "StartWeek": 1405,
+        "LastWeek": 1405,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 10,
+        "StartWeek": 1509,
+        "LastWeek": 1513,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 10,
+        "StartWeek": 1873,
+        "LastWeek": 1873,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 10,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 157,
+        "LastWeek": 157,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 625,
+        "LastWeek": 625,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 729,
+        "LastWeek": 733,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 885,
+        "LastWeek": 885,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 1353,
+        "LastWeek": 1361,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 1561,
+        "LastWeek": 1569,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 1769,
+        "LastWeek": 1769,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 2237,
+        "LastWeek": 2241,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 11,
+        "StartWeek": 2497,
+        "LastWeek": 2501,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 12,
+        "StartWeek": 677,
+        "LastWeek": 677,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 12,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 12,
+        "StartWeek": 2029,
+        "LastWeek": 2029,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 12,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 157,
+        "LastWeek": 157,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 365,
+        "LastWeek": 365,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 573,
+        "LastWeek": 573,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 729,
+        "LastWeek": 737,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 833,
+        "LastWeek": 837,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 885,
+        "LastWeek": 885,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 989,
+        "LastWeek": 997,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 1041,
+        "LastWeek": 1049,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 1249,
+        "LastWeek": 1253,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 1457,
+        "LastWeek": 1461,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 1613,
+        "LastWeek": 1613,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 2029,
+        "LastWeek": 2029,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 2133,
+        "LastWeek": 2137,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 13,
+        "StartWeek": 2393,
+        "LastWeek": 2393,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 261,
+        "LastWeek": 261,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 417,
+        "LastWeek": 421,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 573,
+        "LastWeek": 573,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 625,
+        "LastWeek": 625,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 677,
+        "LastWeek": 677,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 729,
+        "LastWeek": 729,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 885,
+        "LastWeek": 885,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 989,
+        "LastWeek": 1001,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 1405,
+        "LastWeek": 1405,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 1769,
+        "LastWeek": 1769,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 1873,
+        "LastWeek": 1873,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 2029,
+        "LastWeek": 2029,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 14,
+        "StartWeek": 2549,
+        "LastWeek": 2549,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 15,
+        "StartWeek": 677,
+        "LastWeek": 677,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 15,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 15,
+        "StartWeek": 1197,
+        "LastWeek": 1197,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 15,
+        "StartWeek": 1249,
+        "LastWeek": 1249,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 15,
+        "StartWeek": 1769,
+        "LastWeek": 1773,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 209,
+        "LastWeek": 209,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 261,
+        "LastWeek": 265,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 417,
+        "LastWeek": 421,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 469,
+        "LastWeek": 473,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 573,
+        "LastWeek": 573,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 885,
+        "LastWeek": 893,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 1197,
+        "LastWeek": 1197,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 1249,
+        "LastWeek": 1253,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 1613,
+        "LastWeek": 1613,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 2237,
+        "LastWeek": 2241,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 16,
+        "StartWeek": 2497,
+        "LastWeek": 2497,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 521,
+        "LastWeek": 521,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 781,
+        "LastWeek": 781,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 833,
+        "LastWeek": 833,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 937,
+        "LastWeek": 937,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 1353,
+        "LastWeek": 1357,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 1821,
+        "LastWeek": 1821,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 2497,
+        "LastWeek": 2497,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 17,
+        "StartWeek": 2549,
+        "LastWeek": 2557,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 157,
+        "LastWeek": 161,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 313,
+        "LastWeek": 321,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 365,
+        "LastWeek": 365,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 781,
+        "LastWeek": 785,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 1041,
+        "LastWeek": 1045,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 1405,
+        "LastWeek": 1405,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 2081,
+        "LastWeek": 2081,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 2133,
+        "LastWeek": 2133,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 2185,
+        "LastWeek": 2185,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 19,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 105,
+        "LastWeek": 109,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 313,
+        "LastWeek": 313,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 937,
+        "LastWeek": 941,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 989,
+        "LastWeek": 989,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 1249,
+        "LastWeek": 1257,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 1405,
+        "LastWeek": 1405,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 1457,
+        "LastWeek": 1461,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 1509,
+        "LastWeek": 1509,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 1665,
+        "LastWeek": 1665,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 1821,
+        "LastWeek": 1821,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 1873,
+        "LastWeek": 1873,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 1977,
+        "LastWeek": 1977,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 2029,
+        "LastWeek": 2041,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 2133,
+        "LastWeek": 2137,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 2237,
+        "LastWeek": 2237,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 20,
+        "StartWeek": 2600,
+        "LastWeek": 2600,
+        "Weeks": 1,
+        "Open": true
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 209,
+        "LastWeek": 209,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 833,
+        "LastWeek": 833,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 1145,
+        "LastWeek": 1157,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 1197,
+        "LastWeek": 1205,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 1769,
+        "LastWeek": 1773,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 2081,
+        "LastWeek": 2081,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 2237,
+        "LastWeek": 2241,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 2341,
+        "LastWeek": 2365,
+        "Weeks": 25,
+        "Open": false
+      },
+      {
+        "ClubId": 21,
+        "StartWeek": 2600,
+        "LastWeek": 2600,
+        "Weeks": 1,
+        "Open": true
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 209,
+        "LastWeek": 209,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 313,
+        "LastWeek": 333,
+        "Weeks": 21,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 469,
+        "LastWeek": 469,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 521,
+        "LastWeek": 537,
+        "Weeks": 17,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 573,
+        "LastWeek": 573,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 625,
+        "LastWeek": 625,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 677,
+        "LastWeek": 681,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 781,
+        "LastWeek": 781,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 1717,
+        "LastWeek": 1717,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 1821,
+        "LastWeek": 1821,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 2029,
+        "LastWeek": 2029,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 2237,
+        "LastWeek": 2241,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 22,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 23,
+        "StartWeek": 417,
+        "LastWeek": 417,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 23,
+        "StartWeek": 521,
+        "LastWeek": 521,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 23,
+        "StartWeek": 625,
+        "LastWeek": 625,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 23,
+        "StartWeek": 937,
+        "LastWeek": 937,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 23,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 23,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 23,
+        "StartWeek": 1873,
+        "LastWeek": 1873,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 23,
+        "StartWeek": 2081,
+        "LastWeek": 2089,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 23,
+        "StartWeek": 2393,
+        "LastWeek": 2397,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 313,
+        "LastWeek": 317,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 417,
+        "LastWeek": 417,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 573,
+        "LastWeek": 577,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 989,
+        "LastWeek": 993,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 1041,
+        "LastWeek": 1045,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 1509,
+        "LastWeek": 1513,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 1665,
+        "LastWeek": 1665,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 1769,
+        "LastWeek": 1769,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 2081,
+        "LastWeek": 2081,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 24,
+        "StartWeek": 2133,
+        "LastWeek": 2133,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 25,
+        "StartWeek": 937,
+        "LastWeek": 937,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 25,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 25,
+        "StartWeek": 1561,
+        "LastWeek": 1561,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 25,
+        "StartWeek": 1769,
+        "LastWeek": 1773,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 25,
+        "StartWeek": 2237,
+        "LastWeek": 2241,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 25,
+        "StartWeek": 2549,
+        "LastWeek": 2553,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 157,
+        "LastWeek": 157,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 521,
+        "LastWeek": 521,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 625,
+        "LastWeek": 625,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 885,
+        "LastWeek": 885,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 1197,
+        "LastWeek": 1201,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 1353,
+        "LastWeek": 1369,
+        "Weeks": 17,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 1509,
+        "LastWeek": 1509,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 1561,
+        "LastWeek": 1561,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 1769,
+        "LastWeek": 1773,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 1821,
+        "LastWeek": 1821,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 2185,
+        "LastWeek": 2185,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 2237,
+        "LastWeek": 2245,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 2549,
+        "LastWeek": 2553,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 26,
+        "StartWeek": 2600,
+        "LastWeek": 2600,
+        "Weeks": 1,
+        "Open": true
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 573,
+        "LastWeek": 573,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 833,
+        "LastWeek": 833,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 1197,
+        "LastWeek": 1197,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 1561,
+        "LastWeek": 1561,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 1717,
+        "LastWeek": 1717,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 1769,
+        "LastWeek": 1773,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 1873,
+        "LastWeek": 1877,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 1977,
+        "LastWeek": 1989,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 27,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 105,
+        "LastWeek": 105,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 209,
+        "LastWeek": 213,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 313,
+        "LastWeek": 317,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 469,
+        "LastWeek": 469,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 937,
+        "LastWeek": 937,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 989,
+        "LastWeek": 989,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 1353,
+        "LastWeek": 1365,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 1821,
+        "LastWeek": 1825,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 1977,
+        "LastWeek": 1985,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 2029,
+        "LastWeek": 2037,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 2081,
+        "LastWeek": 2089,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 2445,
+        "LastWeek": 2445,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 2497,
+        "LastWeek": 2497,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 28,
+        "StartWeek": 2549,
+        "LastWeek": 2549,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 157,
+        "LastWeek": 157,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 209,
+        "LastWeek": 221,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 261,
+        "LastWeek": 261,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 365,
+        "LastWeek": 381,
+        "Weeks": 17,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 469,
+        "LastWeek": 469,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 573,
+        "LastWeek": 573,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 1457,
+        "LastWeek": 1457,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 1509,
+        "LastWeek": 1509,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 1821,
+        "LastWeek": 1821,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 2497,
+        "LastWeek": 2497,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 29,
+        "StartWeek": 2600,
+        "LastWeek": 2600,
+        "Weeks": 1,
+        "Open": true
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 157,
+        "LastWeek": 165,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 625,
+        "LastWeek": 637,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 677,
+        "LastWeek": 677,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 937,
+        "LastWeek": 937,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 989,
+        "LastWeek": 989,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 1041,
+        "LastWeek": 1045,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 1145,
+        "LastWeek": 1149,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 1405,
+        "LastWeek": 1405,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 1457,
+        "LastWeek": 1461,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 1665,
+        "LastWeek": 1665,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 1925,
+        "LastWeek": 1929,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 2549,
+        "LastWeek": 2549,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 30,
+        "StartWeek": 2600,
+        "LastWeek": 2600,
+        "Weeks": 1,
+        "Open": true
+      },
+      {
+        "ClubId": 31,
+        "StartWeek": 729,
+        "LastWeek": 733,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 31,
+        "StartWeek": 1093,
+        "LastWeek": 1097,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 31,
+        "StartWeek": 1509,
+        "LastWeek": 1517,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 31,
+        "StartWeek": 2497,
+        "LastWeek": 2497,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 32,
+        "StartWeek": 157,
+        "LastWeek": 165,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 32,
+        "StartWeek": 885,
+        "LastWeek": 885,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 32,
+        "StartWeek": 989,
+        "LastWeek": 993,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 32,
+        "StartWeek": 1249,
+        "LastWeek": 1253,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 32,
+        "StartWeek": 1769,
+        "LastWeek": 1769,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 32,
+        "StartWeek": 1925,
+        "LastWeek": 1929,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 32,
+        "StartWeek": 2289,
+        "LastWeek": 2293,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 32,
+        "StartWeek": 2549,
+        "LastWeek": 2549,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 33,
+        "StartWeek": 521,
+        "LastWeek": 521,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 33,
+        "StartWeek": 781,
+        "LastWeek": 793,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 33,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 33,
+        "StartWeek": 1353,
+        "LastWeek": 1361,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 33,
+        "StartWeek": 1665,
+        "LastWeek": 1665,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 33,
+        "StartWeek": 1873,
+        "LastWeek": 1873,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 33,
+        "StartWeek": 1977,
+        "LastWeek": 1977,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 33,
+        "StartWeek": 2133,
+        "LastWeek": 2133,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 33,
+        "StartWeek": 2185,
+        "LastWeek": 2197,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 34,
+        "StartWeek": 209,
+        "LastWeek": 209,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 34,
+        "StartWeek": 469,
+        "LastWeek": 469,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 34,
+        "StartWeek": 573,
+        "LastWeek": 577,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 34,
+        "StartWeek": 1301,
+        "LastWeek": 1313,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 34,
+        "StartWeek": 1457,
+        "LastWeek": 1461,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 34,
+        "StartWeek": 2393,
+        "LastWeek": 2405,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 521,
+        "LastWeek": 521,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 625,
+        "LastWeek": 633,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 937,
+        "LastWeek": 941,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 989,
+        "LastWeek": 997,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 1145,
+        "LastWeek": 1145,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 1249,
+        "LastWeek": 1249,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 1873,
+        "LastWeek": 1877,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 2133,
+        "LastWeek": 2133,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 2237,
+        "LastWeek": 2237,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 2341,
+        "LastWeek": 2345,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 2393,
+        "LastWeek": 2393,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 2497,
+        "LastWeek": 2501,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 35,
+        "StartWeek": 2549,
+        "LastWeek": 2561,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 36,
+        "StartWeek": 105,
+        "LastWeek": 109,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 36,
+        "StartWeek": 521,
+        "LastWeek": 525,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 36,
+        "StartWeek": 989,
+        "LastWeek": 997,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 36,
+        "StartWeek": 1613,
+        "LastWeek": 1621,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 36,
+        "StartWeek": 1769,
+        "LastWeek": 1769,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 36,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 37,
+        "StartWeek": 573,
+        "LastWeek": 573,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 37,
+        "StartWeek": 625,
+        "LastWeek": 625,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 37,
+        "StartWeek": 989,
+        "LastWeek": 989,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 37,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 37,
+        "StartWeek": 1301,
+        "LastWeek": 1301,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 37,
+        "StartWeek": 1509,
+        "LastWeek": 1509,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 37,
+        "StartWeek": 2133,
+        "LastWeek": 2145,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 37,
+        "StartWeek": 2185,
+        "LastWeek": 2185,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 37,
+        "StartWeek": 2497,
+        "LastWeek": 2497,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 38,
+        "StartWeek": 417,
+        "LastWeek": 417,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 38,
+        "StartWeek": 469,
+        "LastWeek": 469,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 38,
+        "StartWeek": 1145,
+        "LastWeek": 1153,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 38,
+        "StartWeek": 1405,
+        "LastWeek": 1405,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 38,
+        "StartWeek": 1457,
+        "LastWeek": 1461,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 38,
+        "StartWeek": 1717,
+        "LastWeek": 1721,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 38,
+        "StartWeek": 2081,
+        "LastWeek": 2085,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 38,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 38,
+        "StartWeek": 2549,
+        "LastWeek": 2553,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 39,
+        "StartWeek": 157,
+        "LastWeek": 157,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 39,
+        "StartWeek": 313,
+        "LastWeek": 337,
+        "Weeks": 25,
+        "Open": false
+      },
+      {
+        "ClubId": 39,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 39,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 39,
+        "StartWeek": 1249,
+        "LastWeek": 1249,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 39,
+        "StartWeek": 1301,
+        "LastWeek": 1321,
+        "Weeks": 21,
+        "Open": false
+      },
+      {
+        "ClubId": 39,
+        "StartWeek": 1457,
+        "LastWeek": 1465,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 40,
+        "StartWeek": 157,
+        "LastWeek": 161,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 40,
+        "StartWeek": 833,
+        "LastWeek": 833,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 40,
+        "StartWeek": 885,
+        "LastWeek": 885,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 40,
+        "StartWeek": 937,
+        "LastWeek": 937,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 40,
+        "StartWeek": 1145,
+        "LastWeek": 1145,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 40,
+        "StartWeek": 1249,
+        "LastWeek": 1249,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 40,
+        "StartWeek": 1353,
+        "LastWeek": 1357,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 40,
+        "StartWeek": 1561,
+        "LastWeek": 1561,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 40,
+        "StartWeek": 2600,
+        "LastWeek": 2600,
+        "Weeks": 1,
+        "Open": true
+      },
+      {
+        "ClubId": 41,
+        "StartWeek": 417,
+        "LastWeek": 421,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 41,
+        "StartWeek": 469,
+        "LastWeek": 469,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 41,
+        "StartWeek": 677,
+        "LastWeek": 681,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 41,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 41,
+        "StartWeek": 1197,
+        "LastWeek": 1201,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 41,
+        "StartWeek": 2185,
+        "LastWeek": 2189,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 41,
+        "StartWeek": 2600,
+        "LastWeek": 2600,
+        "Weeks": 1,
+        "Open": true
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 157,
+        "LastWeek": 157,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 1041,
+        "LastWeek": 1041,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 1145,
+        "LastWeek": 1145,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 1197,
+        "LastWeek": 1197,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 1665,
+        "LastWeek": 1665,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 2029,
+        "LastWeek": 2029,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 2133,
+        "LastWeek": 2137,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 2237,
+        "LastWeek": 2241,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 42,
+        "StartWeek": 2445,
+        "LastWeek": 2457,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 43,
+        "StartWeek": 833,
+        "LastWeek": 833,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 43,
+        "StartWeek": 937,
+        "LastWeek": 941,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 43,
+        "StartWeek": 1145,
+        "LastWeek": 1145,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 43,
+        "StartWeek": 1353,
+        "LastWeek": 1353,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 43,
+        "StartWeek": 1509,
+        "LastWeek": 1509,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 43,
+        "StartWeek": 2029,
+        "LastWeek": 2029,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 157,
+        "LastWeek": 161,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 261,
+        "LastWeek": 265,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 469,
+        "LastWeek": 469,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 521,
+        "LastWeek": 521,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 573,
+        "LastWeek": 577,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 677,
+        "LastWeek": 677,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 833,
+        "LastWeek": 833,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 937,
+        "LastWeek": 941,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 989,
+        "LastWeek": 1005,
+        "Weeks": 17,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 1093,
+        "LastWeek": 1093,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 1353,
+        "LastWeek": 1353,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 1561,
+        "LastWeek": 1561,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 1613,
+        "LastWeek": 1613,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 1925,
+        "LastWeek": 1925,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 2081,
+        "LastWeek": 2081,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 44,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 45,
+        "StartWeek": 105,
+        "LastWeek": 105,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 45,
+        "StartWeek": 157,
+        "LastWeek": 161,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 45,
+        "StartWeek": 417,
+        "LastWeek": 417,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 45,
+        "StartWeek": 833,
+        "LastWeek": 833,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 45,
+        "StartWeek": 989,
+        "LastWeek": 1005,
+        "Weeks": 17,
+        "Open": false
+      },
+      {
+        "ClubId": 45,
+        "StartWeek": 1405,
+        "LastWeek": 1405,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 45,
+        "StartWeek": 2029,
+        "LastWeek": 2041,
+        "Weeks": 13,
+        "Open": false
+      },
+      {
+        "ClubId": 45,
+        "StartWeek": 2237,
+        "LastWeek": 2245,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 157,
+        "LastWeek": 157,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 313,
+        "LastWeek": 313,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 365,
+        "LastWeek": 369,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 469,
+        "LastWeek": 473,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 781,
+        "LastWeek": 781,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 1197,
+        "LastWeek": 1197,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 1353,
+        "LastWeek": 1353,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 1613,
+        "LastWeek": 1613,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 1925,
+        "LastWeek": 1925,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 2237,
+        "LastWeek": 2237,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 46,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 313,
+        "LastWeek": 313,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 521,
+        "LastWeek": 521,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 1249,
+        "LastWeek": 1253,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 1509,
+        "LastWeek": 1509,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 1665,
+        "LastWeek": 1673,
+        "Weeks": 9,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 1717,
+        "LastWeek": 1721,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 2081,
+        "LastWeek": 2081,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 2185,
+        "LastWeek": 2185,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 2289,
+        "LastWeek": 2289,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 47,
+        "StartWeek": 2341,
+        "LastWeek": 2341,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 469,
+        "LastWeek": 469,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 521,
+        "LastWeek": 521,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 781,
+        "LastWeek": 781,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 1249,
+        "LastWeek": 1249,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 1405,
+        "LastWeek": 1405,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 1457,
+        "LastWeek": 1461,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 1509,
+        "LastWeek": 1509,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 1561,
+        "LastWeek": 1565,
+        "Weeks": 5,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 2185,
+        "LastWeek": 2185,
+        "Weeks": 1,
+        "Open": false
+      },
+      {
+        "ClubId": 48,
+        "StartWeek": 2549,
+        "LastWeek": 2549,
+        "Weeks": 1,
+        "Open": false
+      }
+    ]
+  }
+}

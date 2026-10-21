@@ -1,0 +1,12 @@
+  FootballTycoon.Core -> C:\github-projects\football-tycoon\src\FootballTycoon.Core\bin\Release\net10.0\FootballTycoon.Core.dll
+  FootballTycoon.Application -> C:\github-projects\football-tycoon\src\FootballTycoon.Application\bin\Release\net10.0\FootballTycoon.Application.dll
+  FootballTycoon.Endurance -> C:\github-projects\football-tycoon\src\FootballTycoon.Endurance\bin\Release\net10.0\FootballTycoon.Endurance.dll
+  FootballTycoon.Infrastructure -> C:\github-projects\football-tycoon\src\FootballTycoon.Infrastructure\bin\Release\net10.0\FootballTycoon.Infrastructure.dll
+  FootballTycoon.Headless -> C:\github-projects\football-tycoon\src\FootballTycoon.Headless\bin\Release\net10.0\FootballTycoon.Headless.dll
+  FootballTycoon.Tests -> C:\github-projects\football-tycoon\tests\FootballTycoon.Tests\bin\Release\net10.0\FootballTycoon.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:19.25

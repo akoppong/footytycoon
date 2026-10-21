@@ -1,0 +1,79 @@
+{
+  "Configuration": {
+    "Kind": "configuration",
+    "Options": {
+      "Seasons": 50,
+      "Seed": 2028,
+      "Strategy": 9,
+      "TimeLimit": "01:00:00",
+      "OwnerRecruitment": 1
+    },
+    "DiagnosticOnly": true,
+    "SimulationVersion": "renewal-wage-basis-21",
+    "Runtime": "10.0.12",
+    "BuildVersion": "1.0.0+8a2665b8bbcd9466ba45615210b55eb34283cbf8",
+    "AssemblySha256": "F55E6864B37C3CF60DB806C9E3C30E8962B6632142EEFB999C3963323023ADC8",
+    "OwnedClubId": 18,
+    "OwnerRecruitment": "CoverShortages",
+    "Policy": "Selected opening strategy, then preserve reserve; accept recommended renewals/intake unless blocked, then decline intake. When below role or total-squad cover, approve the director's free-agent recommendation only if its ordinary proposal has no blocking reasons; no reserve exception or alternative target search. No owner injections, autosave, pruning, rescue or silent calendar advance."
+  },
+  "RunnerHashVerified": true,
+  "Samples": 101,
+  "ClubAndAggregateBridges": 4949,
+  "MinimumActive": 1077,
+  "MaximumActive": 1225,
+  "OutOfTargetWeeks": 2,
+  "OutOfTargetCensuses": [
+    [
+      "season-close",
+      1352,
+      1085
+    ],
+    [
+      "season-close",
+      2600,
+      1077
+    ],
+    [
+      "final",
+      2600,
+      1077
+    ]
+  ],
+  "FinalPopulation": {
+    "Contracted": 808,
+    "Available": 269,
+    "Active": 1077,
+    "Graduated": 2365,
+    "Retired": 2488
+  },
+  "OwnedShortWeeks": 12,
+  "RivalShortClubWeeks": 1609,
+  "RivalVacancies": {
+    "ObservedClubWeeks": 1609,
+    "RoleGapClubWeeks": 1581,
+    "TotalOnlyClubWeeks": 28,
+    "GateClubWeeks": {
+      "CareerBoundary": 9,
+      "Cooldown": 846,
+      "PendingOffer": 754
+    }
+  },
+  "LongestRivalEpisode": 25,
+  "FinalShortClubs": 9,
+  "FinalClubCashPounds": 4098804292,
+  "FinalOwnerClubCashPounds": 119579814,
+  "FinalClubArrearsPounds": 0,
+  "CumulativeWagesPaidPounds": 3127868180,
+  "FinalYearWagesPaidPounds": 59200920,
+  "FinalYearCashIncreasePounds": 83531004,
+  "CheckpointBytes": 416739256,
+  "GameplaySha256": "ACB95C74B72A9A1C6F8930E93B9BB15D79FE5CCA827D3CAA0D37DD7FF74F46AB",
+  "ElapsedSeconds": 1933.1596038,
+  "MaximumWeekMilliseconds": 3881,
+  "OwnerRecruitment": {
+    "Approved": 22,
+    "Blocked": 0,
+    "NoRecommendation": 0
+  }
+}
