@@ -2,6 +2,8 @@
 
 The completed [50-season renewal-policy pilot](FIFTY_SEASON_PILOT.md) records the preserved schema-21 runner, owner policy, population/coverage results, reconciled cashflows and capacity limits. It is one sample with failed population targets, not an acceptance pass or an extension of playable careers.
 
+The isolated [academy candidate frequency experiment](ACADEMY_FREQUENCY_EXPERIMENT.md) compares completed ten-, 25- and 50-season samples against that policy. Population and squad cover improve in those samples, while accumulated cash increases; the experiment is not part of the playable build.
+
 The separate `FootballTycoon.Endurance` executable compiles the actual core source with a diagnostic 50-season boundary. The desktop and ordinary headless runner still use the three-season core. No production save format or playable career limit changes. Opening contracts remain one to three years in both assemblies, independently of the validation horizon. Tests compare opening bytes and weekly gameplay between the builds; the ordinary reader rejects worlds beyond its supported boundary.
 
 This runner measures the current policy before changing balance. It does not reset seasons, inject cash, invent people, forgive debts, prune history or bypass proposal checks. Only the diagnostic assembly defines `ENDURANCE`. It does not reference the desktop, application or save vault, and does not produce loadable save files.
@@ -24,6 +26,8 @@ The owner chooses the selected strategy in year one, then preserves reserve. Ann
 ## Evidence and interpretation
 
 `metrics.jsonl` starts with configuration, simulation version, runtime, build version, assembly SHA256 and owned club ID. The build version can identify the base source revision; the assembly hash distinguishes locally modified builds. Record the source revision and working-tree state alongside any published pilot results. Samples follow at opening, season close, after renewal and final stop. Counts of graduates, retirements, departures and signings are cumulative. No fictional births are inferred; the known person population is all opening contracted and available people plus actual academy graduates.
+
+The final summary's [checkpoint capacity report](CHECKPOINT_CAPACITY.md) attributes the already encoded checkpoint to top-level UTF-8 value sizes and immediate array counts, with an exact envelope remainder. It is read-only and distinct from compressed file size or durable-save acceptance. Existing elapsed timing is captured before this final scan and excludes its cost.
 
 Configuration names the selected owner policy. `owner-recruitment` events record evaluation week, outcome (`Approved`, `Blocked` or `NoRecommendation`), recommended identity/name where present, and the ordinary blocking reasons. Summary `OwnerRecruitment` counts these evaluation occurrences, not unique people or successful signings. The same unresolved state can recur each week. Healthy squads, disabled policy and ineligible review states produce no event. `NoRecommendation` includes cases where the normal director filters cannot find a suitable candidate; it does not necessarily mean the pool is empty. An approval is a fallible pending approach, not a signing. Existing `OwnedSignings` in population samples counts successful owner signings, including the optional opening transfer search.
 
