@@ -1,0 +1,77 @@
+[
+  {
+    "Week": 0,
+    "SchemaVersion": 23,
+    "SimulationVersion": "compact-journal-23",
+    "Seed": 2026,
+    "JournalEntries": 0,
+    "ObjectJsonBytes": 460461,
+    "CompactJsonBytes": 460461,
+    "ObjectJournalBytes": 2,
+    "CompactJournalBytes": 2,
+    "ObjectGzipBytes": 77461,
+    "CompactGzipBytes": 77461,
+    "ObjectSha256": "6BFEE31002BBC78EDDBA58335F20309D1B824F06877F6E30C31EC42E0141C970",
+    "CompactSha256": "6BFEE31002BBC78EDDBA58335F20309D1B824F06877F6E30C31EC42E0141C970",
+    "DurableFiles": []
+  },
+  {
+    "Week": 52,
+    "SchemaVersion": 23,
+    "SimulationVersion": "compact-journal-23",
+    "Seed": 2026,
+    "JournalEntries": 66479,
+    "ObjectJsonBytes": 9293608,
+    "CompactJsonBytes": 5570784,
+    "ObjectJournalBytes": 7030067,
+    "CompactJournalBytes": 3307243,
+    "ObjectGzipBytes": 1479139,
+    "CompactGzipBytes": 1387670,
+    "ObjectSha256": "967FC596F41A4DAFC78D8BC84C53638D6937A65FC951474EEFF93C261AADCAA3",
+    "CompactSha256": "00B23F8DEE0B7C78EAA6B354A10C24F6EBC363BA1C1D45414502BEEAAA041F6A",
+    "DurableFiles": []
+  },
+  {
+    "Week": 156,
+    "SchemaVersion": 23,
+    "SimulationVersion": "compact-journal-23",
+    "Seed": 2026,
+    "JournalEntries": 187813,
+    "ObjectJsonBytes": 26309282,
+    "CompactJsonBytes": 15791754,
+    "ObjectJournalBytes": 20191193,
+    "CompactJournalBytes": 9673665,
+    "ObjectGzipBytes": 4112484,
+    "CompactGzipBytes": 3854671,
+    "ObjectSha256": "C28ECEFE566EB24901E8414822E7DD141AF2A20B2B56B4F4D51684FE0F482A71",
+    "CompactSha256": "00BE9CCB5B714184CEC73A6591D5621F6DE705FC193C2DE273688147DE594A5B",
+    "DurableFiles": [
+      {
+        "Format": "objects",
+        "SnapshotId": "280787d9c534472f8c8128eddf87548c",
+        "Bytes": 4112820
+      },
+      {
+        "Format": "compact",
+        "SnapshotId": "ce27d1ac088c4dbeb07bf8345d69ae24",
+        "Bytes": 3855007
+      }
+    ]
+  },
+  {
+    "Week": 208,
+    "SchemaVersion": 23,
+    "SimulationVersion": "compact-journal-23",
+    "Seed": 2026,
+    "JournalEntries": 244546,
+    "ObjectJsonBytes": 34550678,
+    "CompactJsonBytes": 20856102,
+    "ObjectJournalBytes": 26440218,
+    "CompactJournalBytes": 12745642,
+    "ObjectGzipBytes": 5390275,
+    "CompactGzipBytes": 5056126,
+    "ObjectSha256": "2EA4076F576840970D0C4B167134AA662304BDF94BDC907B7AEADF76C8D627A9",
+    "CompactSha256": "7E72666F1AD27ACA4019A52A1645FA76E79C5ACDF4EF6D57284467F70C48A6E3",
+    "DurableFiles": []
+  }
+]
