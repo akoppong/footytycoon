@@ -122,7 +122,7 @@ public class RecruitmentMarketTests
         var world = ControlledWorld.Create(8); // Schema four predates the pool and announced retirements.
         SimulationTests.Commit(world, Allocation.Acquire);
         SimulationTests.Commit(world, Allocation.Recruitment);
-        var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var legacy = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         legacy["SchemaVersion"] = 4; legacy["SimulationVersion"] = "competition-4"; legacy.Remove("CalendarStartSeason");
         foreach (var history in legacy["History"]!.AsArray()) history!.AsObject().Remove("Recruitment");
         world.History = world.History.Select(h => h with { Recruitment = null }).ToList();

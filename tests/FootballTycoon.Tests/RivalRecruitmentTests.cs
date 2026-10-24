@@ -127,11 +127,11 @@ public class RivalRecruitmentTests(ITestOutputHelper output)
     {
         var (world, _) = Market(1);
         SimulationTests.Commit(world, Allocation.FreeAgentRecruitment, "owner-offer");
-        var node = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var node = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         node["SchemaVersion"] = 13; node["SimulationVersion"] = "free-agents-13"; node.Remove("RivalApproaches");
         var bytes = Encoding.UTF8.GetBytes(node.ToJsonString()); var copy = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
-        Assert.Equal(copy, bytes); Assert.Equal(22, migrated.SchemaVersion);
+        Assert.Equal(copy, bytes); Assert.Equal(23, migrated.SchemaVersion);
         Assert.Equal(world.FreeAgentBids, migrated.FreeAgentBids); Assert.Equal(world.FreeAgents, migrated.FreeAgents);
         Assert.Equal(world.Journal, migrated.Journal); Assert.Equal(world.RandomStates, migrated.RandomStates);
         Assert.Empty(migrated.RivalApproaches);

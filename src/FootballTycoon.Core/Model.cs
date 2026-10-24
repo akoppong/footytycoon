@@ -185,8 +185,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 22;
-    public string SimulationVersion { get; set; } = "acquisition-counteroffer-22";
+    public int SchemaVersion { get; set; } = 23;
+    public string SimulationVersion { get; set; } = "compact-journal-23";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -236,10 +236,11 @@ public sealed class World
 
 public static class WorldCodec
 {
-    public static byte[] Encode(World world) => JsonSerializer.SerializeToUtf8Bytes(world);
+    private static readonly JsonSerializerOptions CompactOptions = new() { Converters = { new LedgerEntryConverter() } };
+    public static byte[] Encode(World world) => JsonSerializer.SerializeToUtf8Bytes(world, world.SchemaVersion >= 23 ? CompactOptions : null);
     public static World Decode(byte[] bytes)
     {
-        var world = JsonSerializer.Deserialize<World>(bytes) ?? throw new InvalidDataException("Empty world.");
+        var world = JsonSerializer.Deserialize<World>(bytes, CompactOptions) ?? throw new InvalidDataException("Empty world.");
         var closeLegacySeason = world.SchemaVersion == 1 && world.Status == CareerStatus.PrototypeComplete;
         // Pre-calendar saves keep their stored layout (including cup rounds added during migration) for the
         // current season; the next season is the first on the dated calendar.
@@ -394,6 +395,12 @@ public static class WorldCodec
             WorldFactory.Validate(world, priorAcquisition: true);
             // No past bargaining is invented and completed purchases retain their original price.
             world.SchemaVersion = 22; world.SimulationVersion = "acquisition-counteroffer-22";
+        }
+        if (world.SchemaVersion == 22)
+        {
+            WorldFactory.Validate(world, priorCompactJournal: true);
+            // Encoding changes, not financial history: retain every entry and all saved gameplay state.
+            world.SchemaVersion = 23; world.SimulationVersion = "compact-journal-23";
         }
         WorldFactory.Validate(world);
         return world;

@@ -208,7 +208,7 @@ public sealed class MatchRealismTests : IDisposable
     {
         var world = Opening(11);
         while (world.Week < 4) Simulation.AdvanceWeek(world);
-        var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var legacy = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         legacy["SchemaVersion"] = 5; legacy["SimulationVersion"] = "market-5";
         foreach (var result in legacy["Results"]!.AsArray())
         {
@@ -221,7 +221,7 @@ public sealed class MatchRealismTests : IDisposable
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(22, migrated.SchemaVersion); Assert.Equal("acquisition-counteroffer-22", migrated.SimulationVersion);
+        Assert.Equal(23, migrated.SchemaVersion); Assert.Equal("compact-journal-23", migrated.SimulationVersion);
         Assert.Equal(world.Results.Select(r => (r.FixtureId, r.HomeGoals, r.AwayGoals)), migrated.Results.Select(r => (r.FixtureId, r.HomeGoals, r.AwayGoals)));
         Assert.All(migrated.Results, r =>
         {

@@ -68,7 +68,7 @@ public class CupTests
     {
         static byte[] Downgrade(World world)
         {
-            var json = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+            var json = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
             json["SchemaVersion"] = 3; json["SimulationVersion"] = "pyramid-3"; json.Remove("CupStartSeason");
             var fixtures = json["Fixtures"]!.AsArray();
             for (var i = fixtures.Count - 1; i >= 0; i--)
@@ -77,7 +77,7 @@ public class CupTests
         }
         var opening = WorldFactory.Create(4); var openingBytes = Downgrade(opening); var source = openingBytes.ToArray();
         var migratedOpening = WorldCodec.Decode(openingBytes);
-        Assert.Equal(source, openingBytes); Assert.Equal(22, migratedOpening.SchemaVersion);
+        Assert.Equal(source, openingBytes); Assert.Equal(23, migratedOpening.SchemaVersion);
         Assert.Equal(1, migratedOpening.CupStartSeason);
         Assert.Equal(16, migratedOpening.Fixtures.Count(f => f.Competition == Competition.Cup));
 

@@ -4,7 +4,7 @@ Goal: a complete, compelling Football Tycoon game, from consequential ownership 
 
 ## Current evidence and next work
 
-The current packaged executable is artifacts/windows-6bff0971/FootballTycoon.exe (schema 22, one acquisition counteroffer with a saved response and separate purchase confirmation). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
+The current packaged executable is artifacts/windows-e718398a/FootballTycoon.exe (schema 23, compact journal storage preserving every transaction, including the existing acquisition counteroffer flow). Validation is recorded below. This remains a three-season development milestone, not the complete game or a production release.
 
 | Required area | Current state / evidence needed to finish |
 |---|---|
@@ -285,3 +285,11 @@ The matched fifty-season experiment also completes, with population 1,186–1,36
 The isolated runner now measures final serialized bytes by top-level field without creating another world or changing saved state. A matched four-season schema-22 replay preserves all 126 metric events, every existing non-timing summary field and the exact 34,550,723-byte gameplay checkpoint. The journal contributes 26,440,222 bytes (about 76.5%), making it the first storage area to investigate. See [capacity definitions, provenance and limits](CHECKPOINT_CAPACITY.md). The report measures uncompressed bytes, not durable-save capacity, and does not extend playable careers or change production storage limits.
 
 All 258 Release tests, the solution formatting check and warnings-as-errors build pass. Independent reviews cleared the experimental source method, all three matched academy reports, the capacity implementation/tests and its unchanged replay evidence. The production Windows package remains `windows-6bff0971`; no core or desktop behavior changed in this unit.
+
+## Compact journal storage
+
+Schema 23 replaces repeated journal property names with six ordered values, retaining every entry and exact amount. Historical object rows remain readable; migration validates schema 22 and changes only version markers, preserving saved receipts and references. Malformed rows fail with controlled errors so invalid snapshots do not break save discovery. See [format, migration and measurements](COMPACT_JOURNAL.md).
+
+The same week-156 diagnostic world encodes as 26,309,282 object-JSON bytes or 15,791,754 compact bytes, about 40.0% less. Real production-vault files measure 4,112,820 and 3,855,007 bytes, about 6.3% less. Independent checks confirm all 187,813 journal rows, every logical world field, both checksums and exact decompressed payloads. This is not a cross-schema hash-equality claim or fifty-season capacity pass. Vault bounds, playable length and the experimental academy rule remain unchanged.
+
+All 281 Release tests pass, and the 23 focused cases pass again after review corrected the interruption test to fail the candidate write after a successful recovery write. Both format checks and the warnings-as-errors build pass. Package `windows-e718398a` passes headless and graphical acquisition, three-season, development, rival recruitment, owner-depth, retirement and save/load flows with the bundled runtime, exit zero and empty graphical stderr. History at 100% and retirement terms at 150% were inspected. `FootballTycoon-compact-journal-windows.zip` contains 199 entries and all three font licenses. Longer-career storage, economy, clean-machine and human-playtest gates remain open.

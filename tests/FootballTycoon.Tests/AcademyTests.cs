@@ -158,11 +158,11 @@ public class AcademyTests
     public void SchemaElevenMigrationDoesNotInventGraduatesOrAlterExistingPlayers()
     {
         var world = SeasonTests.EndFirstSeason();
-        var legacy = JsonNode.Parse(WorldCodec.Encode(world))!.AsObject();
+        var legacy = System.Text.Json.JsonSerializer.SerializeToNode(world)!.AsObject();
         legacy["SchemaVersion"] = 11; legacy["SimulationVersion"] = "people-history-11"; legacy.Remove("AcademyGraduates");
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var original = bytes.ToArray();
         var loaded = WorldCodec.Decode(bytes);
-        Assert.Equal(original, bytes); Assert.Equal(22, loaded.SchemaVersion); Assert.Empty(loaded.AcademyGraduates);
+        Assert.Equal(original, bytes); Assert.Equal(23, loaded.SchemaVersion); Assert.Empty(loaded.AcademyGraduates);
         Assert.Equal(world.Clubs.SelectMany(c => c.Players), loaded.Clubs.SelectMany(c => c.Players));
         Assert.Equal(world.Journal, loaded.Journal); Assert.Equal(world.RandomStates, loaded.RandomStates);
         Assert.Equal(WorldCodec.Encode(loaded), WorldCodec.Encode(WorldCodec.Clone(loaded)));
