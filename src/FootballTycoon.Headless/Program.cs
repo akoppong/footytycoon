@@ -3,6 +3,13 @@ using FootballTycoon.Application;
 using FootballTycoon.Core;
 using FootballTycoon.Infrastructure;
 
+if (args.Length > 0 && args[0] == "--baseline")
+{
+    if (args.Length != 3) throw new ArgumentException("Usage: --baseline <seed> <new-output-directory>");
+    await FootballTycoon.Headless.BaselineDiagnostics.RunAsync(ulong.Parse(args[1]), args[2]);
+    return;
+}
+
 var strategy = args.Length > 0 ? Enum.Parse<Allocation>(args[0], true) : Allocation.PreserveReserve;
 if (!Seasons.IsCapitalPlan(strategy))
     throw new ArgumentException("Choose PreserveReserve, Hospitality, Recruitment, or Training.");
