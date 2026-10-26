@@ -10,6 +10,13 @@ if (args.Length > 0 && args[0] == "--baseline")
     return;
 }
 
+if (args.Length > 0 && args[0] == "--playable-start")
+{
+    if (args.Length != 2) throw new ArgumentException("Usage: --playable-start <new-output-directory>");
+    await FootballTycoon.Headless.PlayableStartDiagnostics.RunAsync(args[1]);
+    return;
+}
+
 var strategy = args.Length > 0 ? Enum.Parse<Allocation>(args[0], true) : Allocation.PreserveReserve;
 if (!Seasons.IsCapitalPlan(strategy))
     throw new ArgumentException("Choose PreserveReserve, Hospitality, Recruitment, or Training.");
