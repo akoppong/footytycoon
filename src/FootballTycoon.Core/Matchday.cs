@@ -6,6 +6,10 @@ public enum Availability { Available, Injured, Suspended }
 // ReturnWeek is the first career week the player is fit; a suspension is served over club matches, not weeks.
 public sealed record PlayerAvailability(PersonId Player, Availability Status, int ReturnWeek, int MatchesBanned, int SeasonYellows);
 
+// A pure, decision-time result. E06 attaches its snapshots to the executed fixture.
+public sealed record SelectionDecision(ImmutableArray<(Player Player, Role Position)> Lineup,
+    long DecisionWorldRevision, MandateOrigin Origin, ImmutableArray<SelectionSwap> Swaps);
+
 // Aggregate matchday model: availability-aware 1-4-4-2 selection, chances, discipline, injuries and ratings.
 // Tuned for lower-league rates: about 2.6 goals, 3.7 cautions and 0.13 dismissals per match, 0.3 injuries per side.
 public static class Matchday
@@ -43,6 +47,39 @@ public static class Matchday
         return picks.OrderBy(p => p.Position).ToImmutableArray();
     }
 
+    // Only the owned club follows the owner's mandate; the Club overload remains readiness selection.
+    public static SelectionDecision Select(World world)
+    {
+        var club = world.OwnedClub;
+        var readiness = Select(club, world.Week);
+        var origin = new MandateOrigin(world.Mandates.Manager, world.Mandates.Director, world.Mandates.Revision);
+        if (origin.Manager == ManagerMandate.Readiness)
+            return new(readiness, world.Revision, origin, []);
+
+        var starters = readiness.Select(s => s.Player.Id).ToHashSet();
+        var bench = club.Players.Where(p => !starters.Contains(p.Id) && p.Age <= 23 && IsAvailable(p, world.Week)).ToArray();
+        // Rank pairs from the original lineup/bench once; replacements cannot create further candidates.
+        var pairs = readiness.Select((slot, index) => (slot.Player, slot.Position, Index: index))
+            .Where(s => s.Player.Age > 23 && s.Position != Role.Goalkeeper && s.Player.Role == s.Position)
+            .SelectMany(s => bench.Where(p => p.Role == s.Position && p.Ability <= s.Player.Ability && p.Ability >= s.Player.Ability - 5)
+                .Select(p => (Displaced: s.Player, Selected: p, s.Index, Sacrifice: s.Player.Ability - p.Ability)))
+            .OrderBy(p => p.Sacrifice).ThenByDescending(p => p.Selected.Ability).ThenBy(p => p.Selected.Age)
+            .ThenBy(p => p.Selected.Role).ThenBy(p => p.Selected.Id.Value).ThenBy(p => p.Displaced.Id.Value);
+        var lineup = readiness.ToBuilder();
+        var used = new HashSet<PersonId>();
+        var swaps = ImmutableArray.CreateBuilder<SelectionSwap>();
+        static SelectionPlayer Snapshot(Player p) => new(p.Id, p.Role, p.Age, p.Ability);
+        foreach (var pair in pairs)
+        {
+            if (used.Contains(pair.Displaced.Id) || used.Contains(pair.Selected.Id)) continue;
+            used.Add(pair.Displaced.Id); used.Add(pair.Selected.Id);
+            lineup[pair.Index] = (pair.Selected, readiness[pair.Index].Position);
+            swaps.Add(new(Snapshot(pair.Displaced), Snapshot(pair.Selected), pair.Sacrifice));
+            if (swaps.Count == 2) break;
+        }
+        return new(lineup.ToImmutable(), world.Revision, origin, swaps.ToImmutable());
+    }
+
     private static int Distance(Role role, Role slot) => role == slot ? 0 : slot == Role.Goalkeeper ? (int)role : role == Role.Goalkeeper ? 9 : Math.Abs(role - slot);
     private static int Effective(Player player, Role position) => player.Ability - (player.Role == position ? 0
         : player.Role == Role.Goalkeeper || position == Role.Goalkeeper ? 25 : 8 * Math.Abs(player.Role - position));
@@ -74,7 +111,9 @@ public static class Matchday
     internal static MatchResult Play(World world, Fixture fixture, Club home, Club away)
     {
         var stream = $"match/{fixture.Id.Value}"; var people = stream + "/players";
-        Side[] sides = [new(home, Select(home, world.Week)), new(away, Select(away, world.Week))];
+        ImmutableArray<(Player Player, Role Position)> Lineup(Club club) => club.Id == world.OwnedClubId
+            ? Select(world).Lineup : Select(club, world.Week);
+        Side[] sides = [new(home, Lineup(home)), new(away, Lineup(away))];
         var moments = ImmutableArray.CreateBuilder<Moment>(); var events = ImmutableArray.CreateBuilder<MatchEvent>();
         int Conversion(int s) => Math.Clamp(BaseConversion + (s == 0 ? HomeConversion : 0) + (int)Math.Round((sides[s].Strength - sides[1 - s].Strength) * 6.5m)
             - 25 * sides[s].SentOff + 15 * sides[1 - s].SentOff, 40, 320);
