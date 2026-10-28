@@ -56,6 +56,48 @@ public partial class Main
                     list.ScrollVertical = 0;
                 }
             }
+            if (OS.GetCmdlineUserArgs().Contains("--playable-start-recovery-smoke-test"))
+            {
+                var checkpointPath = OS.GetEnvironment("FT_PLAYABLE_START_CHECKPOINT");
+                var bytes = System.IO.File.ReadAllBytes(checkpointPath);
+                var checkpoint = WorldCodec.Decode(bytes);
+                if (checkpoint.Week != 52 || checkpoint.Season != 2 || checkpoint.Status != CareerStatus.Active)
+                    throw new InvalidOperationException("Expected the ordinary E01B season-two checkpoint.");
+                var probeDirectory = System.IO.Path.Combine(output, "recovery-vault");
+                if (System.IO.Directory.Exists(probeDirectory)) throw new InvalidOperationException("Use a fresh recovery output directory.");
+                await session.DisposeAsync();
+                saveDirectory = probeDirectory;
+                var vault = new FootballTycoon.Infrastructure.LocalSaveVault(saveDirectory);
+                var saved = vault.Write(bytes, Guid.NewGuid().ToString("N"), Guid.NewGuid().ToString("N"), null, "E01B ordinary season-two start");
+                session = new FootballTycoon.Application.GameSession(vault);
+                view = await session.QueryAsync();
+                ShowSaves(); await Settled();
+                await Capture("Playable-start-recovery");
+                await Press("Load this checkpoint");
+                var recoveredBytes = await session.ExportCheckpointAsync();
+                if (!bytes.AsSpan().SequenceEqual(recoveredBytes) || inboxSelection != "resume" || auxiliary != "")
+                    throw new InvalidOperationException("Desktop recovery changed the common start or failed to restore context.");
+                foreach (var scale in new[] { 100, 125, 150 })
+                {
+                    textScale = scale; Theme.DefaultFontSize = 14 * scale / 100; Render();
+                    await Capture("Playable-start-loaded");
+                }
+                textScale = 100; Theme.DefaultFontSize = 14; Render();
+                GetViewport().GuiReleaseFocus();
+                _Input(new InputEventKey { Keycode = advanceKey, Pressed = true });
+                await Settled();
+                if (view.Week <= checkpoint.Week) throw new InvalidOperationException("Keyboard continuation did not advance.");
+                while (checkpoint.Week < view.Week) Simulation.AdvanceWeek(checkpoint);
+                var advancedBytes = await session.ExportCheckpointAsync();
+                if (!WorldCodec.Encode(checkpoint).AsSpan().SequenceEqual(advancedBytes))
+                    throw new InvalidOperationException("Recovered keyboard advance differs from production simulation.");
+                if (!bytes.AsSpan().SequenceEqual(vault.Read(saved.SnapshotId).WorldBytes)
+                    || !bytes.AsSpan().SequenceEqual(System.IO.File.ReadAllBytes(checkpointPath)))
+                    throw new InvalidOperationException("Recovery overwrote the common checkpoint.");
+                await Capture("Playable-start-advanced");
+                GD.Print("PLAYABLE START RECOVERY PASS: real checkpoint, recovery callback, exact bytes, three text scales, keyboard advance and preserved source.");
+                GetTree().Quit(); return;
+            }
             if (OS.GetCmdlineUserArgs().Contains("--acquisition-smoke-test"))
             {
                 var opening = await session.SaveAsync("Before acquisition probe");
