@@ -28,6 +28,7 @@ public sealed record GameView(long Revision, int Week, CareerStatus Status, stri
     ImmutableArray<Decision> Decisions, ImmutableArray<string> OpenQuestions, ImmutableArray<CashLine> CashLines,
     ImmutableArray<Obligation> Obligations, ImmutableArray<ClubSummary> Clubs, bool AllocationChosen)
 {
+    public MandateView Mandates { get; init; } = new(MandateState.Default, [], [], [], []);
     public long AcquisitionAskingPrice { get; init; }
     public long AcquisitionPrice { get; init; }
     public AcquisitionCounteroffer? AcquisitionOffer { get; init; }
@@ -154,6 +155,7 @@ public sealed class GameSession : IAsyncDisposable
             world.Obligations.Where(o => o.ClubId == club.Id).ToImmutableArray(),
             world.Clubs.Select(c => new ClubSummary(c.Id, c.Name, c.Division, c.Cash)).ToImmutableArray(), world.AllocationChosen)
         {
+            Mandates = OwnerMandates.View(world),
             AcquisitionAskingPrice = Balance.Load().PurchasePrice,
             AcquisitionPrice = Acquisition.Price(world),
             AcquisitionOffer = world.AcquisitionOffer,

@@ -53,7 +53,7 @@ public sealed class CompactJournalTests : IDisposable
         Assert.All(source.RootElement.GetProperty("Journal").EnumerateArray(), row => Assert.Equal(JsonValueKind.Object, row.ValueKind));
         var loaded = WorldCodec.Decode(bytes);
         var expected = JsonNode.Parse(bytes)!;
-        expected["SchemaVersion"] = 23; expected["SimulationVersion"] = "compact-journal-23";
+        expected["SchemaVersion"] = 24; expected["SimulationVersion"] = "owner-mandates-24";
         Assert.True(JsonNode.DeepEquals(expected, JsonSerializer.SerializeToNode(loaded)));
         Assert.Equal(original, bytes);
         Assert.Throws<InvalidOperationException>(() => Proposals.Commit(loaded, "stale", loaded.Revision, stale));

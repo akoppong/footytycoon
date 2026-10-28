@@ -144,7 +144,7 @@ public sealed class AcquisitionTests
         var bytes = WorldCodec.Encode(world); var original = bytes.ToArray();
         var stale = Proposals.Preview(world, new(bought ? Allocation.PreserveReserve : Allocation.Acquire), world.Revision);
         var migrated = WorldCodec.Decode(bytes);
-        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 23; expected["SimulationVersion"] = "compact-journal-23";
+        var expected = JsonNode.Parse(bytes)!; expected["SchemaVersion"] = 24; expected["SimulationVersion"] = "owner-mandates-24";
         Assert.True(JsonNode.DeepEquals(expected, System.Text.Json.JsonSerializer.SerializeToNode(migrated))); Assert.Equal(original, bytes);
         Assert.Null(migrated.AcquisitionOffer); Assert.Equal(Balance.Load().PurchasePrice, Acquisition.Price(migrated));
         Assert.Throws<InvalidOperationException>(() => Proposals.Commit(migrated, "stale", migrated.Revision, stale));

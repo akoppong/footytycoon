@@ -98,7 +98,7 @@ public class RecruitmentContentionTests
         var bytes = WorldCodec.Encode(world); var copy = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         var expected = JsonNode.Parse(bytes)!;
-        expected["SchemaVersion"] = 23; expected["SimulationVersion"] = "compact-journal-23";
+        expected["SchemaVersion"] = 24; expected["SimulationVersion"] = "owner-mandates-24";
         Assert.True(JsonNode.DeepEquals(expected, System.Text.Json.JsonSerializer.SerializeToNode(migrated)));
         Assert.Equal(copy, bytes);
         var before = WorldCodec.Encode(migrated);
