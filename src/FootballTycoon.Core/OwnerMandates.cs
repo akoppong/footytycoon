@@ -59,7 +59,7 @@ public static class OwnerMandates
                 || change.After.Manager == current.Manager && change.After.Director == current.Director
                 || change.WorldRevision <= lastRevision || change.WorldRevision <= 0 || change.WorldRevision > world.Revision
                 || change.Week < lastWeek || change.Week > world.Week
-                || !world.Commands.TryGetValue(change.CommandId, out var receipt) || receipt.CommandId != change.CommandId
+                || !world.Commands.TryGetValue(change.CommandId, out var receipt) || receipt is null || receipt.CommandId != change.CommandId
                 || receipt.Revision != change.WorldRevision || string.IsNullOrWhiteSpace(receipt.ProposalId))
                 Fail("Invalid mandate transition or shared receipt.");
             current = change.After; lastRevision = change.WorldRevision; lastWeek = change.Week;

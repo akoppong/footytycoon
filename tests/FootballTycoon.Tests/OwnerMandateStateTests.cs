@@ -68,6 +68,7 @@ public sealed class OwnerMandateStateTests : IDisposable
         Reject(world, w => w.MandateHistory[0] = w.MandateHistory[0] with { Before = w.Mandates });
         Reject(world, w => w.MandateHistory[0] = w.MandateHistory[0] with { WorldRevision = 0 });
         Reject(world, w => w.Commands.Clear());
+        Reject(world, w => w.Commands["mandates-1"] = null!);
         Reject(world, w => w.Commands["mandates-1"] = w.Commands["mandates-1"] with { Revision = 2 });
         Reject(world, w => { w.Mandates = MandateState.Default with { Revision = 1 }; w.MandateHistory[0] = w.MandateHistory[0] with { After = w.Mandates }; });
     }
@@ -137,17 +138,101 @@ public sealed class OwnerMandateStateTests : IDisposable
         Assert.Equal(WorldCodec.Encode(world), WorldCodec.Encode(WorldCodec.Clone(world)));
     }
 
-    private static World ApprovedWorld(World? prepared = null)
+    private static World ApprovedWorld(World? prepared = null, Func<World, RecommendationCandidate, RecommendationEvidence>? build = null)
     {
         var world = prepared ?? FreeAgentTests.Available();
         var quote = Proposals.Preview(world, new(Allocation.FreeAgentRecruitment), world.Revision);
         var terms = quote.Recruitment!;
         var candidate = new RecommendationCandidate(terms.Player.Id, terms.Player.Role, terms.Player.Age, terms.Player.Ability,
             terms.WeeklyWage, world.Week + 2, terms.ContractEndWeek, quote.TotalCommitment);
-        var evidence = new RecommendationEvidence(world.Week, world.Revision, Origin(world), candidate, candidate, RecommendationReason.Current);
+        var evidence = build?.Invoke(world, candidate)
+            ?? new RecommendationEvidence(world.Week, world.Revision, Origin(world), candidate, candidate, RecommendationReason.Current);
         Proposals.Commit(world, "approach", world.Revision, quote);
         world.MandateApproaches.Add(new(quote.Forecast.Id, evidence, null));
         WorldFactory.Validate(world); return world;
+    }
+
+    // Evidence is built directly. E04 ranking is not implemented here, only the saved LowerCostValue contract.
+    private static RecommendationCandidate WithWage(RecommendationCandidate c, long wage, int? end = null)
+    {
+        var endWeek = end ?? c.ContractEndWeek;
+        return c with { WeeklyWage = wage, ContractEndWeek = endWeek, TotalCommitment = wage * (endWeek - c.WageStartWeek + 1) };
+    }
+    private static World LowerCostWorld()
+    {
+        var world = FreeAgentTests.Available();
+        RecordChange(world, ManagerMandate.Readiness, DirectorMandate.LowerCostValue);
+        return world;
+    }
+    private static PersonId OtherPerson(World world, RecommendationCandidate selected) => world.OwnedClub.Players.First(p => p.Id != selected.PersonId).Id;
+    private static World LowerCostApproval(Func<RecommendationCandidate, PersonId, RecommendationCandidate> baseline)
+        => ApprovedWorld(LowerCostWorld(), (w, selected) => new(w.Week, w.Revision, Origin(w),
+            baseline(selected, OtherPerson(w, selected)), selected, RecommendationReason.LowerCostAlternative));
+    private static void RejectLowerCost(Func<RecommendationCandidate, PersonId, RecommendationCandidate> baseline)
+    {
+        // Start from valid fallback evidence, then replace the baseline with the broken alternative.
+        var world = ApprovedWorld(LowerCostWorld(), (w, c) => new(w.Week, w.Revision, Origin(w), c, c, RecommendationReason.NoLowerCostAlternative));
+        var evidence = world.MandateApproaches[0].Recommendation!;
+        var broken = evidence with { Baseline = baseline(evidence.Selected, OtherPerson(world, evidence.Selected)), Reason = RecommendationReason.LowerCostAlternative };
+        Reject(world, w => w.MandateApproaches[0] = w.MandateApproaches[0] with { Recommendation = broken });
+    }
+
+    [Fact]
+    public void LowerCostAlternativeEvidenceRoundTripsAtItsBoundaries()
+    {
+        var worlds = new[]
+        {
+            // Strictly cheaper weekly wage and total.
+            LowerCostApproval((s, other) => WithWage(s, s.WeeklyWage + 100) with { PersonId = other }),
+            // Ability floor: the selected player may be exactly five below the baseline.
+            LowerCostApproval((s, other) => WithWage(s, s.WeeklyWage + 100) with { PersonId = other, Ability = s.Ability + 5 }),
+            // Equal weekly wage is allowed when the total commitment is strictly lower.
+            LowerCostApproval((s, other) => WithWage(s, s.WeeklyWage, s.ContractEndWeek + Seasons.Weeks) with { PersonId = other })
+        };
+        foreach (var world in worlds)
+            Assert.Equal(WorldCodec.Encode(world), WorldCodec.Encode(WorldCodec.Decode(WorldCodec.Encode(world))));
+    }
+
+    [Fact]
+    public void NoLowerCostAlternativeEvidenceRoundTripsWhenBaselineIsSelected()
+    {
+        var world = ApprovedWorld(LowerCostWorld(), (w, c) => new(w.Week, w.Revision, Origin(w), c, c, RecommendationReason.NoLowerCostAlternative));
+        Assert.Equal(WorldCodec.Encode(world), WorldCodec.Encode(WorldCodec.Decode(WorldCodec.Encode(world))));
+    }
+
+    [Fact]
+    public void LowerCostAlternativeRejectsEveryBrokenBoundary()
+    {
+        // Selected ability more than five below the baseline.
+        RejectLowerCost((s, other) => WithWage(s, s.WeeklyWage + 100) with { PersonId = other, Ability = s.Ability + 6 });
+        // Selected weekly wage above the baseline, even though the total is lower.
+        RejectLowerCost((s, other) => WithWage(s, s.WeeklyWage - 1, s.ContractEndWeek + Seasons.Weeks) with { PersonId = other });
+        // Selected total above the baseline, even though the weekly wage is not.
+        RejectLowerCost((s, other) => WithWage(s, s.WeeklyWage + 100, s.ContractEndWeek - Seasons.Weeks) with { PersonId = other });
+        // No strict saving: identical weekly wage and total.
+        RejectLowerCost((s, other) => s with { PersonId = other });
+        // The same person is not an alternative.
+        RejectLowerCost((s, _) => WithWage(s, s.WeeklyWage + 100));
+        // Baseline and selected roles must match.
+        RejectLowerCost((s, other) => WithWage(s, s.WeeklyWage + 100) with { PersonId = other, Role = s.Role == Role.Forward ? Role.Defender : Role.Forward });
+    }
+
+    [Fact]
+    public void RecommendationReasonsMustMatchTheOriginDirectorMandate()
+    {
+        var alternative = LowerCostApproval((s, other) => WithWage(s, s.WeeklyWage + 100) with { PersonId = other });
+        var evidence = alternative.MandateApproaches[0].Recommendation!;
+        var fallback = evidence with { Baseline = evidence.Selected, Reason = RecommendationReason.NoLowerCostAlternative };
+        void Replace(World w, RecommendationEvidence value) => w.MandateApproaches[0] = w.MandateApproaches[0] with { Recommendation = value };
+        // Under a genuine CurrentRecommendation mandate (so the origin check passes), lower-cost reasons are rejected.
+        var currentWorld = ApprovedWorld(); var current = currentWorld.MandateApproaches[0].Recommendation!;
+        var cheaper = WithWage(current.Selected, current.Selected.WeeklyWage + 100) with { PersonId = OtherPerson(currentWorld, current.Selected) };
+        Reject(currentWorld, w => Replace(w, current with { Baseline = cheaper, Reason = RecommendationReason.LowerCostAlternative }));
+        Reject(currentWorld, w => Replace(w, current with { Reason = RecommendationReason.NoLowerCostAlternative }));
+        // A fallback keeps the baseline as the selected candidate.
+        Reject(alternative, w => Replace(w, fallback with { Baseline = evidence.Baseline }));
+        // Current evidence cannot be recorded under the LowerCostValue mandate.
+        Reject(alternative, w => Replace(w, fallback with { Reason = RecommendationReason.Current }));
     }
 
     [Fact]
