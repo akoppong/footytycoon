@@ -125,7 +125,14 @@ public class DirectorMandateTests
         Set(world, 1, 85, 150000);
         Value(world);
         if (gate == "empty") world.FreeAgents.Clear();
-        if (gate == "full") world.OwnedClub.Players.AddRange(world.FreeAgents.Select(f => f.Player).Take(7));
+        if (gate == "full")
+        {
+            // Wage-neutral distinct fillers keep the squad cap as the only closed gate; the candidates stay otherwise eligible.
+            var template = world.OwnedClub.Players[0];
+            while (world.OwnedClub.Players.Count < Academy.SquadLimit)
+                world.OwnedClub.Players.Add(template with { Id = new(9000 + world.OwnedClub.Players.Count), WeeklyWage = 0 });
+            Assert.Equal(Academy.SquadLimit, world.OwnedClub.Players.Count);
+        }
         if (gate == "unplanned") world.AllocationChosen = false;
         if (gate == "review") world.Status = CareerStatus.SeasonReview;
         if (gate == "late") world.Week = 51;
