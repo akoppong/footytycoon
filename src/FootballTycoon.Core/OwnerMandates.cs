@@ -43,7 +43,8 @@ public static class OwnerMandates
 
     internal static void Validate(World world)
     {
-        if (world.Mandates is null || world.MandateHistory is null || world.MandateSelections is null || world.MandateApproaches is null)
+        if (world.Mandates is null || world.MandateHistory is null || world.MandateSelections is null || world.MandateApproaches is null
+            || world.Commands is null)
             Fail("Missing mandate state.");
         CheckState(world.Mandates!);
         var current = MandateState.Default;

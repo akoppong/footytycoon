@@ -69,6 +69,7 @@ public sealed class OwnerMandateStateTests : IDisposable
         Reject(world, w => w.MandateHistory[0] = w.MandateHistory[0] with { WorldRevision = 0 });
         Reject(world, w => w.Commands.Clear());
         Reject(world, w => w.Commands["mandates-1"] = null!);
+        Reject(world, w => w.Commands = null!);
         Reject(world, w => w.Commands["mandates-1"] = w.Commands["mandates-1"] with { Revision = 2 });
         Reject(world, w => { w.Mandates = MandateState.Default with { Revision = 1 }; w.MandateHistory[0] = w.MandateHistory[0] with { After = w.Mandates }; });
     }
