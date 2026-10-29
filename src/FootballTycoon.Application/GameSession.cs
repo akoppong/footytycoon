@@ -92,6 +92,19 @@ public sealed class GameSession : IAsyncDisposable
     }
 
     public Task<Proposal> PreviewAsync(OwnerCommand command, long revision) => Enqueue(() => Proposals.Preview(world, command, revision));
+    public Task<MandateProposal> PreviewMandatesAsync(ChangeMandates command) => Enqueue(() => MandateCommands.Preview(world, command));
+    public Task<CommitReceipt> CommitMandatesAsync(MandateProposal proposal) => Enqueue(() =>
+    {
+        ArgumentNullException.ThrowIfNull(proposal);
+        ArgumentNullException.ThrowIfNull(proposal.Command);
+        if (proposal.Command.CommandId is { } id && world.Commands.TryGetValue(id, out var previous)) return previous;
+        var candidate = WorldCodec.Clone(world);
+        var result = MandateCommands.Commit(candidate, proposal);
+        SaveCurrent("recovery");
+        Persist(candidate, "commit");
+        world = candidate;
+        return result;
+    });
     public Task<CommitReceipt> CommitAsync(string commandId, long revision, Proposal proposal) => Enqueue(() =>
     {
         if (world.Commands.TryGetValue(commandId, out var previous)) return previous;
