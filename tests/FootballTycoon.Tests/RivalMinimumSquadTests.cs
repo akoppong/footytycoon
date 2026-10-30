@@ -106,6 +106,8 @@ public class RivalMinimumSquadTests
     {
         var (world, _) = RivalRecruitmentTests.Market(1);
         Simulation.AdvanceWeek(world); Assert.Single(world.RivalApproaches);
+        // These older saves predate prospective mandate evidence.
+        world.MandateSelections.Clear(); world.MandateApproaches.Clear();
         world.SchemaVersion = 18; world.SimulationVersion = "opening-population-18";
         var quote = Proposals.Preview(world, new(Allocation.InjectCapital) { Amount = 100 }, world.Revision);
         var bytes = WorldCodec.Encode(world); var original = bytes.ToArray();

@@ -92,7 +92,9 @@ public sealed class OwnerMandateStateTests : IDisposable
         Assert.Equal(original, bytes); Assert.Equal(originalFile, File.ReadAllBytes(path));
         await session.AdvanceAsync(AdvanceTarget.Week);
         var after = WorldCodec.Decode(await session.ExportCheckpointAsync());
-        Assert.Empty(after.FreeAgentBids); Assert.Empty(after.MandateApproaches);
+        Assert.Empty(after.FreeAgentBids);
+        var legacyOutcome = Assert.Single(after.MandateApproaches);
+        Assert.Null(legacyOutcome.Recommendation); Assert.Null(legacyOutcome.Outcome!.Origin);
         Assert.Equal(world.History.Select(h => h.OriginalForecast.Id), after.History.Select(h => h.OriginalForecast.Id));
         Assert.Equal(world.Commands["legacy-bid"], after.Commands["legacy-bid"]);
         Assert.Equal(originalFile, File.ReadAllBytes(path));
@@ -112,6 +114,7 @@ public sealed class OwnerMandateStateTests : IDisposable
         var displaced = world.OwnedClub.Players.First(p => p.Role == selected.Role && !lineup.Any(a => a.Player == p.Id));
         // Snapshot values represent decision time, deliberately independent of current player values.
         var swap = new SelectionSwap(new(displaced.Id, selected.Role, 29, 63), new(selected.Id, selected.Role, 21, 60), 3);
+        world.MandateSelections.RemoveAll(s => s.FixtureId == result.FixtureId);
         world.MandateSelections.Add(new(result.FixtureId, revision, Origin(world), [swap]));
         WorldFactory.Validate(world);
         return world;
@@ -146,7 +149,7 @@ public sealed class OwnerMandateStateTests : IDisposable
             terms.WeeklyWage, world.Week + 2, terms.ContractEndWeek, quote.TotalCommitment);
         var evidence = new RecommendationEvidence(world.Week, world.Revision, Origin(world), candidate, candidate, RecommendationReason.Current);
         Proposals.Commit(world, "approach", world.Revision, quote);
-        world.MandateApproaches.Add(new(quote.Forecast.Id, evidence, null));
+        world.MandateApproaches[world.MandateApproaches.FindIndex(a => a.ForecastId == quote.Forecast.Id)] = new(quote.Forecast.Id, evidence, null);
         WorldFactory.Validate(world); return world;
     }
 
@@ -218,11 +221,17 @@ public sealed class OwnerMandateStateTests : IDisposable
         Simulation.AdvanceWeek(world);
         var signed = world.OwnedClub.Players.Single(p => p.Id == free.Player.Id);
         var obligation = world.Obligations.Single(o => o.Description == $"Player contract {signed.ContractId.Value}");
-        var outcome = new ApproachOutcomeEvidence(recommendation.Origin, signed.Id, world.Week,
-            ApproachOutcome.Signed, "Accepted", signed.ContractId, obligation.Id);
-        world.MandateApproaches[0] = world.MandateApproaches[0] with { Outcome = outcome };
+        var outcome = world.MandateApproaches[0].Outcome!;
+        Assert.Equal(ApproachOutcome.Signed, outcome.Outcome);
+        Assert.Equal(signed.ContractId, outcome.ContractId); Assert.Equal(obligation.Id, outcome.WageObligationId);
         world = WorldCodec.Clone(world);
         while (world.Week < 104) Simulation.AdvanceWeek(world);
+        var previousReport = MandateReports.Season(world, 2);
+        Assert.True(previousReport.Complete);
+        var originalPayments = Assert.Single(previousReport.Approaches);
+        Assert.Equal(obligation, originalPayments.SignedWages);
+        Assert.Equal(signed.WeeklyWage * (obligation.EndWeek - obligation.StartWeek + 1), originalPayments.WagesPaid);
+        Assert.Equal(obligation.EndWeek - obligation.StartWeek + 1, originalPayments.WagePayments.Length);
         var command = new OwnerCommand(Allocation.StartNextSeason) { DeclineAcademy = true };
         var renewal = Proposals.Preview(world, command, world.Revision);
         var contract = renewal.Renewal!.Contracts.Single(c => c.PlayerId == signed.Id);
@@ -244,6 +253,8 @@ public sealed class OwnerMandateStateTests : IDisposable
         Assert.Equal(obligation, world.Obligations.Single(o => o.Id == obligation.Id));
         Assert.Contains(world.Journal, j => j.Reference == $"obligation/{obligation.Id.Value}/104" && j.Amount == -signed.WeeklyWage);
         Assert.DoesNotContain(world.Journal, j => j.Reference == $"obligation/{obligation.Id.Value}/105");
+        Assert.Equal(JsonSerializer.Serialize(originalPayments), JsonSerializer.Serialize(Assert.Single(MandateReports.Season(world, 2).Approaches)));
+        Assert.DoesNotContain(MandateReports.Season(world, 3).Approaches, a => a.ForecastId == originalPayments.ForecastId);
         if (release)
         {
             Assert.DoesNotContain(world.OwnedClub.Players, p => p.Id == signed.Id);

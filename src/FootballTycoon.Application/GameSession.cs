@@ -29,6 +29,8 @@ public sealed record GameView(long Revision, int Week, CareerStatus Status, stri
     ImmutableArray<Obligation> Obligations, ImmutableArray<ClubSummary> Clubs, bool AllocationChosen)
 {
     public MandateView Mandates { get; init; } = new(MandateState.Default, [], [], [], []);
+    public ImmutableArray<MandateSeasonReport> MandateSeasonReports { get; init; } = [];
+    public RecommendationEvidence? FreeAgentRecommendationEvidence { get; init; }
     public long AcquisitionAskingPrice { get; init; }
     public long AcquisitionPrice { get; init; }
     public AcquisitionCounteroffer? AcquisitionOffer { get; init; }
@@ -148,6 +150,7 @@ public sealed class GameSession : IAsyncDisposable
     public Task<GameView> QueryAsync() => Enqueue(() =>
     {
         var club = world.OwnedClub;
+        var recommendation = FreeAgents.RecommendWithEvidence(world);
         var forecast = Finance.Forecast(world, club.Id);
         var questions = ImmutableArray.CreateBuilder<string>();
         if (RecruitmentMarket.Available(world)) questions.Add("Back a forward for the run-in or keep the squad? Review Football before the midseason window closes.");
@@ -169,6 +172,8 @@ public sealed class GameSession : IAsyncDisposable
             world.Clubs.Select(c => new ClubSummary(c.Id, c.Name, c.Division, c.Cash)).ToImmutableArray(), world.AllocationChosen)
         {
             Mandates = OwnerMandates.View(world),
+            MandateSeasonReports = MandateReports.All(world),
+            FreeAgentRecommendationEvidence = recommendation?.Evidence,
             AcquisitionAskingPrice = Balance.Load().PurchasePrice,
             AcquisitionPrice = Acquisition.Price(world),
             AcquisitionOffer = world.AcquisitionOffer,
@@ -190,7 +195,7 @@ public sealed class GameSession : IAsyncDisposable
             Projects = world.Projects.Where(p => p.ClubId == club.Id).ToImmutableArray(),
             Departures = world.Departures.Where(p => p.ClubId == club.Id).OrderByDescending(p => p.Week).ThenBy(p => p.Name).ToImmutableArray(),
             AcademyGraduates = world.AcademyGraduates.Where(g => g.ClubId == club.Id).OrderByDescending(g => g.Week).ToImmutableArray(),
-            FreeAgentRecommendation = FreeAgents.Recommend(world),
+            FreeAgentRecommendation = recommendation?.Terms,
             FreeAgentApproachPending = world.FreeAgentBids.Count > 0,
             RivalApproaches = world.RivalApproaches.ToImmutableArray(),
             PendingRetirements = world.RetirementNotices.Where(n => n.ClubId == club.Id && world.Retirements.All(r => r.PlayerId != n.PlayerId)).ToImmutableArray(),

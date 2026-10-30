@@ -54,6 +54,8 @@ public class AcademyBalanceTests
         var world = SeasonTests.EndFirstSeason();
         SimulationTests.Commit(world, Allocation.StartNextSeason);
         Assert.NotEmpty(world.AcademyGraduates); Assert.NotEmpty(world.History);
+        // These older saves predate prospective mandate evidence.
+        world.MandateSelections.Clear(); world.MandateApproaches.Clear();
         world.SchemaVersion = 15; world.SimulationVersion = "retirement-15";
         var oldQuote = Proposals.Preview(world, new(Allocation.PreserveReserve), world.Revision);
         var bytes = WorldCodec.Encode(world); var copy = bytes.ToArray();

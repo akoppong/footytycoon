@@ -88,6 +88,8 @@ public class RenewalWageBasisTests
     public void SchemaTwentyMigrationPreservesSignedTermsAndPendingMandates()
     {
         var world = FreeAgentTests.Available(); SimulationTests.Commit(world, Allocation.FreeAgentRecruitment);
+        // These older saves predate prospective mandate evidence.
+        world.MandateSelections.Clear(); world.MandateApproaches.Clear();
         world.SchemaVersion = 20; world.SimulationVersion = "owner-minimum-squad-20";
         var quote = Proposals.Preview(world, new(Allocation.InjectCapital) { Amount = 100 }, world.Revision);
         var bytes = WorldCodec.Encode(world); var original = bytes.ToArray(); var migrated = WorldCodec.Decode(bytes);

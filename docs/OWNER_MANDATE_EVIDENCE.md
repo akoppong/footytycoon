@@ -1,0 +1,43 @@
+# E06 — Mandate execution and outcome evidence
+
+E06 connects the behavior and commands to prospective evidence, using [E00's registered contract](OWNER_MANDATE_EXPERIMENT.md) and E02's saved types without a schema change. Its integration base is E05 `c4293dd34f6ea4a1dca97da295673b7cd9913539` ([PR #52](https://github.com/akoppong/footytycoon/pull/52)), containing E04 `efaf2c6f15159e96b2b5f44b45ba31f9887cbb02` ([PR #51](https://github.com/akoppong/footytycoon/pull/51)) and E03 `088d2289894d7a6d6d236f954f7b415f60612495` ([PR #50](https://github.com/akoppong/footytycoon/pull/50)). Each prerequisite passed independent review and all seven CI jobs. The task branch is `codex/owner-mandate-evidence`; PRs remain open for owner review.
+
+## Actual decision capture
+
+`Matchday.Play` retains the pure owned-club selection result before the match changes availability, then records its fixture, decision-world revision, mandate origin and immutable swaps. Readiness and Development with no qualifying replacement record an empty swap array. That means no mandate replacement occurred, not that no player appeared. Rivals retain their existing path. Historical matches without this record remain without a known mandate origin.
+
+The original free-agent approval in `Proposals.Commit` records `RecommendWithEvidence` before adding the bid or advancing the approval revision. It links the original forecast to the baseline and selected candidates, real terms and originating mandates. Preview alone records nothing. Changing mandates after approval does not relabel the approved offer, alter its terms or recreate an acceptance attempt.
+
+The owner resolver records the first binding execution failure in the existing order: unavailable player, expired approach, inactive ownership, full squad, retirement age, role/window eligibility, annual wage limit, arrears, required reserve, then player refusal. Cash projection still precedes these checks. A failed deterministic check consumes no acceptance draw; refusal means all checks passed and the actual acceptance draw declined. A signed outcome links the existing created contract and wage obligation. These records add no payment or authority; the original signing operation remains responsible for creating the contract.
+
+An ordinary controlled sequence approves a free agent under the current recommendation, changes both mandates in the same week, saves/loads and advances. The resulting signing retains the earlier origin and exact approved terms. At resolution it has a signed wage obligation but no wage payment yet; payments begin the following week. In a boundary case where the player has disappeared and the approach has also expired, the result is unavailable, no acceptance draw occurs and no new obligation or payment is created. These are controlled regression cases, not human observations or E08 treatment results.
+
+New prospective evidence changes encoded-world fingerprints and newly derived proposal/forecast IDs. Imported original IDs remain exact. The E02 comparator for empty/default evidence is not an unchanged full E06 equivalence check; E08 must account for the registered identity-mapping rules. Legacy pending approvals can acquire a new observed outcome with a null origin. Completed legacy approvals and matches are never backfilled with inferred mandates or contract attribution.
+
+## Read interface for E07
+
+| API or field | Meaning |
+|---|---|
+| `GameView.Mandates` | Existing E02 immutable saved current state, transitions, selections, approaches and retained matches. |
+| `GameView.FreeAgentRecommendationEvidence` | Nullable evidence for the same current recommendation as `FreeAgentRecommendation`; querying is pure and does not imply approval. |
+| `GameView.MandateSeasonReports` | Immutable computed reports for retained seasons; no additional saved report or ledger. |
+| `MandateReports.All(World)` / `Season(World, int)` | Pure report construction; invalid season indices are rejected. |
+| `MandateSeasonReport.Changes` / `ObservedPeriods` | Saved changes plus groups of actual recorded decisions by origin/revision, with observed first/last decision week/revision, matches, swaps and approvals. These are not reconstructed continuous policy periods. |
+| `Appearances` | Actual owned-club competitive starts by player, known-origin starts, explicit development replacements and existing annual development when available. The saved summary also retains development records for players without starts. |
+| `Approaches` | Original approved terms and forecast link, whether approved in this season, current pending state, nullable evidence/original signed obligation, exact attributed wage lines and nullable wages paid during this report's played weeks. |
+| `MatchesWithoutOrigin` / `ApprovalsWithoutOrigin` | Explicit missing-history counts, not default-mandate activity. |
+| `Summary` / `Complete` / `CashMovements` | Existing season summary/completion and owner-club cash ledger entries for played weeks after the season boundary. Preserve the summary's original accounting boundary. |
+
+E07 must render `WagesPaid == null` as unknown historical payment attribution, never as zero. A known pending or closed unsigned approach can report zero; a linked signed obligation reports actual ledger payments, including arrear settlements matched by exact obligation-ID delimiters. An empty payment list with unknown attribution is not proof that nothing was spent. Renewed contracts and other obligations are never attributed to the original signing. A prior contract that remains active can appear in a later season's report with that season's payments.
+
+Boundary-week mandate changes can appear in adjacent season reports; they remain one saved history event. Approvals at a new season's boundary belong to that new season. Use decision revisions to distinguish changes within a week. Cash movements cover weeks strictly after the boundary, while the existing saved season summary retains its own opening-ledger accounting boundary; do not derive a different cash reconciliation by conflating them.
+
+The report includes uncertainty wording: appearances, obligations and payments are measured facts; one match result or growth roll cannot establish that the mandate caused success. Lower total commitments can also mean shorter contracted cover. E07 should keep recommendation, owner approval, signing and paid wages distinct and expose missing evidence truthfully.
+
+## Validation and review
+
+Initial focused validation passed 85/85 mandate behavior, command, state and evidence tests, with no failures/skips: `artifacts/owner-mandate-e06-20261030/relevant-1/evidence-relevant.trx`. The new guard-isolation tests invoke the actual owner resolver while deliberately controlling execution inputs; they are not playable checkpoint recipes. Controlled accepting/refusing streams are fixed before approval, not rerolled in an experimental run.
+
+Independent reviewers inspected the actual source, tests and report interface. One material reporting finding was fixed: completed legacy approvals without a saved payment link now report unknown rather than £0. A regression checks this after migration. Review also requested coverage across renewal/release: the test now retains the actual writer outcome, checks all original-contract payments, and verifies the historical report after rollover/save-load while excluding a replacement contract's wages. Both fixes were rechecked. The final full suite passed **372/372 tests**, with no failures/skips: `artifacts/owner-mandate-e06-20261030/full-2/e06-full.trx`. Release build (`build-3.log`, zero warnings/errors) and solution formatting (`format-2.log`) passed in the parent artifact directory. The retained `full-1` run had five synthetic legacy-fixture failures: those fixtures downgraded current worlds while retaining newly produced evidence absent from the old schemas. Clearing only that prospective fixture evidence before downgrade/old-quote creation fixed them; all full-data equality, stale-quote, replay and corrupt-source assertions remain. The reviewer inspected this repair and the handoff; no actionable source/test/documentation concerns remain. Final result verification is recorded in the PR.
+
+E07 UI, E08 matched playable comparisons and E09 participant evidence remain separate. This Core/Application change requires no new UI smoke scenario; the full regression suite and PR CI check existing paths. No schema, world generation, salary, financial safeguard, paid-transfer priority, rival behavior or development formula was changed. Staff relationships, autonomous spending and product value remain unproven.
