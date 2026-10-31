@@ -107,6 +107,8 @@ public class OwnerMinimumSquadTests
     {
         var world = FreeAgentTests.Available();
         SimulationTests.Commit(world, Allocation.FreeAgentRecruitment, "old-offer");
+        // These older saves predate prospective mandate evidence.
+        world.MandateSelections.Clear(); world.MandateApproaches.Clear();
         world.SchemaVersion = 19; world.SimulationVersion = "rival-minimum-squad-19";
         var quote = Proposals.Preview(world, new(Allocation.InjectCapital) { Amount = 100 }, world.Revision);
         var bytes = WorldCodec.Encode(world); var original = bytes.ToArray(); var loaded = WorldCodec.Decode(bytes);

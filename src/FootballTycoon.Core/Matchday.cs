@@ -111,8 +111,13 @@ public static class Matchday
     internal static MatchResult Play(World world, Fixture fixture, Club home, Club away)
     {
         var stream = $"match/{fixture.Id.Value}"; var people = stream + "/players";
-        ImmutableArray<(Player Player, Role Position)> Lineup(Club club) => club.Id == world.OwnedClubId
-            ? Select(world).Lineup : Select(club, world.Week);
+        SelectionDecision? decision = null;
+        ImmutableArray<(Player Player, Role Position)> Lineup(Club club)
+        {
+            if (club.Id != world.OwnedClubId) return Select(club, world.Week);
+            decision = Select(world);
+            return decision.Lineup;
+        }
         Side[] sides = [new(home, Lineup(home)), new(away, Lineup(away))];
         var moments = ImmutableArray.CreateBuilder<Moment>(); var events = ImmutableArray.CreateBuilder<MatchEvent>();
         int Conversion(int s) => Math.Clamp(BaseConversion + (s == 0 ? HomeConversion : 0) + (int)Math.Round((sides[s].Strength - sides[1 - s].Strength) * 6.5m)
@@ -233,6 +238,8 @@ public static class Matchday
             .Select(x => (PersonId?)x.Appearance.Player).FirstOrDefault();
         var recorded = events.ToImmutable();
         foreach (var side in sides) UpdateAvailability(world, side, recorded);
+        if (decision is not null)
+            world.MandateSelections.Add(new(fixture.Id, decision.DecisionWorldRevision, decision.Origin, decision.Swaps));
         return new MatchResult(fixture.Id, world.Week, home.Id, away.Id, sides[0].Goals, sides[1].Goals, sides[0].Shots, sides[1].Shots, 0, 0,
             moments.OrderBy(m => m.Minute).ToImmutableArray())
         {

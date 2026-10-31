@@ -106,17 +106,39 @@ public static class FreeAgents
             var club = world.OwnedClub;
             var forecast = Finance.ProjectCash(world, club.Id, extraWeekly: bid.WeeklyWage, extraStarts: world.Week + 1, extraEnds: bid.ContractEndWeek);
             var minimum = history.Command.ReserveException ? 0 : world.ReserveTarget;
-            var eligible = free is not null && world.Week <= bid.ExpiryWeek && world.Status == CareerStatus.Active
-                && club.Players.Count < Academy.SquadLimit && free.Player.Age < RetirementAge(free.Player.Role)
-                && EligibleRole(world, free.Player.Role, history.Week)
-                && Finance.AnnualWages(club) + bid.WeeklyWage * Seasons.Weeks <= Money.Scale(Finance.EligibleRevenue(world, club.Id), Balance.Load().WageLimit)
-                && !world.Arrears.Any(a => a.ClubId == club.Id) && forecast.LowestDownside >= minimum;
-            var accepted = eligible && RandomStreams.Next(world, $"free-agent-negotiation/{bid.DecisionId}", 100) < 70;
+            // Preserve the existing short-circuit order and project cash before checking eligibility.
+            var reason = free is null ? "The player is no longer available."
+                : world.Week > bid.ExpiryWeek ? "The approved approach expired."
+                : world.Status != CareerStatus.Active ? "The club is not in active ownership."
+                : club.Players.Count >= Academy.SquadLimit ? "The squad has no vacant place."
+                : free.Player.Age >= RetirementAge(free.Player.Role) ? "The player has reached retirement age."
+                : !EligibleRole(world, free.Player.Role, history.Week) ? "The role is no longer eligible under window and squad-cover rules."
+                : Finance.AnnualWages(club) + bid.WeeklyWage * Seasons.Weeks > Money.Scale(Finance.EligibleRevenue(world, club.Id), Balance.Load().WageLimit)
+                    ? "The approved wage would exceed the annual wage limit."
+                : world.Arrears.Any(a => a.ClubId == club.Id) ? "The club has unpaid obligations."
+                : forecast.LowestDownside < minimum ? "The approved contract would breach the required cash reserve."
+                : null;
+            var accepted = reason is null && RandomStreams.Next(world, $"free-agent-negotiation/{bid.DecisionId}", 100) < 70;
+            var outcome = accepted ? ApproachOutcome.Signed : free is null ? ApproachOutcome.Unavailable
+                : reason is null ? ApproachOutcome.Declined : ApproachOutcome.ChecksFailed;
+            reason ??= accepted ? "The player accepted the approved contract." : "The player declined the approved contract.";
+            ContractId? contract = null;
+            ObligationId? obligation = null;
             if (accepted)
+            {
                 Sign(world, club, free!, bid.WeeklyWage, bid.ContractEndWeek);
+                contract = club.Players.Single(p => p.Id == bid.PlayerId).ContractId;
+                obligation = world.Obligations.Single(o => o.ClubId == club.Id && o.Kind == CashKind.Wages
+                    && o.Description == $"Player contract {contract.Value.Value}").Id;
+            }
+            var evidenceIndex = world.MandateApproaches.FindIndex(a => a.ForecastId == bid.ForecastId);
+            var approach = evidenceIndex < 0 ? new MandateApproach(bid.ForecastId, null, null) : world.MandateApproaches[evidenceIndex];
+            approach = approach with { Outcome = new(approach.Recommendation?.Origin, bid.PlayerId, world.Week, outcome, reason, contract, obligation) };
+            if (evidenceIndex < 0) world.MandateApproaches.Add(approach);
+            else world.MandateApproaches[evidenceIndex] = approach;
             world.Reviews.Add(new(world.Week, accepted ? "Free agent signed" : "Free-agent approach closed",
                 accepted ? $"{free!.Player.Name} joined without a fee. Wages of {Money.Format(bid.WeeklyWage)}/week begin next week through {Calendar.FullDay(bid.ContractEndWeek)}. Selection remains the manager's decision."
-                : "The player declined or the availability, deadline, squad, reserve or wage checks no longer allowed the signing. No new contract or payment was created; the existing squad continues.", bid.ForecastId));
+                : $"{reason} No new contract or payment was created; the existing squad continues.", bid.ForecastId));
             world.FreeAgentBids.Remove(bid);
         }
     }

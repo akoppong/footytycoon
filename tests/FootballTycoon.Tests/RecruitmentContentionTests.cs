@@ -93,6 +93,8 @@ public class RecruitmentContentionTests
         Simulation.AdvanceWeek(world);
         SimulationTests.Commit(world, Allocation.FreeAgentRecruitment, "owner-pending");
         Assert.Equal(2, world.RivalApproaches.Count); Assert.Single(world.FreeAgentBids);
+        // These older saves predate prospective mandate evidence.
+        world.MandateSelections.Clear(); world.MandateApproaches.Clear();
         world.SchemaVersion = 16; world.SimulationVersion = "academy-balance-16";
         var oldQuote = Proposals.Preview(world, new(Allocation.InjectCapital) { Amount = 100 }, world.Revision);
         var bytes = WorldCodec.Encode(world); var copy = bytes.ToArray();

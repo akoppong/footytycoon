@@ -183,7 +183,8 @@ public class ManagerMandateTests
             if (Math.Min(25, actual.Appearances) > Math.Min(25, baseline.Appearances)) improvedExposure++;
         }
         Assert.True(improvedExposure > 0, "At least one prospect must gain exposure used by the existing growth-chance calculation.");
-        Assert.Empty(development.MandateSelections); // Persistence and presentation linkage belong to E06.
+        Assert.Equal(development.Results.Count(r => r.Home == development.OwnedClubId || r.Away == development.OwnedClubId), development.MandateSelections.Count);
+        Assert.Contains(development.MandateSelections, s => !s.Swaps.IsEmpty);
     }
 
     [Theory]

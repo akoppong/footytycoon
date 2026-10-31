@@ -291,8 +291,10 @@ public static class Proposals
                 break;
             case Allocation.FreeAgentRecruitment:
                 var freeTerms = proposal.Recruitment!;
+                var recommendation = FreeAgents.RecommendWithEvidence(world)!;
                 world.FreeAgentBids.Add(new(world.History.Count + 1, freeTerms.Player.Id, freeTerms.WeeklyWage,
                     freeTerms.ContractEndWeek, world.Week + 1, proposal.Forecast.Id));
+                world.MandateApproaches.Add(new(proposal.Forecast.Id, recommendation.Evidence, null));
                 break;
         }
         if (Seasons.IsCapitalPlan(proposal.Command.Allocation))
