@@ -273,7 +273,7 @@ public class ContractTests
         var bytes = Encoding.UTF8.GetBytes(legacy.ToJsonString()); var source = bytes.ToArray();
         var migrated = WorldCodec.Decode(bytes);
         Assert.Equal(source, bytes);
-        Assert.Equal(23, migrated.SchemaVersion); Assert.Equal("compact-journal-23", migrated.SimulationVersion);
+        Assert.Equal(24, migrated.SchemaVersion); Assert.Equal("owner-mandates-24", migrated.SimulationVersion);
         Assert.Equal(CareerStatus.SeasonReview, migrated.Status);
         Assert.All(migrated.History, h => { Assert.Null(h.Renewal); Assert.Empty(h.Command.ContractOverrides); });
         Assert.Equal(world.OwnedClub.Players, migrated.OwnedClub.Players);

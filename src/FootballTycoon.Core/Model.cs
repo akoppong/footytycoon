@@ -185,8 +185,8 @@ public sealed class Club
 
 public sealed class World
 {
-    public int SchemaVersion { get; set; } = 23;
-    public string SimulationVersion { get; set; } = "compact-journal-23";
+    public int SchemaVersion { get; set; } = 24;
+    public string SimulationVersion { get; set; } = "owner-mandates-24";
     public string ContentVersion { get; set; } = "prototype-1";
     public int RandomVersion { get; set; } = 1;
     public long Revision { get; set; }
@@ -229,6 +229,10 @@ public sealed class World
     public List<DecisionRecord> History { get; set; } = [];
     public List<Review> Reviews { get; set; } = [];
     public Dictionary<string, ulong> RandomStates { get; set; } = new(StringComparer.Ordinal);
+    public MandateState Mandates { get; set; } = MandateState.Default;
+    public List<MandateChange> MandateHistory { get; set; } = [];
+    public List<SelectionEvidence> MandateSelections { get; set; } = [];
+    public List<MandateApproach> MandateApproaches { get; set; } = [];
     public Dictionary<string, CommitReceipt> Commands { get; set; } = new(StringComparer.Ordinal);
     [System.Text.Json.Serialization.JsonIgnore]
     public Club OwnedClub => Clubs.Single(c => c.Id == OwnedClubId);
@@ -401,6 +405,14 @@ public static class WorldCodec
             WorldFactory.Validate(world, priorCompactJournal: true);
             // Encoding changes, not financial history: retain every entry and all saved gameplay state.
             world.SchemaVersion = 23; world.SimulationVersion = "compact-journal-23";
+        }
+        if (world.SchemaVersion == 23)
+        {
+            WorldFactory.Validate(world, priorMandates: true);
+            // Prospective defaults only. Original approvals, receipts and forecasts retain their identity.
+            world.Mandates = MandateState.Default;
+            world.MandateHistory = []; world.MandateSelections = []; world.MandateApproaches = [];
+            world.SchemaVersion = 24; world.SimulationVersion = "owner-mandates-24";
         }
         WorldFactory.Validate(world);
         return world;

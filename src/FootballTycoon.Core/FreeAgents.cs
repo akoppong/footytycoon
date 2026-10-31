@@ -1,5 +1,8 @@
 namespace FootballTycoon.Core;
 
+// A pure recommendation result; E06 records its evidence when the owner approves the approach.
+public sealed record FreeAgentRecommendation(RecruitmentTerms Terms, RecommendationEvidence Evidence);
+
 public static class FreeAgents
 {
     public static int RetirementAge(Role role) => role == Role.Goalkeeper ? 42 : 40;
@@ -16,23 +19,44 @@ public static class FreeAgents
     public static bool CanReview(World world) => world.Status == CareerStatus.Active && world.AllocationChosen
         && world.Week < Seasons.EndWeek(world) - 1 && world.Negotiations.Count == 0 && world.FreeAgentBids.Count == 0 && world.OwnedClub.Players.Count < Academy.SquadLimit;
 
-    public static RecruitmentTerms? Recommend(World world)
+    public static RecruitmentTerms? Recommend(World world) => RecommendWithEvidence(world)?.Terms;
+
+    public static FreeAgentRecommendation? RecommendWithEvidence(World world)
     {
         if (!CanReview(world)) return null;
         var club = world.OwnedClub;
         var limit = Money.Scale(Finance.EligibleRevenue(world, club.Id), Balance.Load().WageLimit);
-        var target = world.FreeAgents.Select(f => f.Player)
+        var eligible = world.FreeAgents.Select(f => f.Player)
             .Where(p => p.Age < RetirementAge(p.Role) && EligibleRole(world, p.Role, world.Week)
                 && (NeedsCover(club, p.Role) || p.Ability > club.Players.Where(s => s.Role == p.Role).Min(s => s.Ability))
                 && Finance.AnnualWages(club) + Wage(club, p) * Seasons.Weeks <= limit
                 && !world.History.Any(h => h.Command.Allocation == Allocation.FreeAgentRecruitment
-                    && h.Recruitment?.Player.Id == p.Id && world.Week < h.Week + 4))
+                    && h.Recruitment?.Player.Id == p.Id && world.Week < h.Week + 4)).ToArray();
+        var baseline = eligible
             .OrderByDescending(p => HasShortage(club, p.Role)).ThenByDescending(p => p.Ability).ThenBy(p => p.Age).ThenBy(p => p.Id.Value)
             .FirstOrDefault();
-        if (target is null) return null;
+        if (baseline is null) return null;
+        RecommendationCandidate Snapshot(Player p) => new(p.Id, p.Role, p.Age, p.Ability, Wage(club, p),
+            world.Week + 2, ContractEnd(world, p), checked(Wage(club, p) * (ContractEnd(world, p) - world.Week - 1)));
+        var baselineSnapshot = Snapshot(baseline);
+        var target = baseline;
+        var reason = RecommendationReason.Current;
+        if (world.Mandates.Director == DirectorMandate.LowerCostValue)
+        {
+            var alternative = eligible.Where(p => p.Role == baseline.Role && p.Ability >= baseline.Ability - 5)
+                .Select(p => (Player: p, Quote: Snapshot(p)))
+                .Where(p => p.Quote.WeeklyWage <= baselineSnapshot.WeeklyWage && p.Quote.TotalCommitment <= baselineSnapshot.TotalCommitment
+                    && (p.Quote.WeeklyWage < baselineSnapshot.WeeklyWage || p.Quote.TotalCommitment < baselineSnapshot.TotalCommitment))
+                .OrderBy(p => p.Quote.TotalCommitment).ThenBy(p => p.Quote.WeeklyWage).ThenByDescending(p => p.Player.Ability)
+                .ThenBy(p => p.Player.Age).ThenBy(p => p.Player.Id.Value).Select(p => p.Player).FirstOrDefault();
+            target = alternative ?? baseline;
+            reason = alternative is null ? RecommendationReason.NoLowerCostAlternative : RecommendationReason.LowerCostAlternative;
+        }
         var current = club.Players.Where(p => p.Role == target.Role).OrderByDescending(p => p.Ability).Take(2).ToArray();
-        return new(Allocation.FreeAgentRecruitment, target, "Free agent", 0, Wage(club, target), ContractEnd(world, target), 0)
+        var terms = new RecruitmentTerms(Allocation.FreeAgentRecruitment, target, "Free agent", 0, Wage(club, target), ContractEnd(world, target), 0)
         { IsFreeAgent = true, CurrentRoleAbility = current.Length == 0 ? 0 : current.Average(p => (decimal)p.Ability) };
+        return new(terms, new(world.Week, world.Revision, new(world.Mandates.Manager, world.Mandates.Director, world.Mandates.Revision),
+            baselineSnapshot, Snapshot(target), reason));
     }
 
     internal static void Release(World world, Club club, Player player)
