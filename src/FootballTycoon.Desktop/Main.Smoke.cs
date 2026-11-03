@@ -56,6 +56,11 @@ public partial class Main
                     list.ScrollVertical = 0;
                 }
             }
+            if (OS.GetCmdlineUserArgs().Contains("--mandate-smoke-test"))
+            {
+                await MandateSmoke(output, Capture);
+                GetTree().Quit(); return;
+            }
             if (OS.GetCmdlineUserArgs().Contains("--playable-start-recovery-smoke-test"))
             {
                 var checkpointPath = OS.GetEnvironment("FT_PLAYABLE_START_CHECKPOINT");
