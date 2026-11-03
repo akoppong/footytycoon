@@ -77,7 +77,8 @@ public partial class Main : Control
     {
         if (view is null) return;
         BuildShell();
-        if (workspace != "Owner Desk" && selected is null) Heading(workspace);
+        if (workspace != "Owner Desk" && selected is null && mandateDraft is null) Heading(workspace);
+        if (mandateDraft is not null) { RenderMandates(); return; }
         if (selected is not null) { RenderProposal(selected); return; }
         switch (workspace)
         {
@@ -180,8 +181,9 @@ public partial class Main : Control
     private void People()
     {
         var staff = Card(); staff.AddChild(Label("Your leadership team", 24));
-        staff.AddChild(Label("Mara Ellis · CEO · Cautious operator\nJonas Reed · Sporting director · Values immediate readiness\nCallum Price · Manager · Selects the squad independently"));
+        staff.AddChild(Label("Mara Ellis · CEO · Administers the business\nJonas Reed · Sporting director · Recommends recruitment\nCallum Price · Manager · Selects the squad independently"));
         staff.AddChild(Label("Appointments are fixed in this prototype. Hiring, dismissal, personality policies and contract negotiations are future systems.", 14));
+        StaffMandates(staff);
         var retirement = Card(); retirement.AddChild(Label("Retirement plans", 24));
         retirement.AddChild(Label("Players announce retirement in their final contract year when they will reach the age cutoff: 40 for outfield roles, 42 for goalkeepers. Signed wages remain payable through expiry; departures cannot be reversed to preserve cover.", 14));
         if (view.PendingRetirements.IsEmpty) retirement.AddChild(Label("No announced departures pending.", 14));
@@ -192,7 +194,9 @@ public partial class Main : Control
         var market = Card(); market.AddChild(Label("Director's free-agent recommendation", 24));
         if (view.FreeAgentRecommendation is { } candidate)
         {
-            market.AddChild(Label($"{candidate.Player.Name} · {candidate.Player.Role} · Age {candidate.Player.Age} · Ability {candidate.Player.Ability}\nNo transfer fee · proposed {Money.Format(candidate.WeeklyWage)}/week. Review the full contract and cash forecast before authorizing an approach.", 16));
+            if (view.FreeAgentRecommendationEvidence is { } evidence) RecommendationFacts(market, evidence);
+            else market.AddChild(Label($"{candidate.Player.Name} · {candidate.Player.Role} · Age {candidate.Player.Age} · Ability {candidate.Player.Ability}\nNo transfer fee · proposed {Money.Format(candidate.WeeklyWage)}/week.", 16));
+            market.AddChild(Label("Recommendation only. Review the full contract and cash forecast before authorizing an approach; a signing is not guaranteed.", 14));
             market.AddChild(Button("Review free-agent approach", () => Preview(Allocation.FreeAgentRecruitment)));
         }
         else market.AddChild(Label(view.FreeAgentApproachPending
@@ -239,6 +243,7 @@ public partial class Main : Control
 
     private void History()
     {
+        MandateHistory();
         foreach (var season in view.SeasonSummaries.Reverse()) SeasonReport(season);
         foreach (var decision in view.History.Reverse())
         {
@@ -253,6 +258,7 @@ public partial class Main : Control
 
     private void Preview(Allocation allocation, long amount = 0, bool reserveException = false, System.Collections.Immutable.ImmutableArray<PersonId> contractOverrides = default, bool declineAcademy = false) => Start(async () =>
     {
+        ClearMandateEditor();
         confirming = false;
         selected = await session.PreviewAsync(new(allocation, amount, reserveException) { ContractOverrides = contractOverrides.IsDefault ? [] : contractOverrides, DeclineAcademy = declineAcademy }, view.Revision);
         retryCommandId = Guid.NewGuid().ToString("N");
@@ -261,11 +267,15 @@ public partial class Main : Control
 
     private void RenderProposal(Proposal proposal) => DesignProposal(proposal);
 
-    private void Advance(AdvanceTarget target) => Start(async () =>
+    private void Advance(AdvanceTarget target)
     {
-        var result = await session.AdvanceAsync(target); view = await session.QueryAsync(); inboxSelection = "brief";
-        return $"Saved locally · {Calendar.FullDay(result.Week)} · {result.StopReason}";
-    });
+        if (mandateDraft is not null) return;
+        Start(async () =>
+        {
+            var result = await session.AdvanceAsync(target); view = await session.QueryAsync(); inboxSelection = "brief";
+            return $"Saved locally · {Calendar.FullDay(result.Week)} · {result.StopReason}";
+        });
+    }
     private void Save() => Start(async () =>
     {
         var checkpoint = await session.SaveAsync($"Manual · {Calendar.FullDay(view.Week)}"); return $"Saved locally · {checkpoint.CreatedAt.ToLocalTime():g}";
@@ -277,7 +287,7 @@ public partial class Main : Control
         var page = await session.ListSavePageAsync(offset);
         updates.Enqueue(() =>
         {
-            auxiliary = "saves"; selected = null; BuildShell(); Heading("Load a checkpoint");
+            ClearMandateEditor(); auxiliary = "saves"; selected = null; BuildShell(); Heading("Load a checkpoint");
             content.AddChild(Label("Continuing a loaded checkpoint creates a new branch. Existing snapshots remain available."));
             if (offset > 0) content.AddChild(Button("Newer checkpoints", () => ShowSavePage(Math.Max(0, offset - 20))));
             if (page.NextOffset is { } next) content.AddChild(Button("Older checkpoints", () => ShowSavePage(next)));
@@ -285,20 +295,25 @@ public partial class Main : Control
             {
                 var card = Card();
                 card.AddChild(Label($"{save.Slot} · {Calendar.FullDay(save.Week)} · {save.CreatedAt.ToLocalTime():g} · Branch {save.BranchId[..6]}"));
-                card.AddChild(Button("Load this checkpoint", () => Start(async () =>
-                {
-                    await session.LoadAsync(save.SnapshotId); view = await session.QueryAsync(); selected = null; workspace = "Owner Desk"; auxiliary = ""; inboxSelection = "resume"; filedReviews.Clear(); showFiled = false; chosenReview = null; chosenMatch = null; chosenHistory = null; confirming = false; openingPlans = null; openingPlansFailedKey = "";
-                    return "Loaded validated checkpoint. Next save will preserve a new branch.";
-                })));
+                var load = Button("Load this checkpoint", () => LoadCheckpoint(save.SnapshotId));
+                load.SetMeta("snapshot_id", save.SnapshotId); card.AddChild(load);
             }
             if (page.Entries.IsEmpty) content.AddChild(Label("No valid snapshots on this page. Other pages and preserved files remain available."));
         });
         return $"Local vault: {saveDirectory}";
     }, false);
 
+    private void LoadCheckpoint(string snapshotId) => Start(async () =>
+    {
+        await session.LoadAsync(snapshotId); view = await session.QueryAsync(); ClearMandateEditor(); mandateHistoryExpanded = false;
+        selected = null; workspace = "Owner Desk"; auxiliary = ""; inboxSelection = "resume"; filedReviews.Clear(); showFiled = false;
+        chosenReview = null; chosenMatch = null; chosenHistory = null; confirming = false; openingPlans = null; openingPlansFailedKey = "";
+        return "Loaded validated checkpoint. Next save will preserve a new branch.";
+    });
+
     private void ShowSettings()
     {
-        auxiliary = "settings"; selected = null; BuildShell(); Heading("Settings");
+        ClearMandateEditor(); auxiliary = "settings"; selected = null; BuildShell(); Heading("Settings");
         content.AddChild(Label("Guidance and text size affect presentation only. Match results and obligations stay the same."));
         content.AddChild(Button(compact ? "Guidance: compact" : "Guidance: explained", () => { compact = !compact; SavePreferences(); ShowSettings(); }));
         foreach (var scale in new[] { 100, 125, 150 })
@@ -325,7 +340,12 @@ public partial class Main : Control
             ShowSettings(); GetViewport().SetInputAsHandled(); return;
         }
         if (key.CtrlPressed && key.Keycode == Key.S) { Save(); GetViewport().SetInputAsHandled(); }
-        else if (key.Keycode == Key.Escape) { if (confirming) confirming = false; else selected = null; auxiliary = ""; Render(); GetViewport().SetInputAsHandled(); }
+        else if (key.Keycode == Key.Escape)
+        {
+            if (mandateDraft is not null) CancelMandates();
+            else { if (confirming) confirming = false; else selected = null; auxiliary = ""; Render(); }
+            GetViewport().SetInputAsHandled();
+        }
         else if (key.Keycode == advanceKey && auxiliary == "" && view is not null && !key.CtrlPressed && !key.AltPressed && GetViewport().GuiGetFocusOwner() is not (Godot.Button or LineEdit or TextEdit))
         { ContinueCareer(); GetViewport().SetInputAsHandled(); }
     }

@@ -110,11 +110,11 @@ public partial class Main
     }
     private void Navigate(string name)
     {
-        workspace = name; selected = null; confirming = false; auxiliary = ""; Render();
+        ClearMandateEditor(); workspace = name; selected = null; confirming = false; auxiliary = ""; Render();
     }
     private void SelectInbox(string id)
     {
-        workspace = "Owner Desk"; auxiliary = ""; selected = null; confirming = false; inboxSelection = id; Render();
+        ClearMandateEditor(); workspace = "Owner Desk"; auxiliary = ""; selected = null; confirming = false; inboxSelection = id; Render();
     }
     private void BuildShell()
     {
@@ -137,9 +137,9 @@ public partial class Main
                 ? Caption(ShortMoney(metric.Item2), White, 18)
                 : KeyNumber(ShortMoney(metric.Item2), 26, White));
         }
-        var advance = Button(selected is not null ? "Time is held" : view.Status == CareerStatus.Acquisition ? "Review purchase" : view.Status == CareerStatus.SeasonReview ? "Review next season" : !view.AllocationChosen ? "Choose a plan" : "Continue →", ContinueCareer);
+        var advance = Button(selected is not null || mandateDraft is not null ? "Time is held" : view.Status == CareerStatus.Acquisition ? "Review purchase" : view.Status == CareerStatus.SeasonReview ? "Review next season" : !view.AllocationChosen ? "Choose a plan" : "Continue →", ContinueCareer);
         advance.CustomMinimumSize = new Vector2(155, 0); advance.SizeFlagsHorizontal = SizeFlags.Fill; Primary(advance); top.AddChild(advance);
-        if (selected is not null || auxiliary != "" || view.Status is CareerStatus.LostControl or CareerStatus.PrototypeComplete)
+        if (selected is not null || mandateDraft is not null || auxiliary != "" || view.Status is CareerStatus.LostControl or CareerStatus.PrototypeComplete)
             Unavailable(advance, "Finish or leave this screen before advancing. Completed careers cannot advance.");
         else advance.TooltipText = $"{advanceKey}: continue to the next review or required decision.";
         var navPanel = Surface(Navy, 4); shell.AddChild(navPanel);
@@ -166,12 +166,12 @@ public partial class Main
             var b = Button(item.Item1, item.Item2); b.SizeFlagsHorizontal = SizeFlags.Fill; b.AutowrapMode = TextServer.AutowrapMode.Off; b.CustomMinimumSize = Vector2.Zero;
             b.AddThemeFontSizeOverride("font_size", 11 * textScale / 100); nav.AddChild(b);
         }
-        if (auxiliary == "" && (selected is not null || !view.AllocationChosen || view.Status != CareerStatus.Active))
+        if (auxiliary == "" && (selected is not null || mandateDraft is not null || !view.AllocationChosen || view.Status != CareerStatus.Active))
         {
             var banner = Surface(new Color("f3e7cc"), 8); shell.AddChild(banner);
             banner.AddChild(Caption(view.Status is CareerStatus.LostControl or CareerStatus.PrototypeComplete
                 ? $"{view.Status.ToString().ToUpperInvariant()}  ·  Review your season in History."
-                : selected is not null ? "TIME IS HELD  ·  Review the terms. Nothing is committed until you confirm."
+                : selected is not null || mandateDraft is not null ? "TIME IS HELD  ·  Review the terms. Nothing is committed until you confirm."
                 : view.Status == CareerStatus.Acquisition ? "NEW CAREER  ·  Review the acquisition before taking control."
                 : view.Status == CareerStatus.Administration ? "ADMINISTRATION  ·  Review overdue obligations in Business."
                 : view.Status == CareerStatus.SeasonReview ? "SEASON COMPLETE  ·  Review next season’s renewals before continuing."
@@ -179,7 +179,7 @@ public partial class Main
         }
         // The opening decision carries its own per-plan cash charts; the season chart has nothing to show before a plan is chosen.
         var openingDecision = view.Status == CareerStatus.Active && !view.AllocationChosen && workspace == "Owner Desk" && selected is null && inboxSelection is "brief" or "resume";
-        if (view.Status != CareerStatus.Acquisition && auxiliary == "" && !openingDecision) BuildSeasonLine();
+        if (view.Status != CareerStatus.Acquisition && auxiliary == "" && !openingDecision && mandateDraft is null) BuildSeasonLine();
         var body = new HBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill }; body.AddThemeConstantOverride("separation", 0); shell.AddChild(body);
         var acquisition = view.Status == CareerStatus.Acquisition && workspace == "Owner Desk" && selected is null && auxiliary == "";
         if (!acquisition && auxiliary == "") BuildInbox(Pane(body, new Color("f1ede3"), textScale == 150 ? 235 : 218));
@@ -281,12 +281,16 @@ public partial class Main
     private void RenderDesk()
     {
         if (view.Status == CareerStatus.Acquisition) { Acquisition(); return; }
+        var mandates = Card(); mandates.AddChild(Label("Staff instructions", 20));
+        mandates.AddChild(Label(MandateNames(view.Mandates.Current.Manager, view.Mandates.Current.Director), 14));
+        mandates.AddChild(Button("Review staff mandates", () => Navigate("People")));
         if (inboxSelection.StartsWith("review:") && chosenReview is not null)
         {
             var card = Card(); card.AddChild(Caption($"REVIEW · {Calendar.FullDay(chosenReview.Week).ToUpperInvariant()}")); card.AddChild(Label(chosenReview.Title, 28));
             card.AddChild(Label(chosenReview.Evidence));
             var original = view.History.LastOrDefault(h => h.OriginalForecast.Id == chosenReview.ForecastId);
             if (original is not null) Comparison(card, original, chosenReview.Week);
+            if (original?.Recruitment is { IsFreeAgent: true }) ApproachMandate(card, original.OriginalForecast.Id);
             card.AddChild(Button(filedReviews.Contains(ReviewKey(chosenReview)) ? "Restore to inbox" : "File away", () =>
             {
                 var key = ReviewKey(chosenReview); if (!filedReviews.Add(key)) filedReviews.Remove(key); SelectInbox("brief");
@@ -380,7 +384,8 @@ public partial class Main
     private void RecruitmentHistory(VBoxContainer card, DecisionRecord decision)
     {
         if (decision.Recruitment is not { } terms) return;
-        card.AddChild(Label($"Approved target: {terms.Player.Name} · {terms.Seller}\nFee ceiling {Money.Format(terms.FeeCeiling)} · {Money.Format(terms.WeeklyWage)}/week · contract through {Calendar.FullDay(terms.ContractEndWeek)}. These are the saved mandate terms; the negotiation outcome is reported separately.", 14));
+        card.AddChild(Label($"Approved target: {terms.Player.Name} · {terms.Seller}\nFee ceiling {Money.Format(terms.FeeCeiling)} · {Money.Format(terms.WeeklyWage)}/week · contract through {Calendar.FullDay(terms.ContractEndWeek)}. These are the saved approved terms; the negotiation outcome is reported separately.", 14));
+        if (terms.IsFreeAgent) ApproachMandate(card, decision.OriginalForecast.Id);
     }
 
     private void RenewalHistory(VBoxContainer card, DecisionRecord decision)
@@ -543,7 +548,7 @@ public partial class Main
     }
     private void ContinueCareer()
     {
-        if (busy || selected is not null || auxiliary != "") return;
+        if (busy || selected is not null || mandateDraft is not null || auxiliary != "") return;
         if (view.Status == CareerStatus.Acquisition) { Preview(Allocation.Acquire); return; }
         if (view.Status == CareerStatus.SeasonReview) { Preview(Allocation.StartNextSeason); return; }
         if (view.Status is CareerStatus.LostControl or CareerStatus.PrototypeComplete) return;
@@ -601,6 +606,7 @@ public partial class Main
         var card = Card(); card.AddChild(Caption($"{(fixture.Competition == Competition.Cup ? Cups.RoundName(fixture.CupRound).ToUpperInvariant() : "MATCH REPORT")} · {Calendar.FullDay(match.Week).ToUpperInvariant()}")); card.AddChild(Label(MatchTitle(match), 24));
         if (match.ExtraTime) card.AddChild(Label(match.Shootout is null ? "Decided after extra time." : $"Level after extra time · {match.Shootout} on penalties.", 13));
         card.AddChild(Label($"Shots {match.HomeShots}–{match.AwayShots} · Attendance {match.Attendance:N0} · Home receipts {Money.Format(match.Receipts)}", 13));
+        SelectionMandate(card, match);
         string Name(PersonId id) => view.PlayerNames.TryGetValue(id, out var name) ? name : "Unknown player";
         static string Rating(Appearance a) => (a.Rating / 10m).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
         foreach (var moment in match.Moments) card.AddChild(Label($"{moment.Minute}'  {moment.Text}{(moment.AssistId is { } assist ? $" Assist: {Name(assist)}." : "")}"));
