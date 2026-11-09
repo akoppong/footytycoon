@@ -3,6 +3,20 @@ using FootballTycoon.Application;
 using FootballTycoon.Core;
 using FootballTycoon.Infrastructure;
 
+if (args.Length > 0 && args[0] == "--mandate-comparison")
+{
+    if (args.Length != 3) throw new ArgumentException("Usage: --mandate-comparison <E01B-run3-directory> <new-output-directory>");
+    await FootballTycoon.Headless.MandateComparisonDiagnostics.RunAsync(args[1], args[2]);
+    return;
+}
+
+if (args.Length > 0 && args[0] == "--mandate-timing")
+{
+    if (args.Length != 3) throw new ArgumentException("Usage: --mandate-timing <checkpoint-path> <new-output-directory>");
+    await FootballTycoon.Headless.MandateTimingDiagnostics.RunAsync(args[1], args[2]);
+    return;
+}
+
 if (args.Length > 0 && args[0] == "--baseline")
 {
     if (args.Length != 3) throw new ArgumentException("Usage: --baseline <seed> <new-output-directory>");
